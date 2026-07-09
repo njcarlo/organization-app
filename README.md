@@ -86,3 +86,14 @@ Tokens and Tailwind theme from harvardae.org (Archivo Black, Libre Franklin, cri
 - Hosting currently serves **Operating Tracker** (`apps/operating-tracker/dist`)
 - Auth: email/password
 - Rules: authenticated read/write (`firestore.rules`)
+
+### Operating Tracker modules
+
+- **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins
+- **Programs** (`/programs/:programId`) — projects + inline tasks
+- **My Tasks** (`/my-tasks`) — personal / all-tasks (admin) with filters
+- **Admin** (`/admin`) — users (via secondary Auth app) + programs
+
+### Collections
+
+`users`, `programs`, `projects`, `tasks`
