@@ -83,14 +83,15 @@ export default function Setup() {
   if (alreadySetup) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-hae-mist px-4 text-center">
-        <h1 className="font-display text-3xl text-hae-crimson">Already set up</h1>
+        <img src="/hae-logo.webp" alt="HAE" className="mx-auto h-12 w-auto" />
+        <h1 className="mt-6 font-display text-3xl text-hae-ink">Already set up</h1>
         <p className="mt-2 max-w-md text-sm text-hae-slate">
           Users already exist in this project. Sign in with an existing account, or ask an
           admin to add you.
         </p>
         <Link
           to="/login"
-          className="mt-6 rounded-md bg-hae-crimson px-4 py-2 text-sm font-semibold text-white"
+          className="mt-6 bg-hae-crimson px-4 py-2 text-sm font-semibold tracking-wide text-white uppercase"
         >
           Go to login
         </Link>
@@ -99,11 +100,19 @@ export default function Setup() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_#f3e8ea_0%,_#f7f5f2_45%,_#ebe7e0_100%)] px-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(184,0,40,0.12)_0%,_#ffffff_42%,_#f6f6f6_100%)]"
+      />
+      <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="font-display text-5xl text-hae-crimson">HAE</div>
-          <h1 className="mt-4 text-xl font-semibold text-hae-ink">First-time setup</h1>
+          <img
+            src="/hae-logo.webp"
+            alt="Harvard Alumni Entrepreneurs"
+            className="mx-auto h-14 w-auto object-contain"
+          />
+          <h1 className="mt-5 font-display text-3xl text-hae-ink">First-time setup</h1>
           <p className="mt-2 text-sm text-hae-slate">
             Creates the admin account and seeds all 11 programs.
           </p>
@@ -111,7 +120,7 @@ export default function Setup() {
 
         <form
           onSubmit={handleSetup}
-          className="rounded-xl border border-hae-line bg-white/90 p-6 shadow-sm"
+          className="border border-hae-line bg-white/95 p-6 shadow-[0_12px_40px_rgba(26,26,26,0.06)]"
         >
           <label className="block text-sm font-medium">
             Your name
@@ -147,7 +156,7 @@ export default function Setup() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-5 w-full rounded-md bg-hae-crimson px-4 py-2.5 text-sm font-semibold text-white hover:bg-hae-crimson-dark disabled:opacity-60"
+            className="mt-5 w-full bg-hae-crimson px-4 py-2.5 text-sm font-semibold tracking-wide text-white uppercase transition-colors hover:bg-hae-crimson-dark disabled:opacity-60"
           >
             {submitting ? 'Setting up…' : 'Create admin & seed programs'}
           </button>
