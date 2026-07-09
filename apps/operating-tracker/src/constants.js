@@ -1,15 +1,15 @@
 export const DEFAULT_PROGRAMS = [
-  { name: 'Alumni Angels', lead: '', order: 1 },
-  { name: 'Startup Studio', lead: '', order: 2 },
-  { name: 'Venture Mentoring', lead: '', order: 3 },
-  { name: 'Founder Fellowship', lead: '', order: 4 },
-  { name: 'Global Chapters', lead: '', order: 5 },
-  { name: 'Women Founders', lead: '', order: 6 },
-  { name: 'Student Engagement', lead: '', order: 7 },
-  { name: 'Corporate Partners', lead: '', order: 8 },
-  { name: 'Events & Summits', lead: '', order: 9 },
-  { name: 'Communications', lead: '', order: 10 },
-  { name: 'Operations', lead: '', order: 11 },
+  { name: 'Startup World Cup 2026', lead: '', order: 1 },
+  { name: 'Strategic Advisory Network', lead: '', order: 2 },
+  { name: 'Membership & Community', lead: '', order: 3 },
+  { name: 'Sponsorship & Partnerships', lead: '', order: 4 },
+  { name: 'Chapters', lead: '', order: 5 },
+  { name: 'Operations & Technology', lead: '', order: 6 },
+  { name: '1636 Partners', lead: '', order: 7 },
+  { name: 'A Foundery', lead: '', order: 8 },
+  { name: 'EiR', lead: '', order: 9 },
+  { name: 'Investor Network', lead: '', order: 10 },
+  { name: 'Accelerator', lead: '', order: 11 },
 ]
 
 export const TASK_STATUSES = [
