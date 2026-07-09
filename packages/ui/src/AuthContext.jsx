@@ -1,11 +1,17 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-} from 'firebase/auth'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@hae/firebase'
+import {
+  canAccessModule,
+  hasAnyPermission,
+  hasPermission,
+  isAdminRole,
+  isStaffRole,
+  normalizeRole,
+  permissionsForRole,
+  roleLabel,
+} from './rbac.js'
 
 const AuthContext = createContext(null)
 
@@ -15,36 +21,49 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
-      if (firebaseUser) {
-        try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-          setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
-        } catch {
-          setUserProfile(null)
-        }
-      } else {
+      if (!firebaseUser) {
         setUserProfile(null)
+        setLoading(false)
+        return
       }
-      setLoading(false)
+      try {
+        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+        setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+      } catch {
+        setUserProfile(null)
+      } finally {
+        setLoading(false)
+      }
     })
-    return unsub
   }, [])
 
-  const login = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password)
+  const role = normalizeRole(userProfile?.role)
+  const permissions = useMemo(() => permissionsForRole(role), [role])
+  const isAdmin = isAdminRole(role)
+  const isStaff = isStaffRole(role)
 
-  const logout = () => firebaseSignOut(auth)
-  const isAdmin = userProfile?.role === 'admin'
-
-  return (
-    <AuthContext.Provider
-      value={{ user, userProfile, loading, login, logout, isAdmin }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      userProfile,
+      loading,
+      role,
+      roleLabel: roleLabel(role),
+      permissions,
+      isAdmin,
+      isStaff,
+      hasPermission: (perm) => hasPermission(permissions, perm),
+      hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
+      canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
+      login: (email, password) => signInWithEmailAndPassword(auth, email, password),
+      logout: () => signOut(auth),
+    }),
+    [user, userProfile, loading, role, permissions, isAdmin, isStaff]
   )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

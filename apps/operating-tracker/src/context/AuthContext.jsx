@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -6,6 +6,16 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import {
+  canAccessModule,
+  hasAnyPermission,
+  hasPermission,
+  isAdminRole,
+  isStaffRole,
+  normalizeRole,
+  permissionsForRole,
+  roleLabel,
+} from '../../../../packages/ui/src/rbac.js'
 
 const AuthContext = createContext(null)
 
@@ -37,29 +47,38 @@ export function AuthProvider({ children }) {
 
   const logout = () => firebaseSignOut(auth)
 
-  const isAdmin = userProfile?.role === 'admin'
-
   const refreshProfile = async () => {
     if (!auth.currentUser) return
     const snap = await getDoc(doc(db, 'users', auth.currentUser.uid))
     setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        userProfile,
-        loading,
-        login,
-        logout,
-        isAdmin,
-        refreshProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const role = normalizeRole(userProfile?.role)
+  const permissions = useMemo(() => permissionsForRole(role), [role])
+  const isAdmin = isAdminRole(role)
+  const isStaff = isStaffRole(role)
+
+  const value = useMemo(
+    () => ({
+      user,
+      userProfile,
+      loading,
+      login,
+      logout,
+      refreshProfile,
+      role,
+      roleLabel: roleLabel(role),
+      permissions,
+      isAdmin,
+      isStaff,
+      hasPermission: (perm) => hasPermission(permissions, perm),
+      hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
+      canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
+    }),
+    [user, userProfile, loading, role, permissions, isAdmin, isStaff]
   )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

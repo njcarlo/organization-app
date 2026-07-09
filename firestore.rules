@@ -1,8 +1,151 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userExists() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function role() {
+      return userExists()
+        ? (userDoc().role == 'user' ? 'staff' : userDoc().role)
+        : '';
+    }
+
+    function isAdmin() {
+      return signedIn() && role() == 'admin';
+    }
+
+    function isStaff() {
+      return signedIn() && (role() == 'admin' || role() == 'staff');
+    }
+
+    function isMember() {
+      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'member');
+    }
+
+    function isStudent() {
+      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'student');
+    }
+
+    function emailLower() {
+      return signedIn() && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    // —— Users ——
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      // Admins create others; Setup / self-bootstrap may create own admin profile
+      allow create: if signedIn() && (
+        isAdmin()
+        || (request.auth.uid == userId && request.resource.data.role == 'admin')
+      );
+      allow update: if isAdmin()
+        || (signedIn()
+            && request.auth.uid == userId
+            && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+
+    // —— Tracker ——
+    match /programs/{id} {
+      allow read, write: if isStaff();
+    }
+    match /projects/{id} {
+      allow read, write: if isStaff();
+    }
+    match /tasks/{id} {
+      allow read, write: if isStaff();
+    }
+
+    // —— LMS ——
+    match /courses/{id} {
+      allow read: if isStaff() || isStudent() || isMember();
+      allow write: if isStaff();
+    }
+    match /modules/{id} {
+      allow read: if isStaff() || isStudent() || isMember();
+      allow write: if isStaff();
+    }
+    match /sessions/{id} {
+      allow read: if isStaff() || isStudent();
+      allow write: if isStaff();
+    }
+    match /enrollments/{id} {
+      allow read: if isStaff()
+        || (signedIn()
+            && resource.data.learnerEmail is string
+            && resource.data.learnerEmail.lower() == emailLower());
+      allow write: if isStaff();
+    }
+    match /checkIns/{id} {
+      allow read: if isStaff()
+        || (signedIn()
+            && resource.data.learnerEmail is string
+            && resource.data.learnerEmail.lower() == emailLower());
+      allow write: if isStaff();
+    }
+    match /certificates/{id} {
+      allow read: if isStaff()
+        || (signedIn()
+            && resource.data.learnerEmail is string
+            && resource.data.learnerEmail.lower() == emailLower());
+      allow write: if isStaff();
+    }
+
+    // —— EiR ——
+    match /experts/{id} {
+      allow get: if signedIn()
+        && (isStaff()
+            || ((isMember() || isStudent()) && resource.data.status == 'Active'));
+      allow list: if signedIn() && (isStaff() || isMember() || isStudent());
+      allow write: if isStaff();
+    }
+
+    // —— CRM ——
+    match /contacts/{id} {
+      allow read, write: if isStaff();
+    }
+    match /interactions/{id} {
+      allow read, write: if isStaff();
+    }
+
+    // —— AMS ——
+    match /members/{id} {
+      allow read: if isStaff()
+        || (signedIn()
+            && resource.data.email is string
+            && resource.data.email.lower() == emailLower());
+      allow list: if isStaff();
+      allow write: if isStaff();
+    }
+    match /memberships/{id} {
+      allow read: if isStaff()
+        || (signedIn()
+            && resource.data.memberEmail is string
+            && resource.data.memberEmail.lower() == emailLower());
+      allow write: if isStaff();
+    }
+    match /events/{id} {
+      allow read: if isStaff() || isMember();
+      allow write: if isStaff();
+    }
+    match /committees/{id} {
+      allow read, write: if isStaff();
+    }
+
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

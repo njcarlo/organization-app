@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
-import { useAuth } from '@hae/ui'
+import { useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Dashboard() {
-  const { isAdmin } = useAuth()
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission(PERMISSIONS.EIR_MANAGE)
   const [experts, setExperts] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -85,7 +86,7 @@ export default function Dashboard() {
           >
             Find an expert
           </Link>
-          {isAdmin ? (
+          {canManage ? (
             <Link
               to="/manage"
               className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
@@ -114,7 +115,7 @@ export default function Dashboard() {
         </div>
         {stats.recent.length === 0 ? (
           <p className="text-sm text-hae-slate">
-            {isAdmin
+            {canManage
               ? 'No experts yet. Add profiles in Manage experts.'
               : 'No active experts in the directory yet. Check back soon.'}
           </p>

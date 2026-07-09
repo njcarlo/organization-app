@@ -2,23 +2,35 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 import { MODULES, moduleHref } from './modules.js'
+import { hasAnyPermission, hasPermission } from './rbac.js'
 
 /**
  * Shared shell for LMS / CRM / AMS / EiR apps.
- * navItems: [{ to, label, end? }]
- * moduleId: 'lms' | 'crm' | 'ams' | 'tracker' | 'eir'
+ * navItems: [{ to, label, end?, adminOnly?, permission?, anyOf? }]
+ *          or (ctx) => items[]
  */
 export default function ModuleShell({
   moduleId,
   title,
   navItems = [],
 }) {
-  const { userProfile, logout, isAdmin } = useAuth()
+  const auth = useAuth()
+  const { userProfile, logout, isAdmin, isStaff, role, roleLabel, permissions, canAccessModule } =
+    auth
   const [navOpen, setNavOpen] = useState(false)
 
   const resolvedNav =
-    typeof navItems === 'function' ? navItems({ isAdmin, userProfile }) : navItems
-  const visibleNav = resolvedNav.filter((item) => !item.adminOnly || isAdmin)
+    typeof navItems === 'function'
+      ? navItems({ isAdmin, isStaff, role, userProfile, permissions, hasPermission: auth.hasPermission })
+      : navItems
+
+  const visibleNav = resolvedNav.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false
+    if (item.staffOnly && !isStaff) return false
+    if (item.permission && !hasPermission(permissions, item.permission)) return false
+    if (item.anyOf?.length && !hasAnyPermission(permissions, item.anyOf)) return false
+    return true
+  })
 
   useEffect(() => {
     if (!navOpen) return undefined
@@ -41,6 +53,10 @@ export default function ModuleShell({
     }`
 
   const closeNav = () => setNavOpen(false)
+
+  const platformModules = MODULES.filter(
+    (m) => m.id === moduleId || canAccessModule(m.id)
+  )
 
   const sidebar = (
     <>
@@ -70,44 +86,48 @@ export default function ModuleShell({
           ))}
         </div>
 
-        <div className="mb-1 px-3 text-[10px] font-semibold tracking-wider text-hae-slate uppercase">
-          Platform
-        </div>
-        <div className="space-y-0.5">
-          {MODULES.map((m) => {
-            const active = m.id === moduleId
-            if (active) {
-              return (
-                <div
-                  key={m.id}
-                  className="rounded-md bg-hae-crimson/10 px-3 py-2 text-sm font-semibold text-hae-crimson"
-                >
-                  {m.short}
-                  <div className="text-[11px] font-normal text-hae-slate">
-                    Milestone {m.milestone}
-                  </div>
-                </div>
-              )
-            }
-            const href = moduleHref(m)
-            return (
-              <a
-                key={m.id}
-                href={href}
-                className="block rounded-md px-3 py-2 text-sm text-hae-ink/80 hover:bg-black/5"
-              >
-                {m.short}
-                <div className="text-[11px] text-hae-slate">{m.description}</div>
-              </a>
-            )
-          })}
-        </div>
+        {platformModules.length > 1 ? (
+          <>
+            <div className="mb-1 px-3 text-[10px] font-semibold tracking-wider text-hae-slate uppercase">
+              Platform
+            </div>
+            <div className="space-y-0.5">
+              {platformModules.map((m) => {
+                const active = m.id === moduleId
+                if (active) {
+                  return (
+                    <div
+                      key={m.id}
+                      className="rounded-md bg-hae-crimson/10 px-3 py-2 text-sm font-semibold text-hae-crimson"
+                    >
+                      {m.short}
+                      <div className="text-[11px] font-normal text-hae-slate">
+                        Milestone {m.milestone}
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <a
+                    key={m.id}
+                    href={moduleHref(m)}
+                    className="block rounded-md px-3 py-2 text-sm text-hae-ink/80 hover:bg-black/5"
+                  >
+                    {m.short}
+                    <div className="text-[11px] text-hae-slate">{m.description}</div>
+                  </a>
+                )
+              })}
+            </div>
+          </>
+        ) : null}
       </nav>
 
       <div className="border-t border-hae-line px-4 py-3">
         <div className="truncate text-sm font-medium text-hae-ink">
           {userProfile?.name || 'User'}
         </div>
+        <div className="text-[11px] text-hae-slate">{roleLabel}</div>
         <button
           type="button"
           onClick={() => logout()}
@@ -168,7 +188,7 @@ export default function ModuleShell({
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-hae-ink">{title}</div>
             <div className="truncate text-[11px] text-hae-slate">
-              {userProfile?.name || 'HAE'}
+              {userProfile?.name || 'HAE'} · {roleLabel}
             </div>
           </div>
           <img

@@ -45,6 +45,7 @@ export default function Memberships() {
     await addDoc(collection(db, 'memberships'), {
       memberId: member.id,
       memberName: member.name,
+      memberEmail: (member.email || '').toLowerCase(),
       tier: form.tier,
       renewalDate: form.renewalDate || '',
       paymentStatus: form.paymentStatus,

@@ -4,6 +4,7 @@ import {
   LoginPage,
   ProtectedRoute,
   ModuleShell,
+  PERMISSIONS,
 } from '@hae/ui'
 import Dashboard from './pages/Dashboard.jsx'
 import Directory from './pages/Directory.jsx'
@@ -11,14 +12,18 @@ import ExpertDetail from './pages/ExpertDetail.jsx'
 import ManageExperts from './pages/ManageExperts.jsx'
 import HowItWorks from './pages/HowItWorks.jsx'
 
-function eirNav({ isAdmin }) {
+function eirNav({ hasPermission }) {
   const items = [
     { to: '/', label: 'Home', end: true },
     { to: '/directory', label: 'Directory' },
     { to: '/how-it-works', label: 'How it works' },
   ]
-  if (isAdmin) {
-    items.push({ to: '/manage', label: 'Manage experts', adminOnly: true })
+  if (hasPermission(PERMISSIONS.EIR_MANAGE)) {
+    items.push({
+      to: '/manage',
+      label: 'Manage experts',
+      permission: PERMISSIONS.EIR_MANAGE,
+    })
   }
   return items
 }
@@ -32,7 +37,13 @@ export default function App() {
             path="/login"
             element={<LoginPage appName="Expert Office Hours" />}
           />
-          <Route element={<ProtectedRoute />}>
+          <Route
+            element={
+              <ProtectedRoute
+                anyOf={[PERMISSIONS.EIR_READ, PERMISSIONS.EIR_MANAGE]}
+              />
+            }
+          >
             <Route
               element={
                 <ModuleShell
@@ -46,7 +57,7 @@ export default function App() {
               <Route path="/directory" element={<Directory />} />
               <Route path="/experts/:expertId" element={<ExpertDetail />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route element={<ProtectedRoute adminOnly />}>
+              <Route element={<ProtectedRoute permission={PERMISSIONS.EIR_MANAGE} />}>
                 <Route path="/manage" element={<ManageExperts />} />
               </Route>
             </Route>

@@ -10,13 +10,14 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { useAuth } from '@hae/ui'
+import { useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 import { MODULE_TYPES } from '../constants'
 
 export default function CourseDetail() {
   const { courseId } = useParams()
-  const { isAdmin } = useAuth()
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission(PERMISSIONS.LMS_MANAGE)
   const [course, setCourse] = useState(null)
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
@@ -96,10 +97,10 @@ export default function CourseDetail() {
     <div className="space-y-6">
       <div>
         <Link
-          to={isAdmin ? '/courses' : '/catalog'}
+          to={canManage ? '/courses' : '/catalog'}
           className="text-xs font-semibold text-hae-crimson"
         >
-          ← {isAdmin ? 'Courses' : 'Catalog'}
+          ← {canManage ? 'Courses' : 'Catalog'}
         </Link>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
         <p className="mt-1 text-sm text-hae-slate">
@@ -113,7 +114,7 @@ export default function CourseDetail() {
         ) : null}
       </div>
 
-      {isAdmin ? (
+      {canManage ? (
         <div className="flex flex-wrap gap-2">
           {['Draft', 'Open', 'In Progress', 'Completed', 'Archived'].map((s) => (
             <button
@@ -136,7 +137,7 @@ export default function CourseDetail() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
           Modules & sessions
         </h2>
-        {isAdmin ? (
+        {canManage ? (
           <form
             onSubmit={addModule}
             className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
@@ -187,17 +188,17 @@ export default function CourseDetail() {
                 <th className="px-3 py-2 font-semibold">Title</th>
                 <th className="px-3 py-2 font-semibold">Type</th>
                 <th className="px-3 py-2 font-semibold">Resource</th>
-                {isAdmin ? <th className="px-3 py-2 font-semibold w-20" /> : null}
+                {canManage ? <th className="px-3 py-2 font-semibold w-20" /> : null}
               </tr>
             </thead>
             <tbody>
               {modules.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isAdmin ? 5 : 4}
+                    colSpan={canManage ? 5 : 4}
                     className="px-3 py-6 text-center text-sm text-hae-slate"
                   >
-                    {isAdmin
+                    {canManage
                       ? 'No modules yet — add lessons, office hours, quizzes, workbooks'
                       : 'No modules published for this course yet'}
                   </td>
@@ -222,7 +223,7 @@ export default function CourseDetail() {
                         '—'
                       )}
                     </td>
-                    {isAdmin ? (
+                    {canManage ? (
                       <td className="px-3 py-2 text-right">
                         <button
                           type="button"

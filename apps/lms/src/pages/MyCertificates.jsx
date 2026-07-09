@@ -1,19 +1,25 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { useAuth } from '@hae/ui'
 import { db } from '../firebase'
-import { matchesLearner } from '../utils/learner'
 
 export default function MyCertificates() {
   const { userProfile } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const email = (userProfile?.email || '').trim().toLowerCase()
 
   useEffect(() => {
+    if (!email) {
+      setLoading(false)
+      return undefined
+    }
     let cancelled = false
     ;(async () => {
-      const snap = await getDocs(collection(db, 'certificates'))
+      const snap = await getDocs(
+        query(collection(db, 'certificates'), where('learnerEmail', '==', email))
+      )
       if (cancelled) return
       setItems(
         snap.docs
@@ -25,12 +31,7 @@ export default function MyCertificates() {
     return () => {
       cancelled = true
     }
-  }, [])
-
-  const mine = useMemo(
-    () => items.filter((c) => matchesLearner(c, userProfile)),
-    [items, userProfile]
-  )
+  }, [email])
 
   if (loading) return <p className="text-sm text-hae-slate">Loading certificates…</p>
 
@@ -45,13 +46,13 @@ export default function MyCertificates() {
         </p>
       </header>
 
-      {mine.length === 0 ? (
+      {items.length === 0 ? (
         <p className="text-sm text-hae-slate">
           No certificates yet. Complete an eligible course to receive one.
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {mine.map((c) => (
+          {items.map((c) => (
             <div key={c.id} className="border border-hae-line bg-white p-5">
               <div className="text-[11px] font-semibold tracking-wider text-hae-crimson uppercase">
                 Certificate of Completion
