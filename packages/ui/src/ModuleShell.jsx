@@ -111,8 +111,11 @@ export default function ModuleShell({
                 return (
                   <a
                     key={m.id}
-                    href="#"
+                    href={moduleHref(m)}
                     onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                        return
+                      }
                       e.preventDefault()
                       navigateToModule(m)
                     }}

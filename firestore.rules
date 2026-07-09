@@ -144,6 +144,21 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    // —— Cross-app SSO handoffs (short-lived refresh-token bridge) ——
+    match /ssoHandoffs/{id} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.refreshToken is string
+        && request.resource.data.keys().hasAll(['uid', 'refreshToken', 'createdAt'])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'refreshToken', 'createdAt', 'customToken'
+        ]);
+      // Id is an unguessable single-use code; get/delete allowed without auth
+      // so the destination origin can consume before signing in.
+      allow get, delete: if true;
+      allow list, update: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

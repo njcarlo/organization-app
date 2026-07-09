@@ -23,7 +23,7 @@
     "build:all": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "import:real": "node scripts/import-real-data.mjs",
-    "deploy": "npm run build:all && firebase deploy --only hosting,functions,firestore:rules,auth",
+    "deploy": "npm run build:all && firebase deploy --only hosting,firestore:rules,auth",
     "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
     "deploy:tracker": "npm run build:tracker && firebase deploy --only hosting:tracker",
