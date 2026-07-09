@@ -13,8 +13,12 @@ export default function ModuleShell({
   title,
   navItems = [],
 }) {
-  const { userProfile, logout } = useAuth()
+  const { userProfile, logout, isAdmin } = useAuth()
   const [navOpen, setNavOpen] = useState(false)
+
+  const resolvedNav =
+    typeof navItems === 'function' ? navItems({ isAdmin, userProfile }) : navItems
+  const visibleNav = resolvedNav.filter((item) => !item.adminOnly || isAdmin)
 
   useEffect(() => {
     if (!navOpen) return undefined
@@ -53,7 +57,7 @@ export default function ModuleShell({
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <div className="mb-4 space-y-0.5">
-          {navItems.map((item) => (
+          {visibleNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

@@ -11,12 +11,17 @@ import ExpertDetail from './pages/ExpertDetail.jsx'
 import ManageExperts from './pages/ManageExperts.jsx'
 import HowItWorks from './pages/HowItWorks.jsx'
 
-const nav = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/directory', label: 'Directory' },
-  { to: '/how-it-works', label: 'How it works' },
-  { to: '/manage', label: 'Manage experts' },
-]
+function eirNav({ isAdmin }) {
+  const items = [
+    { to: '/', label: 'Home', end: true },
+    { to: '/directory', label: 'Directory' },
+    { to: '/how-it-works', label: 'How it works' },
+  ]
+  if (isAdmin) {
+    items.push({ to: '/manage', label: 'Manage experts', adminOnly: true })
+  }
+  return items
+}
 
 export default function App() {
   return (
@@ -33,7 +38,7 @@ export default function App() {
                 <ModuleShell
                   moduleId="eir"
                   title="Experts (EiR)"
-                  navItems={nav}
+                  navItems={eirNav}
                 />
               }
             >
@@ -41,7 +46,9 @@ export default function App() {
               <Route path="/directory" element={<Directory />} />
               <Route path="/experts/:expertId" element={<ExpertDetail />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/manage" element={<ManageExperts />} />
+              <Route element={<ProtectedRoute adminOnly />}>
+                <Route path="/manage" element={<ManageExperts />} />
+              </Route>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

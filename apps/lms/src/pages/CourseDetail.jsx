@@ -10,11 +10,13 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
+import { useAuth } from '@hae/ui'
 import { db } from '../firebase'
 import { MODULE_TYPES } from '../constants'
 
 export default function CourseDetail() {
   const { courseId } = useParams()
+  const { isAdmin } = useAuth()
   const [course, setCourse] = useState(null)
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
@@ -93,81 +95,89 @@ export default function CourseDetail() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/courses" className="text-xs font-semibold text-hae-crimson">
-          ← Courses
+        <Link
+          to={isAdmin ? '/courses' : '/catalog'}
+          className="text-xs font-semibold text-hae-crimson"
+        >
+          ← {isAdmin ? 'Courses' : 'Catalog'}
         </Link>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
         <p className="mt-1 text-sm text-hae-slate">
           {course.path === 'flagship' ? 'Flagship Deep Dive' : 'Academy Fast Track'}
           {course.facilitator ? ` · ${course.facilitator}` : ''}
           {course.durationWeeks ? ` · ${course.durationWeeks} weeks` : ''}
+          {course.status ? ` · ${course.status}` : ''}
         </p>
         {course.description ? (
           <p className="mt-3 text-sm text-hae-slate">{course.description}</p>
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {['Draft', 'Open', 'In Progress', 'Completed', 'Archived'].map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => saveCourseField('status', s)}
-            className={`px-3 py-1.5 text-xs font-semibold ${
-              course.status === s
-                ? 'bg-hae-crimson text-white'
-                : 'border border-hae-line bg-white text-hae-slate'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      {isAdmin ? (
+        <div className="flex flex-wrap gap-2">
+          {['Draft', 'Open', 'In Progress', 'Completed', 'Archived'].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => saveCourseField('status', s)}
+              className={`px-3 py-1.5 text-xs font-semibold ${
+                course.status === s
+                  ? 'bg-hae-crimson text-white'
+                  : 'border border-hae-line bg-white text-hae-slate'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
           Modules & sessions
         </h2>
-        <form
-          onSubmit={addModule}
-          className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          <input
-            required
-            placeholder="Module title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-          />
-          <select
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="border border-hae-line px-3 py-2 text-sm"
+        {isAdmin ? (
+          <form
+            onSubmit={addModule}
+            className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {MODULE_TYPES.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="Order"
-            value={form.order}
-            onChange={(e) => setForm({ ...form, order: e.target.value })}
-            className="border border-hae-line px-3 py-2 text-sm"
-          />
-          <input
-            placeholder="Resource / Zoom / PDF URL"
-            value={form.resourceUrl}
-            onChange={(e) => setForm({ ...form, resourceUrl: e.target.value })}
-            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-          />
-          <button
-            type="submit"
-            className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
-          >
-            Add module
-          </button>
-        </form>
+            <input
+              required
+              placeholder="Module title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm"
+            >
+              {MODULE_TYPES.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Order"
+              value={form.order}
+              onChange={(e) => setForm({ ...form, order: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm"
+            />
+            <input
+              placeholder="Resource / Zoom / PDF URL"
+              value={form.resourceUrl}
+              onChange={(e) => setForm({ ...form, resourceUrl: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <button
+              type="submit"
+              className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
+            >
+              Add module
+            </button>
+          </form>
+        ) : null}
 
         <div className="overflow-x-auto border border-hae-line bg-white">
           <table className="w-full min-w-[560px] text-left">
@@ -177,14 +187,19 @@ export default function CourseDetail() {
                 <th className="px-3 py-2 font-semibold">Title</th>
                 <th className="px-3 py-2 font-semibold">Type</th>
                 <th className="px-3 py-2 font-semibold">Resource</th>
-                <th className="px-3 py-2 font-semibold w-20" />
+                {isAdmin ? <th className="px-3 py-2 font-semibold w-20" /> : null}
               </tr>
             </thead>
             <tbody>
               {modules.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
-                    No modules yet — add lessons, office hours, quizzes, workbooks
+                  <td
+                    colSpan={isAdmin ? 5 : 4}
+                    className="px-3 py-6 text-center text-sm text-hae-slate"
+                  >
+                    {isAdmin
+                      ? 'No modules yet — add lessons, office hours, quizzes, workbooks'
+                      : 'No modules published for this course yet'}
                   </td>
                 </tr>
               ) : (
@@ -207,15 +222,17 @@ export default function CourseDetail() {
                         '—'
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeModule(m.id)}
-                        className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {isAdmin ? (
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => removeModule(m.id)}
+                          className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))
               )}
