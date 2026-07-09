@@ -29,8 +29,19 @@ const STATUS_FILTERS = [
   'Complete',
 ]
 
-const inputClass =
-  'w-full rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
+const fieldClass =
+  'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
+
+function Field({ label, children, className = '' }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-1 block text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
 
 export default function MyTasks() {
   const { userProfile, isStaff } = useAuth()
@@ -99,6 +110,8 @@ export default function MyTasks() {
     safePage * PAGE_SIZE + PAGE_SIZE
   )
 
+  const colCount = isStaff && viewAll ? 11 : 10
+
   const startEdit = (task) => {
     setEditingId(task.id)
     setDraft({
@@ -111,6 +124,11 @@ export default function MyTasks() {
       leadershipAttention: task.leadershipAttention || 'None',
       nextAction: task.nextAction || '',
     })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setDraft(null)
   }
 
   const saveEdit = async () => {
@@ -127,8 +145,7 @@ export default function MyTasks() {
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
       })
-      setEditingId(null)
-      setDraft(null)
+      cancelEdit()
       await load()
     } finally {
       setSaving(false)
@@ -142,14 +159,7 @@ export default function MyTasks() {
   }
 
   const onEditKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      saveEdit()
-    }
-    if (e.key === 'Escape') {
-      setEditingId(null)
-      setDraft(null)
-    }
+    if (e.key === 'Escape') cancelEdit()
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading tasks…</p>
@@ -204,7 +214,20 @@ export default function MyTasks() {
 
       <div className="overflow-hidden rounded-xl border border-hae-line bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left">
+          <table className="w-full min-w-[1100px] table-fixed text-left">
+            <colgroup>
+              <col className="w-[7%]" />
+              <col className="w-[16%]" />
+              {isStaff && viewAll ? <col className="w-[9%]" /> : null}
+              <col className="w-[12%]" />
+              <col className="w-[11%]" />
+              <col className="w-[8%]" />
+              <col className="w-[9%]" />
+              <col className="w-[9%]" />
+              <col className="w-[10%]" />
+              <col className="w-[11%]" />
+              <col className="w-[7%]" />
+            </colgroup>
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
                 <th className="px-3 py-2 font-semibold">Priority</th>
@@ -219,14 +242,14 @@ export default function MyTasks() {
                 <th className="px-3 py-2 font-semibold">Waiting On</th>
                 <th className="px-3 py-2 font-semibold">Leadership</th>
                 <th className="px-3 py-2 font-semibold">Next Action</th>
-                <th className="px-3 py-2 font-semibold w-20" />
+                <th className="px-3 py-2 font-semibold" />
               </tr>
             </thead>
             <tbody>
               {pageItems.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isStaff && viewAll ? 11 : 10}
+                    colSpan={colCount}
                     className="px-3 py-8 text-center text-sm text-hae-slate"
                   >
                     No tasks match this filter
@@ -235,120 +258,149 @@ export default function MyTasks() {
               ) : (
                 pageItems.map((task) =>
                   editingId === task.id && draft ? (
-                    <tr key={task.id} className="bg-amber-50">
-                      <td className="px-2 py-1">
-                        <select
-                          className={inputClass}
-                          value={draft.priority}
-                          onChange={(e) =>
-                            setDraft({ ...draft, priority: e.target.value })
-                          }
-                        >
-                          <option value="">Auto</option>
-                          <option value="HIGH">HIGH</option>
-                          <option value="MEDIUM">MEDIUM</option>
-                          <option value="LOW">LOW</option>
-                        </select>
-                      </td>
-                      <td className="px-2 py-1">
-                        <input
-                          autoFocus
-                          className={inputClass}
-                          value={draft.name}
-                          onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    <tr key={task.id} className="bg-amber-50/80">
+                      <td colSpan={colCount} className="px-4 py-4">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
+                              Editing task
+                            </p>
+                            <p className="text-sm text-hae-slate">
+                              {programNameOf(task, programsById)}
+                              {projectNameOf(task, projectsById)
+                                ? ` · ${projectNameOf(task, projectsById)}`
+                                : ''}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={cancelEdit}
+                              className="rounded-md border border-hae-line px-3 py-1.5 text-xs font-semibold text-hae-slate hover:bg-white"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={saving}
+                              onClick={saveEdit}
+                              className="rounded-md bg-hae-crimson px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                            >
+                              {saving ? 'Saving…' : 'Save'}
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
                           onKeyDown={onEditKeyDown}
-                        />
-                      </td>
-                      {isStaff && viewAll && (
-                        <td className="px-2 py-1">
-                          <input
-                            className={inputClass}
-                            value={draft.owner}
-                            onChange={(e) =>
-                              setDraft({ ...draft, owner: e.target.value })
-                            }
-                            onKeyDown={onEditKeyDown}
-                          />
-                        </td>
-                      )}
-                      <td className="px-3 py-2 text-sm text-hae-slate">
-                        {programNameOf(task, programsById)}
-                      </td>
-                      <td className="px-3 py-2 text-sm text-hae-slate">
-                        {projectNameOf(task, projectsById)}
-                      </td>
-                      <td className="px-2 py-1">
-                        <input
-                          type="date"
-                          className={inputClass}
-                          value={draft.dueDate}
-                          onChange={(e) =>
-                            setDraft({ ...draft, dueDate: e.target.value })
-                          }
-                          onKeyDown={onEditKeyDown}
-                        />
-                      </td>
-                      <td className="px-2 py-1">
-                        <select
-                          className={inputClass}
-                          value={draft.status}
-                          onChange={(e) =>
-                            setDraft({ ...draft, status: e.target.value })
-                          }
                         >
-                          {TASK_STATUSES.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className={inputClass}
-                          value={draft.waitingOn}
-                          onChange={(e) =>
-                            setDraft({ ...draft, waitingOn: e.target.value })
-                          }
-                          onKeyDown={onEditKeyDown}
-                        />
-                      </td>
-                      <td className="px-2 py-1">
-                        <select
-                          className={inputClass}
-                          value={draft.leadershipAttention}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              leadershipAttention: e.target.value,
-                            })
-                          }
-                        >
-                          {LEADERSHIP_ATTENTION.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1">
-                        <input
-                          className={inputClass}
-                          value={draft.nextAction}
-                          onChange={(e) =>
-                            setDraft({ ...draft, nextAction: e.target.value })
-                          }
-                          onKeyDown={onEditKeyDown}
-                        />
-                      </td>
-                      <td className="px-2 py-1 text-right text-xs">
-                        <button
-                          type="button"
-                          onClick={saveEdit}
-                          className="font-semibold text-hae-crimson"
-                        >
-                          Save
-                        </button>
+                          <Field label="Task" className="sm:col-span-2 lg:col-span-2">
+                            <input
+                              autoFocus
+                              className={fieldClass}
+                              value={draft.name}
+                              onChange={(e) =>
+                                setDraft({ ...draft, name: e.target.value })
+                              }
+                            />
+                          </Field>
+                          {isStaff && viewAll ? (
+                            <Field label="Owner">
+                              <input
+                                className={fieldClass}
+                                value={draft.owner}
+                                onChange={(e) =>
+                                  setDraft({ ...draft, owner: e.target.value })
+                                }
+                              />
+                            </Field>
+                          ) : (
+                            <Field label="Owner">
+                              <input
+                                className={fieldClass}
+                                value={draft.owner}
+                                onChange={(e) =>
+                                  setDraft({ ...draft, owner: e.target.value })
+                                }
+                              />
+                            </Field>
+                          )}
+                          <Field label="Priority">
+                            <select
+                              className={fieldClass}
+                              value={draft.priority}
+                              onChange={(e) =>
+                                setDraft({ ...draft, priority: e.target.value })
+                              }
+                            >
+                              <option value="">Auto</option>
+                              <option value="HIGH">HIGH</option>
+                              <option value="MEDIUM">MEDIUM</option>
+                              <option value="LOW">LOW</option>
+                            </select>
+                          </Field>
+                          <Field label="Status">
+                            <select
+                              className={fieldClass}
+                              value={draft.status}
+                              onChange={(e) =>
+                                setDraft({ ...draft, status: e.target.value })
+                              }
+                            >
+                              {TASK_STATUSES.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                          <Field label="Due">
+                            <input
+                              type="date"
+                              className={fieldClass}
+                              value={draft.dueDate}
+                              onChange={(e) =>
+                                setDraft({ ...draft, dueDate: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Waiting on">
+                            <input
+                              className={fieldClass}
+                              value={draft.waitingOn}
+                              onChange={(e) =>
+                                setDraft({ ...draft, waitingOn: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Leadership">
+                            <select
+                              className={fieldClass}
+                              value={draft.leadershipAttention}
+                              onChange={(e) =>
+                                setDraft({
+                                  ...draft,
+                                  leadershipAttention: e.target.value,
+                                })
+                              }
+                            >
+                              {LEADERSHIP_ATTENTION.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                          <Field label="Next action" className="sm:col-span-2 lg:col-span-1">
+                            <input
+                              className={fieldClass}
+                              value={draft.nextAction}
+                              onChange={(e) =>
+                                setDraft({ ...draft, nextAction: e.target.value })
+                              }
+                            />
+                          </Field>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -363,30 +415,44 @@ export default function MyTasks() {
                           ) : null}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-sm font-medium">{task.name}</td>
+                      <td className="px-3 py-2 text-sm font-medium">
+                        <span className="line-clamp-2">{task.name}</span>
+                      </td>
                       {isStaff && viewAll && (
                         <td className="px-3 py-2 text-sm text-hae-slate">
                           {task.owner || '—'}
                         </td>
                       )}
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {programNameOf(task, programsById)}
+                        <span className="line-clamp-2">
+                          {programNameOf(task, programsById)}
+                        </span>
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {projectNameOf(task, projectsById)}
+                        <span className="line-clamp-2">
+                          {projectNameOf(task, projectsById)}
+                        </span>
                       </td>
-                      <td className="px-3 py-2 text-sm text-hae-slate">
+                      <td className="whitespace-nowrap px-3 py-2 text-sm text-hae-slate">
                         {formatDate(task.dueDate)}
                       </td>
-                      <td className="px-3 py-2 text-sm text-hae-slate">{task.status}</td>
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {task.waitingOn || '—'}
+                        {task.status}
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {task.leadershipAttention || 'None'}
+                        <span className="line-clamp-2">
+                          {task.waitingOn || '—'}
+                        </span>
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {task.nextAction || '—'}
+                        <span className="line-clamp-2">
+                          {task.leadershipAttention || 'None'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-sm text-hae-slate">
+                        <span className="line-clamp-2">
+                          {task.nextAction || '—'}
+                        </span>
                       </td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
