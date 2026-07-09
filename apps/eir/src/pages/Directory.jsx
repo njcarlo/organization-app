@@ -27,6 +27,7 @@ export default function Directory() {
   const tags = useMemo(() => {
     const set = new Set()
     for (const e of experts) {
+      if (e.status !== 'Active') continue
       for (const t of e.expertise || []) set.add(t)
     }
     return [...set].sort()
@@ -35,7 +36,8 @@ export default function Directory() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return experts.filter((e) => {
-      if (e.status === 'Inactive') return false
+      // Members only see bookable Active experts
+      if (e.status !== 'Active') return false
       if (tag !== 'all' && !(e.expertise || []).includes(tag)) return false
       if (!q) return true
       const hay = [

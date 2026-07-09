@@ -59,14 +59,14 @@ export default function Dashboard() {
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
-          Milestone 2 · HAE Academy
+          Staff · HAE Academy
         </p>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           Learning Dashboard
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-          Academy Fast Track and Flagship Deep Dive courses, enrollments, office hours,
-          and 30/60/180-day check-ins.
+          Staff overview of Academy Fast Track and Flagship courses, enrollments,
+          office hours, and check-ins. Students see My learning instead.
         </p>
       </header>
 

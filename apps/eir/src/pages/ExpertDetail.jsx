@@ -30,6 +30,8 @@ export default function ExpertDetail() {
     )
   }
 
+  const bookable = expert.status === 'Active' && Boolean(expert.bookingUrl)
+
   return (
     <div className="space-y-6">
       <Link to="/directory" className="text-xs font-semibold text-hae-crimson">
@@ -50,7 +52,16 @@ export default function ExpertDetail() {
         )}
 
         <div>
-          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">{expert.name}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">
+              {expert.name}
+            </h1>
+            {expert.status && expert.status !== 'Active' ? (
+              <span className="rounded bg-hae-mist px-2 py-0.5 text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
+                {expert.status}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm text-hae-slate">
             {expert.title || 'Expert'}
             {expert.organization ? ` · ${expert.organization}` : ''}
@@ -67,7 +78,7 @@ export default function ExpertDetail() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            {expert.bookingUrl ? (
+            {bookable ? (
               <a
                 href={expert.bookingUrl}
                 target="_blank"
@@ -78,7 +89,9 @@ export default function ExpertDetail() {
               </a>
             ) : (
               <span className="border border-hae-line px-4 py-2.5 text-xs text-hae-slate">
-                Booking link not set
+                {expert.status !== 'Active'
+                  ? 'Not currently available for booking'
+                  : 'Booking link not set'}
               </span>
             )}
             {expert.linkedinUrl ? (

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
+import { useAuth } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth()
   const [experts, setExperts] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -21,16 +23,16 @@ export default function Dashboard() {
   }, [])
 
   const stats = useMemo(() => {
-    const active = experts.filter((e) => e.status !== 'Inactive')
+    const bookable = experts.filter((e) => e.status === 'Active')
     const tags = new Set()
-    for (const e of active) {
+    for (const e of bookable) {
       for (const t of e.expertise || []) tags.add(t)
     }
     return {
       total: experts.length,
-      active: active.length,
+      active: bookable.length,
       areas: tags.size,
-      recent: [...active]
+      recent: [...bookable]
         .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
         .slice(0, 6),
     }
@@ -83,12 +85,21 @@ export default function Dashboard() {
           >
             Find an expert
           </Link>
-          <Link
-            to="/manage"
-            className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
-          >
-            Manage experts
-          </Link>
+          {isAdmin ? (
+            <Link
+              to="/manage"
+              className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
+            >
+              Manage experts
+            </Link>
+          ) : (
+            <Link
+              to="/how-it-works"
+              className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
+            >
+              How it works
+            </Link>
+          )}
         </div>
       </section>
 
@@ -103,7 +114,9 @@ export default function Dashboard() {
         </div>
         {stats.recent.length === 0 ? (
           <p className="text-sm text-hae-slate">
-            No experts yet. Add profiles in Manage experts.
+            {isAdmin
+              ? 'No experts yet. Add profiles in Manage experts.'
+              : 'No active experts in the directory yet. Check back soon.'}
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -73,9 +73,9 @@ export default function Courses() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Courses</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage courses</h1>
         <p className="mt-1 text-sm text-hae-slate">
-          Academy Fast Track and Flagship Deep Dive catalog
+          Staff catalog — create and manage Academy / Flagship courses. Students browse the Catalog.
         </p>
       </header>
 
