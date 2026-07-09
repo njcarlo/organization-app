@@ -17,6 +17,7 @@ import Sessions from './pages/Sessions.jsx'
 import CheckIns from './pages/CheckIns.jsx'
 import Certificates from './pages/Certificates.jsx'
 import MyCertificates from './pages/MyCertificates.jsx'
+import Help from './pages/Help.jsx'
 
 function lmsNav({ hasPermission }) {
   const items = []
@@ -43,6 +44,7 @@ function lmsNav({ hasPermission }) {
       { to: '/certificates', label: 'Issue certificates', permission: PERMISSIONS.LMS_MANAGE }
     )
   }
+  items.push({ to: '/help', label: 'Help' })
   return items
 }
 
@@ -87,6 +89,7 @@ export default function App() {
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/my-certificates" element={<MyCertificates />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
+              <Route path="/help" element={<Help />} />
 
               <Route element={<ProtectedRoute permission={PERMISSIONS.LMS_MANAGE} />}>
                 <Route path="/courses" element={<Courses />} />

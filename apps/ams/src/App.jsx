@@ -13,6 +13,7 @@ import Memberships from './pages/Memberships.jsx'
 import Events from './pages/Events.jsx'
 import Committees from './pages/Committees.jsx'
 import MemberHome from './pages/MemberHome.jsx'
+import Help from './pages/Help.jsx'
 
 function amsNav({ hasPermission }) {
   if (hasPermission(PERMISSIONS.AMS_MANAGE)) {
@@ -22,11 +23,13 @@ function amsNav({ hasPermission }) {
       { to: '/memberships', label: 'Memberships' },
       { to: '/events', label: 'Events' },
       { to: '/committees', label: 'Committees' },
+      { to: '/help', label: 'Help' },
     ]
   }
   return [
     { to: '/', label: 'My membership', end: true },
     { to: '/events', label: 'Events' },
+    { to: '/help', label: 'Help' },
   ]
 }
 
@@ -59,6 +62,7 @@ export default function App() {
             >
               <Route path="/" element={<HomeRoute />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/help" element={<Help />} />
 
               <Route element={<ProtectedRoute permission={PERMISSIONS.AMS_MANAGE} />}>
                 <Route path="/members" element={<Members />} />

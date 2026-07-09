@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
 import MyTasks from './pages/MyTasks'
 import Admin from './pages/Admin'
+import Help from './pages/Help'
 import { PERMISSIONS } from '../../../packages/ui/src/rbac.js'
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/my-tasks" element={<MyTasks />} />
+              <Route path="/help" element={<Help />} />
               <Route path="/programs/:programId" element={<ProgramPage />} />
               <Route
                 element={

@@ -136,13 +136,22 @@ export default function ModuleShell({
           {userProfile?.name || 'User'}
         </div>
         <div className="text-[11px] text-hae-slate">{roleLabel}</div>
-        <button
-          type="button"
-          onClick={() => logout()}
-          className="mt-1 text-xs text-hae-slate hover:text-hae-crimson"
-        >
-          Sign out
-        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <NavLink
+            to="/help"
+            onClick={closeNav}
+            className="text-xs font-semibold text-hae-crimson hover:underline"
+          >
+            Help
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="text-xs text-hae-slate hover:text-hae-crimson"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </>
   )
