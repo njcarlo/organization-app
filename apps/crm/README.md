@@ -1,22 +1,25 @@
-# @hae/crm — Constituent Relationship Management
+# @hae/crm — HAE Relationships (CRM)
 
-**Milestone 3 — Planned**
+**Milestone 3**
 
-Track HAE relationships with alumni, donors, partners, and prospects.
+Staff/admin console for relationship management across alumni, donors, partners,
+and prospects.
 
-## Planned scope
+## Features
 
-- Contact database (alumni, donors, partners, prospects)
-- Interaction log (emails, calls, meetings, notes)
-- Pipeline view (prospect → engaged → committed → closed)
-- Tags and segments
-- Tasks linked to contacts
-- Dashboard widgets: recent interactions, pipeline totals, follow-ups
+- **Dashboard** with pipeline totals by stage, recent interactions, and upcoming follow-ups
+- **Contacts** CRUD — type, region, tags, pipeline stage, notes, follow-up date
+- **Interactions** — log emails, calls, meetings, and notes linked to contacts
+- **Pipeline** — board + table filtered by stage (prospect → engaged → committed → closed)
 
-## Firestore collections (planned)
+## Collections
 
-`contacts`, `interactions`, `pipelines`
+`contacts`, `interactions` (pipeline stage stored on contact; optional `pipelines` records supported if added later)
 
-## Status
+## Run
 
-Stub only. Scaffold when Milestone 3 starts. Will share `@hae/firebase` and `@hae/branding`.
+```bash
+npm run dev:crm
+```
+
+Opens on port 5175.
