@@ -12,7 +12,7 @@ One repo, **one app per milestone module**. Shared Firebase + branding packages.
 ```
 hae-platform/
 ├── apps/
-│   ├── operating-tracker/   ✅ Milestone 1 — live
+│   ├── operating-tracker/   ✅ Milestone 1 — COMPLETE / live
 │   ├── lms/                 🔲 Milestone 2 — stub
 │   ├── crm/                 🔲 Milestone 3 — stub
 │   └── ams/                 🔲 Milestone 4 — stub
@@ -26,7 +26,7 @@ hae-platform/
 
 | App | Package name | Milestone | Status |
 |-----|--------------|-----------|--------|
-| Operating Tracker | `@hae/operating-tracker` | 1 | Live |
+| Operating Tracker | `@hae/operating-tracker` | 1 | **Complete** / Live |
 | LMS | `@hae/lms` | 2 | Planned stub |
 | CRM | `@hae/crm` | 3 | Planned stub |
 | AMS | `@hae/ams` | 4 | Planned stub |
