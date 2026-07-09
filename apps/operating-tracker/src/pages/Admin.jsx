@@ -21,6 +21,7 @@ import {
   exportCollections,
   importCollections,
 } from '../utils/dataTransfer'
+import AdminAddItems from '../components/AdminAddItems'
 
 const CREATE_GUIDE = [
   {
@@ -38,45 +39,38 @@ const CREATE_GUIDE = [
     items: [
       { what: 'Users', where: 'Admin → Users (this page)' },
       { what: 'Programs', where: 'Admin → Programs (this page)' },
-      { what: 'Projects', where: 'Programs → open a program → Add Project' },
-      { what: 'Tasks', where: 'Programs → expand a project → Add Task' },
+      { what: 'Projects & tasks', where: 'Admin → Add items, or Programs → open a program' },
     ],
   },
   {
     app: 'LMS',
     items: [
-      { what: 'Courses', where: 'LMS → Manage courses (staff)' },
-      { what: 'Modules', where: 'LMS → Courses → open a course' },
-      { what: 'Enrollments', where: 'LMS → Enrollments (use learner email = login email)' },
-      { what: 'Office Hours', where: 'LMS → Sessions' },
-      { what: 'Check-ins', where: 'LMS → Check-ins' },
-      { what: 'Certificates', where: 'LMS → Issue certificates' },
+      { what: 'Courses, modules, enrollments…', where: 'Admin → Add items (or LMS manage pages)' },
+      { what: 'Learner email', where: 'Must match login email for student views' },
     ],
   },
   {
     app: 'EiR',
-    items: [{ what: 'Experts', where: 'EiR → Manage experts (staff/admin)' }],
+    items: [{ what: 'Experts', where: 'Admin → Add items, or EiR → Manage experts' }],
   },
   {
     app: 'CRM',
     items: [
-      { what: 'Contacts', where: 'CRM → Contacts (staff)' },
-      { what: 'Interactions', where: 'CRM → Interactions' },
+      { what: 'Contacts & interactions', where: 'Admin → Add items, or CRM pages' },
       { what: 'Pipeline stage', where: 'CRM → Pipeline (moves existing contacts)' },
     ],
   },
   {
     app: 'AMS',
     items: [
-      { what: 'Members', where: 'AMS → Members (staff)' },
-      { what: 'Memberships', where: 'AMS → Memberships (stores memberEmail for member view)' },
-      { what: 'Events', where: 'AMS → Events' },
-      { what: 'Committees', where: 'AMS → Committees' },
+      { what: 'Members, memberships, events…', where: 'Admin → Add items, or AMS pages' },
+      { what: 'Member email', where: 'Stored on memberships for member view' },
     ],
   },
 ]
 
 const TABS = [
+  { id: 'add', label: 'Add items' },
   { id: 'users', label: 'Users' },
   { id: 'programs', label: 'Programs' },
   { id: 'data', label: 'Import / Export' },
@@ -84,7 +78,7 @@ const TABS = [
 ]
 
 export default function Admin() {
-  const [tab, setTab] = useState('users')
+  const [tab, setTab] = useState('add')
   const [users, setUsers] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -292,7 +286,7 @@ export default function Admin() {
           Admin
         </h1>
         <p className="mt-1 text-sm text-hae-slate">
-          Manage users, programs, and platform data import/export
+          Add platform items, manage users and programs, and import/export data
         </p>
       </header>
 
@@ -314,6 +308,8 @@ export default function Admin() {
       </div>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
+
+      {tab === 'add' && <AdminAddItems />}
 
       {tab === 'users' && (
         <div className="space-y-4">
