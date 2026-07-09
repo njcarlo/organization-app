@@ -95,7 +95,7 @@ export default function Setup() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-hae-mist px-4 text-center">
         <img src="/hae-logo.webp" alt="HAE" className="mx-auto h-12 w-auto" />
-        <h1 className="mt-6 font-display text-3xl text-hae-ink">Already set up</h1>
+        <h1 className="mt-6 font-display text-2xl text-hae-ink sm:text-3xl">Already set up</h1>
         <p className="mt-2 max-w-md text-sm text-hae-slate">
           Users already exist in this project. Sign in with an existing account, or ask an
           admin to add you.
@@ -123,7 +123,7 @@ export default function Setup() {
             alt="Harvard Alumni Entrepreneurs"
             className="mx-auto h-14 w-auto object-contain"
           />
-          <h1 className="mt-5 font-display text-3xl text-hae-ink">First-time setup</h1>
+          <h1 className="mt-5 font-display text-2xl text-hae-ink sm:text-3xl">First-time setup</h1>
           <p className="mt-2 text-sm text-hae-slate">
             Creates the admin account and seeds all 11 programs.
           </p>
@@ -131,7 +131,7 @@ export default function Setup() {
 
         <form
           onSubmit={handleSetup}
-          className="border border-hae-line bg-white/95 p-6 shadow-[0_12px_40px_rgba(26,26,26,0.06)]"
+          className="border border-hae-line bg-white/95 p-4 shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-6"
         >
           <label className="block text-sm font-medium">
             Your name

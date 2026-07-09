@@ -158,7 +158,7 @@ export default function MyTasks() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-hae-ink md:text-5xl">
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
             {isAdmin && viewAll ? 'All Tasks' : 'My Tasks'}
           </h1>
           <p className="mt-1 text-sm text-hae-slate">
@@ -389,7 +389,7 @@ export default function MyTasks() {
                         {task.nextAction || '—'}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => startEdit(task)}
@@ -414,7 +414,7 @@ export default function MyTasks() {
           </table>
         </div>
 
-        <div className="flex h-12 items-center justify-between border-t border-hae-line px-4 text-xs text-hae-slate">
+        <div className="flex h-auto min-h-12 flex-col gap-2 border-t border-hae-line px-4 py-3 text-xs text-hae-slate sm:h-12 sm:flex-row sm:items-center sm:justify-between sm:py-0">
           <span>
             Page {safePage + 1} of {totalPages}
           </span>

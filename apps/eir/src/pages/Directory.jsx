@@ -57,7 +57,7 @@ export default function Directory() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Directory</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Directory</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Browse SMEs, explore expertise, then open a profile to book 30 minutes.
         </p>

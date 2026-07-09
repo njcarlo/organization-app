@@ -50,7 +50,7 @@ export default function Dashboard() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Milestone 3 · Relationships
         </p>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           CRM Dashboard
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
@@ -59,7 +59,7 @@ export default function Dashboard() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div className="border border-hae-line bg-white p-4">
           <div className="text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
             Total contacts
@@ -78,7 +78,7 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="border border-hae-line bg-white">
-          <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hae-line px-4 py-3">
             <h2 className="text-sm font-semibold">Recent interactions</h2>
             <Link to="/interactions" className="text-xs font-semibold text-hae-crimson">
               View all
@@ -104,7 +104,7 @@ export default function Dashboard() {
         </section>
 
         <section className="border border-hae-line bg-white">
-          <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hae-line px-4 py-3">
             <h2 className="text-sm font-semibold">Upcoming follow-ups</h2>
             <Link to="/contacts" className="text-xs font-semibold text-hae-crimson">
               View contacts

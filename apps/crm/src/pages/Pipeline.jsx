@@ -47,7 +47,7 @@ export default function Pipeline() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Pipeline</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Pipeline</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Prospect → Engaged → Committed → Closed — board and table views
         </p>

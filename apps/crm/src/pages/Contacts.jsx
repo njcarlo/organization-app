@@ -107,7 +107,7 @@ export default function Contacts() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Contacts</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Contacts</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Alumni, donors, partners, and prospects — type, region, tags, and stage
         </p>
@@ -269,14 +269,14 @@ export default function Contacts() {
                     <button
                       type="button"
                       onClick={() => startEdit(c)}
-                      className="mr-2 font-semibold text-hae-crimson opacity-0 group-hover:opacity-100"
+                      className="mr-2 font-semibold text-hae-crimson opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => remove(c.id)}
-                      className="text-hae-slate opacity-0 group-hover:opacity-100 hover:text-hae-red"
+                      className="text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

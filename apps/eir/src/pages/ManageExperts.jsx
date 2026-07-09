@@ -139,7 +139,7 @@ export default function ManageExperts() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Manage experts</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage experts</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Add and update SME profiles dynamically. Structure follows the public
           Expert Office Hours directory as a reference — not a copy of live data.
@@ -253,7 +253,7 @@ export default function ManageExperts() {
         </div>
       </form>
 
-      <div className="border border-hae-line bg-white">
+      <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[800px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>

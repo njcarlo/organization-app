@@ -1,11 +1,12 @@
-/** Platform modules — one app per milestone */
+/** Platform modules — one app per milestone / Firebase Hosting site */
 export const MODULES = [
   {
     id: 'tracker',
     name: 'Operating Tracker',
     short: 'Tracker',
     milestone: 1,
-    path: '/',
+    path: 'https://hae-operating-tracker.web.app',
+    localPort: 5173,
     description: 'Programs, projects, and tasks',
   },
   {
@@ -13,7 +14,8 @@ export const MODULES = [
     name: 'Learning',
     short: 'LMS',
     milestone: 2,
-    path: '/lms/',
+    path: 'https://hae-lms.web.app',
+    localPort: 5174,
     description: 'Courses, enrollments, sessions',
   },
   {
@@ -21,7 +23,8 @@ export const MODULES = [
     name: 'Experts',
     short: 'EiR',
     milestone: 2,
-    path: '/eir/',
+    path: 'https://hae-eir.web.app',
+    localPort: 5177,
     description: 'Expert Office Hours directory',
   },
   {
@@ -29,7 +32,8 @@ export const MODULES = [
     name: 'Relationships',
     short: 'CRM',
     milestone: 3,
-    path: '/crm/',
+    path: 'https://hae-crm.web.app',
+    localPort: 5175,
     description: 'Contacts, pipeline, interactions',
   },
   {
@@ -37,7 +41,18 @@ export const MODULES = [
     name: 'Membership',
     short: 'AMS',
     milestone: 4,
-    path: '/ams/',
+    path: 'https://hae-ams.web.app',
+    localPort: 5176,
     description: 'Members, renewals, events',
   },
 ]
+
+/** Resolve cross-app href for local vs deployed hosting. */
+export function moduleHref(module) {
+  if (typeof window === 'undefined') return module.path
+  const host = window.location.hostname
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `http://localhost:${module.localPort}`
+  }
+  return module.path
+}

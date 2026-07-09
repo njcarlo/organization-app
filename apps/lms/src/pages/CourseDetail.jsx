@@ -96,7 +96,7 @@ export default function CourseDetail() {
         <Link to="/courses" className="text-xs font-semibold text-hae-crimson">
           ← Courses
         </Link>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink">{course.name}</h1>
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
         <p className="mt-1 text-sm text-hae-slate">
           {course.path === 'flagship' ? 'Flagship Deep Dive' : 'Academy Fast Track'}
           {course.facilitator ? ` · ${course.facilitator}` : ''}
@@ -169,8 +169,8 @@ export default function CourseDetail() {
           </button>
         </form>
 
-        <div className="border border-hae-line bg-white">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto border border-hae-line bg-white">
+          <table className="w-full min-w-[560px] text-left">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
                 <th className="px-3 py-2 font-semibold">#</th>
@@ -211,7 +211,7 @@ export default function CourseDetail() {
                       <button
                         type="button"
                         onClick={() => removeModule(m.id)}
-                        className="text-xs text-hae-slate opacity-0 group-hover:opacity-100 hover:text-hae-red"
+                        className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                       >
                         Delete
                       </button>

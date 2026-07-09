@@ -44,7 +44,7 @@ export default function Dashboard() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           EiR · Expert Office Hours
         </p>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           Expert Directory
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
@@ -53,7 +53,7 @@ export default function Dashboard() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: 'Experts', value: stats.total },
           { label: 'Active', value: stats.active },
@@ -93,7 +93,7 @@ export default function Dashboard() {
       </section>
 
       <section>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Featured experts
           </h2>

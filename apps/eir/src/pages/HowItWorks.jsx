@@ -31,7 +31,7 @@ export default function HowItWorks() {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
-        <h1 className="font-display text-4xl text-hae-ink">How it works</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">How it works</h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
           Office Hours connects founders with seasoned experts for personalized guidance.
           Flow modeled after the public HAE Expert Directory (reference only).

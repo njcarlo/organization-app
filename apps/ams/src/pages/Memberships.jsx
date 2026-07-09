@@ -75,7 +75,7 @@ export default function Memberships() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Memberships</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Memberships</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Tiers, renewal dates, and payment status
         </p>
@@ -173,7 +173,7 @@ export default function Memberships() {
                     <button
                       type="button"
                       onClick={() => remove(m.id)}
-                      className="text-xs text-hae-slate opacity-0 group-hover:opacity-100 hover:text-hae-red"
+                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

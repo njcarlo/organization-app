@@ -53,7 +53,7 @@ export default function Dashboard() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Harvard Alumni Entrepreneurs
         </p>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           Operating Dashboard
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">

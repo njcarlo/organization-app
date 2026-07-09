@@ -61,7 +61,7 @@ export default function Dashboard() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Milestone 2 · HAE Academy
         </p>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           Learning Dashboard
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
@@ -88,7 +88,7 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="border border-hae-line bg-white">
-          <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hae-line px-4 py-3">
             <h2 className="text-sm font-semibold">Upcoming office hours</h2>
             <Link to="/sessions" className="text-xs font-semibold text-hae-crimson">
               View all
@@ -111,7 +111,7 @@ export default function Dashboard() {
         </section>
 
         <section className="border border-hae-line bg-white">
-          <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hae-line px-4 py-3">
             <h2 className="text-sm font-semibold">Upcoming check-ins</h2>
             <Link to="/check-ins" className="text-xs font-semibold text-hae-crimson">
               View all
