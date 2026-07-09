@@ -9,6 +9,9 @@ import ProgramPage from './pages/ProgramPage'
 import MyTasks from './pages/MyTasks'
 import Admin from './pages/Admin'
 import Help from './pages/Help'
+import Surveys from './pages/Surveys'
+import SurveyEditor from './pages/SurveyEditor'
+import SurveyRespond from './pages/SurveyRespond'
 import { PERMISSIONS } from '../../../packages/ui/src/rbac.js'
 
 export default function App() {
@@ -18,6 +21,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<Setup />} />
+          {/* Public survey response — no login required */}
+          <Route path="/s/:surveyId" element={<SurveyRespond />} />
 
           <Route element={<ProtectedRoute permission={PERMISSIONS.TRACKER_READ} />}>
             <Route element={<Layout />}>
@@ -25,6 +30,16 @@ export default function App() {
               <Route path="/my-tasks" element={<MyTasks />} />
               <Route path="/help" element={<Help />} />
               <Route path="/programs/:programId" element={<ProgramPage />} />
+              <Route
+                element={
+                  <ProtectedRoute
+                    anyOf={[PERMISSIONS.TRACKER_WRITE, PERMISSIONS.TRACKER_ADMIN]}
+                  />
+                }
+              >
+                <Route path="/surveys" element={<Surveys />} />
+                <Route path="/surveys/:surveyId" element={<SurveyEditor />} />
+              </Route>
               <Route
                 element={
                   <ProtectedRoute
