@@ -53,23 +53,32 @@ service cloud.firestore {
 2. Create the admin account — this also seeds the 11 default programs.
 3. Sign in at `/login`.
 
-### Deploy to Vercel
+### Deploy to Firebase Hosting
+
+Project: `hae-tracker-516ee` (configured in `.firebaserc` / `firebase.json`).
+
+```bash
+npm install
+npx firebase login          # one-time browser login
+npm run deploy              # builds to dist/ then deploys hosting
+```
+
+Or step by step:
+
+```bash
+npm run build
+npx firebase deploy --only hosting
+```
+
+Hosting URL after deploy: `https://hae-tracker-516ee.web.app` (also `*.firebaseapp.com`).
+
+SPA rewrites are already set in `firebase.json` so React Router routes work.
+
+### Deploy to Vercel (optional)
 
 1. Push this repo and import it in Vercel.
 2. Framework preset: Vite. Build command: `npm run build`. Output: `dist`.
 3. `vercel.json` already rewrites all routes to `index.html`.
-
-### Deploy notes for Firebase Hosting (optional)
-
-If you prefer Firebase Hosting instead of Vercel:
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting   # public directory: dist, SPA rewrite: yes
-npm run build
-firebase deploy --only hosting
-```
 
 ## App modules
 

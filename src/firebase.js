@@ -2,15 +2,14 @@ import { initializeApp, getApps } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Replace with your Firebase project config before deploying.
-// Keep this file out of public repos if the project has sensitive rules.
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: 'AIzaSyBeoG-8bFneTzgOx-2IDHZixpozHCChjUQ',
+  authDomain: 'hae-tracker-516ee.firebaseapp.com',
+  projectId: 'hae-tracker-516ee',
+  storageBucket: 'hae-tracker-516ee.firebasestorage.app',
+  messagingSenderId: '1052897331519',
+  appId: '1:1052897331519:web:d88605854ca70de9fd2b8a',
+  measurementId: 'G-FYCZT899ZZ',
 }
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
