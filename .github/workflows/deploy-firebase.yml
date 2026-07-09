@@ -34,7 +34,10 @@ jobs:
       - name: Build all apps
         run: npm run build:all
 
-      - name: Deploy hosting + Firestore rules
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Deploy hosting + functions + Firestore rules
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
@@ -42,4 +45,4 @@ jobs:
             echo "::error::Missing repository secret FIREBASE_TOKEN. Create one with: firebase login:ci"
             exit 1
           fi
-          npx firebase-tools deploy --only hosting,firestore:rules --non-interactive --project hae-operating-tracker
+          npx firebase-tools deploy --only hosting,functions,firestore:rules --non-interactive --project hae-operating-tracker

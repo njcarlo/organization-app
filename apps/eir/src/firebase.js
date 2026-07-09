@@ -1,1 +1,1 @@
-export { auth, db, secondaryAuth, firebaseConfig } from '@hae/firebase'
+export { auth, db, functions, secondaryAuth, firebaseConfig } from '@hae/firebase'

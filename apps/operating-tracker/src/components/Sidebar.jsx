@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { MODULES, moduleHref } from '@hae/ui'
 import { canAccessModule } from '../../../../packages/ui/src/rbac.js'
+import { navigateToModule } from '../../../../packages/ui/src/sso.js'
 
 export default function Sidebar({ open = false, onClose }) {
   const { userProfile, isAdmin, logout, roleLabel, permissions } = useAuth()
@@ -123,7 +124,11 @@ export default function Sidebar({ open = false, onClose }) {
             return (
               <a
                 key={m.id}
-                href={moduleHref(m)}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  navigateToModule(m)
+                }}
                 className="block rounded-md px-3 py-2 text-sm text-hae-ink/80 hover:bg-black/5"
               >
                 {m.short}
