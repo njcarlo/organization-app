@@ -27,17 +27,36 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_#f3e8ea_0%,_#f7f5f2_45%,_#ebe7e0_100%)] px-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(184,0,40,0.12)_0%,_#ffffff_42%,_#f6f6f6_100%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 top-16 h-72 w-72 rounded-full bg-hae-coral/15 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-16 bottom-10 h-64 w-64 rounded-full bg-hae-crimson/10 blur-3xl"
+      />
+
+      <div className="relative w-full max-w-md animate-[fadeIn_0.5s_ease-out]">
         <div className="mb-8 text-center">
-          <div className="font-display text-5xl text-hae-crimson">HAE</div>
-          <p className="mt-2 text-sm text-hae-slate">Harvard Alumni Entrepreneurs</p>
-          <h1 className="mt-4 text-xl font-semibold text-hae-ink">Operating Tracker</h1>
+          <img
+            src="/hae-logo.webp"
+            alt="Harvard Alumni Entrepreneurs"
+            className="mx-auto h-14 w-auto object-contain"
+          />
+          <h1 className="mt-5 font-display text-3xl text-hae-ink">Operating Tracker</h1>
+          <p className="mt-2 text-sm text-hae-slate">
+            Leadership hub for programs, projects, and tasks
+          </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-hae-line bg-white/90 p-6 shadow-sm backdrop-blur"
+          className="border border-hae-line bg-white/95 p-6 shadow-[0_12px_40px_rgba(26,26,26,0.06)]"
         >
           <label className="block text-sm font-medium text-hae-ink">
             Email
@@ -46,7 +65,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </label>
           <label className="mt-4 block text-sm font-medium text-hae-ink">
@@ -56,14 +75,14 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </label>
           {error && <p className="mt-3 text-sm text-hae-red">{error}</p>}
           <button
             type="submit"
             disabled={submitting}
-            className="mt-5 w-full rounded-md bg-hae-crimson px-4 py-2.5 text-sm font-semibold text-white hover:bg-hae-crimson-dark disabled:opacity-60"
+            className="mt-5 w-full bg-hae-crimson px-4 py-2.5 text-sm font-semibold tracking-wide text-white uppercase transition-colors hover:bg-hae-crimson-dark disabled:opacity-60"
           >
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
@@ -71,11 +90,18 @@ export default function Login() {
 
         <p className="mt-4 text-center text-xs text-hae-slate">
           First install?{' '}
-          <Link to="/setup" className="text-hae-crimson hover:underline">
+          <Link to="/setup" className="font-semibold text-hae-crimson hover:underline">
             Run setup
           </Link>
         </p>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

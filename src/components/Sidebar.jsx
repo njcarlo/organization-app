@@ -31,9 +31,13 @@ export default function Sidebar() {
 
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-hae-line bg-white">
-      <div className="border-b border-hae-line px-4 py-5">
-        <div className="font-display text-2xl leading-none text-hae-crimson">HAE</div>
-        <div className="mt-1 text-xs font-medium tracking-wide text-hae-slate uppercase">
+      <div className="border-b border-hae-line px-4 py-4">
+        <img
+          src="/hae-logo.webp"
+          alt="Harvard Alumni Entrepreneurs"
+          className="h-10 w-auto object-contain"
+        />
+        <div className="mt-2 text-[10px] font-semibold tracking-[0.14em] text-hae-slate uppercase">
           Operating Tracker
         </div>
       </div>

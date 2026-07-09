@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Instrument Serif", Georgia, serif;
-  --color-hae-crimson: #a51c30;
-  --color-hae-crimson-dark: #8c1828;
+  /* Brand fonts from harvardae.org */
+  --font-sans: "Libre Franklin", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+
+  /* Brand colors from harvardae.org site CSS */
+  --color-hae-crimson: #b80028;
+  --color-hae-crimson-dark: #960021;
+  --color-hae-coral: #f0523d;
   --color-hae-ink: #1a1a1a;
-  --color-hae-slate: #4a5568;
-  --color-hae-mist: #f7f5f2;
-  --color-hae-line: #e8e4de;
+  --color-hae-charcoal: #272727;
+  --color-hae-slate: #3e3e3e;
+  --color-hae-mist: #f6f6f6;
+  --color-hae-line: #dddddd;
   --color-hae-green: #1f7a4c;
   --color-hae-yellow: #b8860b;
-  --color-hae-red: #c53030;
+  --color-hae-red: #c00;
 }
 
 html,
@@ -24,10 +29,18 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-hae-ink);
-  background: var(--color-hae-mist);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184, 0, 40, 0.08), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, var(--color-hae-mist) 100%);
   -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }

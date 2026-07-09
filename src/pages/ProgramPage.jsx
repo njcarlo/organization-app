@@ -105,7 +105,7 @@ export default function ProgramPage() {
           <p className="text-xs font-semibold tracking-wider text-hae-crimson uppercase">
             Program
           </p>
-          <h1 className="mt-1 font-display text-4xl text-hae-ink">{program.name}</h1>
+          <h1 className="mt-1 font-display text-4xl text-hae-ink md:text-5xl">{program.name}</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Overall lead: {program.lead || '—'}
           </p>

@@ -158,7 +158,7 @@ export default function MyTasks() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-hae-ink">
+          <h1 className="font-display text-4xl text-hae-ink md:text-5xl">
             {isAdmin && viewAll ? 'All Tasks' : 'My Tasks'}
           </h1>
           <p className="mt-1 text-sm text-hae-slate">

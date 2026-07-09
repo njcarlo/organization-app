@@ -141,7 +141,7 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Admin</h1>
+        <h1 className="font-display text-4xl text-hae-ink md:text-5xl">Admin</h1>
         <p className="mt-1 text-sm text-hae-slate">Manage users and programs</p>
       </header>
 

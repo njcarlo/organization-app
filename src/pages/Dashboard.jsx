@@ -49,12 +49,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-xs font-semibold tracking-wider text-hae-crimson uppercase">
+      <header className="border-b border-hae-line pb-6">
+        <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Harvard Alumni Entrepreneurs
         </p>
-        <h1 className="mt-1 font-display text-4xl text-hae-ink">Operating Dashboard</h1>
-        <p className="mt-2 max-w-2xl text-sm text-hae-slate">
+        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+          Operating Dashboard
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm text-hae-slate">
           Live view of priorities, blockers, attention items, and wins across all programs.
         </p>
       </header>
