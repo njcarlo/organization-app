@@ -52,6 +52,15 @@ npm run deploy        # all hosting targets + firestore rules
 npm run import:real   # upsert production programs/projects/tasks/users
 ```
 
+### Auto-deploy (GitHub Actions)
+
+Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting + Firestore rules.
+
+1. Generate a CI token locally: `npx firebase login:ci`
+2. Add it as a repo secret named `FIREBASE_TOKEN`  
+   (GitHub → Settings → Secrets and variables → Actions)
+3. Merge to `main` — workflow: `.github/workflows/deploy-firebase.yml`
+
 ---
 
 ## Live URLs
