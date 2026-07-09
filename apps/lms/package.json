@@ -1,0 +1,10 @@
+{
+  "name": "@hae/lms",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Milestone 2 — Learning Management System (planned)",
+  "scripts": {
+    "dev": "echo 'LMS app not started yet — see README.md'",
+    "build": "echo 'LMS app not started yet'"
+  }
+}
