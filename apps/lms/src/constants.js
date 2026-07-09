@@ -23,4 +23,6 @@ export const MODULE_TYPES = [
   'Workbook',
   'AMA',
   'Check-in',
+  'Branching',
+  'Simulation',
 ]

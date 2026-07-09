@@ -103,6 +103,7 @@ export const HELP_SECTIONS = [
           'Your enrollments, upcoming office hours, check-ins, and certificates appear on the home page.',
           'Enrollments must use your login email as learner email — otherwise you will not see them.',
           'Catalog shows open courses; My certificates lists issued certificates for your email.',
+          'Points & badges — earn points from progress, check-ins, and certificates (private to you).',
         ],
         roles: ['student', 'admin', 'staff'],
       },
@@ -110,8 +111,10 @@ export const HELP_SECTIONS = [
         heading: 'Staff — manage learning',
         steps: [
           'Manage courses — create a course (path, facilitator, status).',
+          'Authoring — start from Academy/Flagship/orientation templates; draft quiz outlines; use Branching/Simulation module types.',
           'Open a course to add modules (lessons, quizzes, office hours, etc.).',
           'Enrollments — add learners with name + login email + course.',
+          'Tracking — see at-risk learners, overdue check-ins, course completion, and send email nudges.',
           'Office Hours / Check-ins / Issue certificates — schedule sessions and track milestones.',
           'Tip: put the learner’s login email on check-ins too so students can see them.',
         ],

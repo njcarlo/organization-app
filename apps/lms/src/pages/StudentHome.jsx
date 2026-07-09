@@ -106,6 +106,12 @@ export default function StudentHome() {
           Browse catalog
         </Link>
         <Link
+          to="/progress"
+          className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
+        >
+          Points & badges
+        </Link>
+        <Link
           to="/my-certificates"
           className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
         >

@@ -77,6 +77,7 @@ export default function Sidebar({ open = false, onClose }) {
           </NavLink>
           <NavLink to="/help" className={linkClass} onClick={handleNav}>
             Help
+          </NavLink>
           <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
             Surveys
           </NavLink>

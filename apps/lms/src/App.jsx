@@ -18,6 +18,9 @@ import CheckIns from './pages/CheckIns.jsx'
 import Certificates from './pages/Certificates.jsx'
 import MyCertificates from './pages/MyCertificates.jsx'
 import Help from './pages/Help.jsx'
+import Tracking from './pages/Tracking.jsx'
+import Progress from './pages/Progress.jsx'
+import Authoring from './pages/Authoring.jsx'
 
 function lmsNav({ hasPermission }) {
   const items = []
@@ -33,12 +36,17 @@ function lmsNav({ hasPermission }) {
     items.push({ to: '/catalog', label: 'Catalog' })
   }
   if (hasPermission(PERMISSIONS.LMS_LEARN)) {
-    items.push({ to: '/my-certificates', label: 'My certificates' })
+    items.push(
+      { to: '/my-certificates', label: 'My certificates' },
+      { to: '/progress', label: 'Points & badges' }
+    )
   }
   if (hasPermission(PERMISSIONS.LMS_MANAGE)) {
     items.push(
       { to: '/courses', label: 'Manage courses', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/authoring', label: 'Authoring', permission: PERMISSIONS.LMS_MANAGE },
       { to: '/enrollments', label: 'Enrollments', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/tracking', label: 'Tracking', permission: PERMISSIONS.LMS_MANAGE },
       { to: '/sessions', label: 'Office Hours', permission: PERMISSIONS.LMS_MANAGE },
       { to: '/check-ins', label: 'Check-ins', permission: PERMISSIONS.LMS_MANAGE },
       { to: '/certificates', label: 'Issue certificates', permission: PERMISSIONS.LMS_MANAGE }
@@ -88,12 +96,15 @@ export default function App() {
               <Route path="/" element={<HomeRoute />} />
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/my-certificates" element={<MyCertificates />} />
+              <Route path="/progress" element={<Progress />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
               <Route path="/help" element={<Help />} />
 
               <Route element={<ProtectedRoute permission={PERMISSIONS.LMS_MANAGE} />}>
                 <Route path="/courses" element={<Courses />} />
+                <Route path="/authoring" element={<Authoring />} />
                 <Route path="/enrollments" element={<Enrollments />} />
+                <Route path="/tracking" element={<Tracking />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/check-ins" element={<CheckIns />} />
                 <Route path="/certificates" element={<Certificates />} />
