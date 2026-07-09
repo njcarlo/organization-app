@@ -81,7 +81,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
                 <th className="px-3 py-2 font-semibold">Program</th>
                 <th className="px-3 py-2 font-semibold">Project</th>
                 <th className="px-3 py-2 font-semibold">Project Owner</th>
-                <th className="px-3 py-2 font-semibold">Due Date</th>
+                <th className="px-3 py-2 font-semibold">Due</th>
                 <th className="px-3 py-2 font-semibold">Next Action</th>
               </tr>
             </thead>
@@ -128,7 +128,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
                   <th className="px-3 py-2 font-semibold">Program</th>
                   <th className="px-3 py-2 font-semibold">Project</th>
                   <th className="px-3 py-2 font-semibold">Project Owner</th>
-                  <th className="px-3 py-2 font-semibold">Due Date</th>
+                  <th className="px-3 py-2 font-semibold">Due</th>
                   <th className="px-3 py-2 font-semibold">Next Action</th>
                 </tr>
               </thead>

@@ -45,6 +45,14 @@ export default function Setup() {
     setError('')
     setSubmitting(true)
     try {
+      // Re-check right before write to avoid double-seed race
+      const existingUsers = await getDocs(collection(db, 'users'))
+      if (!existingUsers.empty) {
+        setAlreadySetup(true)
+        setError('Setup already completed. Please sign in instead.')
+        return
+      }
+
       const cred = await createUserWithEmailAndPassword(
         auth,
         email.trim(),
@@ -57,11 +65,14 @@ export default function Setup() {
         createdAt: serverTimestamp(),
       })
 
-      for (const program of DEFAULT_PROGRAMS) {
-        await addDoc(collection(db, 'programs'), {
-          ...program,
-          createdAt: serverTimestamp(),
-        })
+      const existingPrograms = await getDocs(collection(db, 'programs'))
+      if (existingPrograms.empty) {
+        for (const program of DEFAULT_PROGRAMS) {
+          await addDoc(collection(db, 'programs'), {
+            ...program,
+            createdAt: serverTimestamp(),
+          })
+        }
       }
 
       navigate('/')
