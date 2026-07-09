@@ -48,7 +48,7 @@ export default function Login() {
             alt="Harvard Alumni Entrepreneurs"
             className="mx-auto h-14 w-auto object-contain"
           />
-          <h1 className="mt-5 font-display text-3xl text-hae-ink">Operating Tracker</h1>
+          <h1 className="mt-5 font-display text-2xl text-hae-ink sm:text-3xl">Operating Tracker</h1>
           <p className="mt-2 text-sm text-hae-slate">
             Leadership hub for programs, projects, and tasks
           </p>
@@ -56,7 +56,7 @@ export default function Login() {
 
         <form
           onSubmit={handleSubmit}
-          className="border border-hae-line bg-white/95 p-6 shadow-[0_12px_40px_rgba(26,26,26,0.06)]"
+          className="border border-hae-line bg-white/95 p-4 shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-6"
         >
           <label className="block text-sm font-medium text-hae-ink">
             Email

@@ -36,21 +36,21 @@ export default function ExpertDetail() {
         ← Directory
       </Link>
 
-      <div className="grid gap-6 border border-hae-line bg-white p-6 lg:grid-cols-[160px_1fr]">
+      <div className="grid gap-6 border border-hae-line bg-white p-4 sm:p-6 lg:grid-cols-[160px_1fr]">
         {expert.photoUrl ? (
           <img
             src={expert.photoUrl}
             alt=""
-            className="h-40 w-40 object-cover"
+            className="mx-auto h-40 w-40 object-cover lg:mx-0"
           />
         ) : (
-          <div className="flex h-40 w-40 items-center justify-center bg-hae-crimson/10 font-display text-5xl text-hae-crimson">
+          <div className="mx-auto flex h-40 w-40 items-center justify-center bg-hae-crimson/10 font-display text-5xl text-hae-crimson lg:mx-0">
             {(expert.name || '?').slice(0, 1)}
           </div>
         )}
 
         <div>
-          <h1 className="font-display text-4xl text-hae-ink">{expert.name}</h1>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">{expert.name}</h1>
           <p className="mt-1 text-sm text-hae-slate">
             {expert.title || 'Expert'}
             {expert.organization ? ` · ${expert.organization}` : ''}

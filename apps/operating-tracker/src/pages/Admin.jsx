@@ -141,11 +141,11 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink md:text-5xl">Admin</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">Admin</h1>
         <p className="mt-1 text-sm text-hae-slate">Manage users and programs</p>
       </header>
 
-      <div className="flex gap-2 border-b border-hae-line">
+      <div className="flex flex-wrap gap-2 border-b border-hae-line">
         {['users', 'programs'].map((t) => (
           <button
             key={t}
@@ -210,7 +210,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-hidden rounded-xl border border-hae-line bg-white">
+          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
@@ -272,7 +272,7 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => {
@@ -328,7 +328,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-hidden rounded-xl border border-hae-line bg-white">
+          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
@@ -379,7 +379,7 @@ export default function Admin() {
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                       <td className="px-3 py-2 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100">
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => {

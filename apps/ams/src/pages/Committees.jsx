@@ -64,7 +64,7 @@ export default function Committees() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-4xl text-hae-ink">Committees</h1>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Committees</h1>
         <p className="mt-1 text-sm text-hae-slate">
           Committee and volunteer assignments
         </p>
@@ -116,7 +116,7 @@ export default function Committees() {
         </button>
       </form>
 
-      <div className="border border-hae-line bg-white">
+      <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
@@ -147,7 +147,7 @@ export default function Committees() {
                     <button
                       type="button"
                       onClick={() => remove(c.id)}
-                      className="text-xs text-hae-slate opacity-0 group-hover:opacity-100 hover:text-hae-red"
+                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

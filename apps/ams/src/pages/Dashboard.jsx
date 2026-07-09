@@ -54,7 +54,7 @@ export default function Dashboard() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Milestone 4 · AMS
         </p>
-        <h1 className="mt-2 font-display text-4xl text-hae-ink md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           Membership Dashboard
         </h1>
         <p className="mt-3 text-sm text-hae-slate">
@@ -62,7 +62,7 @@ export default function Dashboard() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: 'Active members', value: stats.active, to: '/members' },
           { label: 'Renewals due', value: stats.renewalsDue, to: '/memberships' },
@@ -78,7 +78,7 @@ export default function Dashboard() {
       </div>
 
       <section className="border border-hae-line bg-white">
-        <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hae-line px-4 py-3">
           <h2 className="text-sm font-semibold">Upcoming events</h2>
           <Link to="/events" className="text-xs font-semibold text-hae-crimson">
             View all

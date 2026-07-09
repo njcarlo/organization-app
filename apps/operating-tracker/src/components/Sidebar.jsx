@@ -4,7 +4,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose }) {
   const { userProfile, isAdmin, logout } = useAuth()
   const [programs, setPrograms] = useState([])
 
@@ -29,8 +29,30 @@ export default function Sidebar() {
         : 'text-hae-ink/80 hover:bg-black/5'
     }`
 
+  const handleNav = () => {
+    onClose?.()
+  }
+
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-hae-line bg-white">
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 flex w-60 max-w-[85vw] flex-col border-r border-hae-line bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
+        open ? 'translate-x-0' : '-translate-x-full'
+      }`}
+    >
+      <div className="flex items-center justify-between border-b border-hae-line px-3 py-2 lg:hidden">
+        <span className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
+          Menu
+        </span>
+        <button
+          type="button"
+          onClick={() => onClose?.()}
+          className="rounded-md px-2 py-1 text-sm text-hae-ink hover:bg-black/5"
+          aria-label="Close navigation"
+        >
+          ✕
+        </button>
+      </div>
+
       <div className="border-b border-hae-line px-4 py-4">
         <img
           src="/hae-logo.webp"
@@ -44,14 +66,14 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <div className="mb-3 space-y-0.5">
-          <NavLink to="/" end className={linkClass}>
+          <NavLink to="/" end className={linkClass} onClick={handleNav}>
             Dashboard
           </NavLink>
-          <NavLink to="/my-tasks" className={linkClass}>
+          <NavLink to="/my-tasks" className={linkClass} onClick={handleNav}>
             My Tasks
           </NavLink>
           {isAdmin && (
-            <NavLink to="/admin" className={linkClass}>
+            <NavLink to="/admin" className={linkClass} onClick={handleNav}>
               Admin
             </NavLink>
           )}
@@ -62,7 +84,12 @@ export default function Sidebar() {
         </div>
         <div className="space-y-0.5">
           {programs.map((p) => (
-            <NavLink key={p.id} to={`/programs/${p.id}`} className={linkClass}>
+            <NavLink
+              key={p.id}
+              to={`/programs/${p.id}`}
+              className={linkClass}
+              onClick={handleNav}
+            >
               <div className="leading-snug">{p.name}</div>
               {p.lead ? (
                 <div className="text-[11px] font-normal text-hae-slate">{p.lead}</div>
