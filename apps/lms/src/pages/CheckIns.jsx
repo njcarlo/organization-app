@@ -17,6 +17,7 @@ export default function CheckIns() {
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({
     learnerName: '',
+    learnerEmail: '',
     courseId: '',
     type: '60-day',
     dueDate: '',
@@ -45,6 +46,7 @@ export default function CheckIns() {
     if (!form.learnerName.trim()) return
     await addDoc(collection(db, 'checkIns'), {
       learnerName: form.learnerName.trim(),
+      learnerEmail: form.learnerEmail.trim().toLowerCase(),
       courseId: course?.id || '',
       courseName: course?.name || '',
       type: form.type,
@@ -55,6 +57,7 @@ export default function CheckIns() {
     })
     setForm({
       learnerName: '',
+      learnerEmail: '',
       courseId: '',
       type: '60-day',
       dueDate: '',
@@ -94,6 +97,13 @@ export default function CheckIns() {
           placeholder="Learner name"
           value={form.learnerName}
           onChange={(e) => setForm({ ...form, learnerName: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm"
+        />
+        <input
+          type="email"
+          placeholder="Learner email (login)"
+          value={form.learnerEmail}
+          onChange={(e) => setForm({ ...form, learnerEmail: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
         <select
@@ -161,7 +171,12 @@ export default function CheckIns() {
                 <tr key={c.id} className="group border-b border-hae-line/70">
                   <td className="px-3 py-2 text-sm text-hae-slate">{c.dueDate || '—'}</td>
                   <td className="px-3 py-2 text-sm font-medium">{c.type}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{c.learnerName}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    <div>{c.learnerName}</div>
+                    {c.learnerEmail ? (
+                      <div className="text-xs text-hae-slate">{c.learnerEmail}</div>
+                    ) : null}
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {c.courseName || '—'}
                   </td>
