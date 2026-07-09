@@ -75,6 +75,9 @@ export default function Sidebar({ open = false, onClose }) {
           <NavLink to="/my-tasks" className={linkClass} onClick={handleNav}>
             My Tasks
           </NavLink>
+          <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
+            Surveys
+          </NavLink>
           {isAdmin && (
             <NavLink to="/admin" className={linkClass} onClick={handleNav}>
               Admin

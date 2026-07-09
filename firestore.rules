@@ -68,6 +68,24 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    // —— Surveys (public respond link; staff manage) ——
+    match /surveys/{id} {
+      allow get: if isStaff()
+        || (resource.data.status == 'Open');
+      allow list: if isStaff();
+      allow create, update, delete: if isStaff();
+    }
+    match /surveyResponses/{id} {
+      allow create: if request.resource.data.surveyId is string
+        && request.resource.data.keys().hasAll(['surveyId', 'answers', 'submittedAt'])
+        && exists(/databases/$(database)/documents/surveys/$(request.resource.data.surveyId))
+        && get(/databases/$(database)/documents/surveys/$(request.resource.data.surveyId)).data.status == 'Open';
+      allow read, update, delete: if isStaff();
+    }
+    match /surveyInvites/{id} {
+      allow read, write: if isStaff();
+    }
+
     // —— LMS ——
     match /courses/{id} {
       allow read: if isStaff() || isStudent() || isMember();

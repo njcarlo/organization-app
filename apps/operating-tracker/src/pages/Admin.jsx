@@ -40,6 +40,7 @@ const CREATE_GUIDE = [
       { what: 'Users', where: 'Admin → Users (this page)' },
       { what: 'Programs', where: 'Admin → Programs (this page)' },
       { what: 'Projects & tasks', where: 'Admin → Add items, or Programs → open a program' },
+      { what: 'Surveys', where: 'Tracker → Surveys (share link + email invite via your inbox)' },
     ],
   },
   {
