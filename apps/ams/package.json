@@ -1,0 +1,10 @@
+{
+  "name": "@hae/ams",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Milestone 4 — Association Management System (planned)",
+  "scripts": {
+    "dev": "echo 'AMS app not started yet — see README.md'",
+    "build": "echo 'AMS app not started yet'"
+  }
+}

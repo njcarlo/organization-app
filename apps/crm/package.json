@@ -1,0 +1,10 @@
+{
+  "name": "@hae/crm",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Milestone 3 — Constituent Relationship Management (planned)",
+  "scripts": {
+    "dev": "echo 'CRM app not started yet — see README.md'",
+    "build": "echo 'CRM app not started yet'"
+  }
+}

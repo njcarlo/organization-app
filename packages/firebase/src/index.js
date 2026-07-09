@@ -20,3 +20,5 @@ const secondaryApp =
   getApps().find((a) => a.name === 'Secondary') ||
   initializeApp(firebaseConfig, 'Secondary')
 export const secondaryAuth = getAuth(secondaryApp)
+
+export { firebaseConfig }

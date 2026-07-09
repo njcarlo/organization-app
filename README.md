@@ -1,93 +1,88 @@
-# HAE Operating Tracker
+# HAE Platform (Monorepo)
 
-Web app for **Harvard Alumni Entrepreneurs (HAE)** leadership and staff to monitor programs, projects, and tasks.
+One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
-**Live:** https://hae-operating-tracker.web.app
+**Live (Operating Tracker):** https://hae-operating-tracker.web.app  
+**Public brand site:** https://www.harvardae.org/
 
-## Tech stack
+---
 
-- React 18 + Vite
-- Tailwind CSS v4 (`@tailwindcss/vite`)
-- React Router v6
-- Firebase (Auth email/password + Firestore)
-- Vercel SPA (`vercel.json` rewrites)
+## Layout
 
-## Milestone status
+```
+hae-platform/
+├── apps/
+│   ├── operating-tracker/   ✅ Milestone 1 — live
+│   ├── lms/                 🔲 Milestone 2 — stub
+│   ├── crm/                 🔲 Milestone 3 — stub
+│   └── ams/                 🔲 Milestone 4 — stub
+├── packages/
+│   ├── firebase/            Shared Auth + Firestore clients
+│   └── branding/            HAE fonts, colors, theme CSS
+├── firebase.json            Hosting / Auth / Firestore (root)
+├── firestore.rules
+└── package.json             npm workspaces root
+```
 
-| Milestone | Status |
-|-----------|--------|
-| 1 — Operating Tracker | Implemented in this repo |
-| 2 — LMS | Planned |
-| 3 — CRM | Planned |
-| 4 — AMS | Planned |
+| App | Package name | Milestone | Status |
+|-----|--------------|-----------|--------|
+| Operating Tracker | `@hae/operating-tracker` | 1 | Live |
+| LMS | `@hae/lms` | 2 | Planned stub |
+| CRM | `@hae/crm` | 3 | Planned stub |
+| AMS | `@hae/ams` | 4 | Planned stub |
 
-## Local development
+**Yes — this is a monorepo:** each milestone is its own Vite/React app under `apps/`, with shared code in `packages/`. Later you can host each app on its own Firebase Hosting site or subdomain without splitting repos.
+
+---
+
+## Commands
 
 ```bash
 npm install
-npm run dev
+
+# Milestone 1 (default)
+npm run dev                 # same as dev:tracker
+npm run build:tracker
+npm run deploy              # build tracker + firebase deploy
+
+# Future modules (stubs until scaffolded)
+npm run dev:lms
+npm run dev:crm
+npm run dev:ams
 ```
 
-### Firebase config
+---
 
-Edit `src/firebase.js` with your Firebase web app config (apiKey, authDomain, projectId, etc.).
+## Shared packages
 
-Enable **Email/Password** auth in the Firebase console.
+### `@hae/firebase`
+Primary + secondary Auth apps and Firestore `db` for `hae-operating-tracker`.
 
-Suggested Firestore rules (tighten for production):
+### `@hae/branding`
+Tokens and Tailwind theme from harvardae.org (Archivo Black, Libre Franklin, crimson `#b80028`).
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+---
 
-### First-time setup
+## First-time setup (Operating Tracker)
 
-1. Open `/setup` while the `users` collection is empty.
-2. Create the admin account — this also seeds the 11 default programs.
-3. Sign in at `/login`.
+1. Open https://hae-operating-tracker.web.app/setup (only when `users` is empty)
+2. Create admin — seeds 11 programs
+3. Sign in at `/login`
 
-### Deploy to Firebase Hosting
+---
 
-Project: `hae-operating-tracker` (configured in `.firebaserc` / `firebase.json`).
+## Adding the next milestone
 
-```bash
-npm install
-npx firebase login          # one-time browser login
-npm run deploy              # builds to dist/ then deploys hosting
-# Auth email/password is configured via firebase.json auth.providers
-```
+1. Replace the stub in `apps/<module>/` with a Vite React app (copy `operating-tracker` as a starting point)
+2. Depend on `@hae/firebase` and `@hae/branding`
+3. Add a Hosting target in `firebase.json` when ready to deploy separately
+4. Keep module-specific Firestore collections in that app’s domain
 
-Or step by step:
+---
 
-```bash
-npm run build
-npx firebase deploy --only hosting
-```
+## Firebase
 
-Hosting URL after deploy: `https://hae-operating-tracker.web.app` (also `*.firebaseapp.com`).
-
-SPA rewrites are already set in `firebase.json` so React Router routes work.
-
-### Deploy to Vercel (optional)
-
-1. Push this repo and import it in Vercel.
-2. Framework preset: Vite. Build command: `npm run build`. Output: `dist`.
-3. `vercel.json` already rewrites all routes to `index.html`.
-
-## App modules
-
-- **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins
-- **Programs** (`/programs/:programId`) — projects + inline tasks
-- **My Tasks** (`/my-tasks`) — personal / all-tasks (admin) with filters
-- **Admin** (`/admin`) — users (via secondary Auth app) + programs
-
-## Collections
-
-`users`, `programs`, `projects`, `tasks`
+- Project: `hae-operating-tracker`
+- Hosting currently serves **Operating Tracker** (`apps/operating-tracker/dist`)
+- Auth: email/password
+- Rules: authenticated read/write (`firestore.rules`)

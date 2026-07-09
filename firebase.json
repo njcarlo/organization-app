@@ -1,14 +1,6 @@
 {
-  "auth": {
-    "providers": {
-      "emailPassword": true
-    }
-  },
-  "firestore": {
-    "rules": "firestore.rules"
-  },
   "hosting": {
-    "public": "dist",
+    "public": "apps/operating-tracker/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
@@ -27,5 +19,13 @@
         ]
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "auth": {
+    "providers": {
+      "emailPassword": true
+    }
   }
 }
