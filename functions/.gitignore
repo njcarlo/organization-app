@@ -1,5 +1,0 @@
-node_modules/
-*.local
-.runtimeconfig.json
-firebase-debug.log
-firebase-debug.*.log

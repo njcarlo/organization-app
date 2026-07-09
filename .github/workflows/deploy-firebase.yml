@@ -43,9 +43,3 @@ jobs:
             exit 1
           fi
           npx firebase-tools deploy --only hosting,firestore:rules --non-interactive --project hae-operating-tracker
-          # Optional: Cloud Functions SSO (requires Blaze). Ignore failure on Spark.
-          if npx firebase-tools deploy --only functions --non-interactive --project hae-operating-tracker; then
-            echo "Functions deployed"
-          else
-            echo "::warning::Functions deploy skipped (Blaze plan required for Cloud Functions). Client SSO uses Firestore handoffs instead."
-          fi

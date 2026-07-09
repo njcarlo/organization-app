@@ -1,30 +1,23 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  Timestamp,
-} from 'firebase/firestore'
 import { signInWithCustomToken } from 'firebase/auth'
-import { auth, db, firebaseConfig } from '@hae/firebase'
+import { auth, firebaseConfig } from '@hae/firebase'
 import { moduleHref } from './modules.js'
 
 const SSO_PARAM = 'sso'
-const HANDOFF_TTL_MS = 2 * 60 * 1000
 const AUTH_USER_KEY = `firebase:authUser:${firebaseConfig.apiKey}:${auth.name || '[DEFAULT]'}`
 const IDB_NAME = 'firebaseLocalStorageDb'
 const IDB_STORE = 'firebaseLocalStorage'
 
-/** Pull an SSO handoff id from the URL and strip it. */
+/**
+ * Pull an SSO payload from the URL hash (preferred) or query, then strip it.
+ * Hash fragments are not sent to servers / referrers.
+ */
 export function takeSsoTokenFromUrl() {
   if (typeof window === 'undefined') return null
 
   const url = new URL(window.location.href)
-  let token = url.searchParams.get(SSO_PARAM)
+  let token = null
 
-  if (!token && url.hash) {
+  if (url.hash) {
     const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''))
     token = hashParams.get(SSO_PARAM)
     if (token) {
@@ -34,16 +27,19 @@ export function takeSsoTokenFromUrl() {
     }
   }
 
+  if (!token) {
+    token = url.searchParams.get(SSO_PARAM)
+    if (token) url.searchParams.delete(SSO_PARAM)
+  }
+
   if (!token) return null
 
-  url.searchParams.delete(SSO_PARAM)
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`)
   return token
 }
 
 function openAuthDb() {
   return new Promise((resolve, reject) => {
-    // Open existing DB without forcing a version (Auth SDK owns the schema).
     const req = indexedDB.open(IDB_NAME)
     req.onerror = () => reject(req.error || new Error('IndexedDB open failed'))
     req.onupgradeneeded = () => {
@@ -57,7 +53,6 @@ function openAuthDb() {
 }
 
 async function persistAuthUser(userBlob) {
-  // Prefer IndexedDB (default Firebase Auth web persistence).
   try {
     const idb = await openAuthDb()
     await new Promise((resolve, reject) => {
@@ -78,10 +73,6 @@ async function persistAuthUser(userBlob) {
   }
 }
 
-/**
- * Exchange a refresh token for ID/refresh tokens, persist a session blob,
- * then reload so AuthProvider picks it up.
- */
 async function restoreSessionFromRefreshToken(refreshToken) {
   const res = await fetch(
     `https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(firebaseConfig.apiKey)}`,
@@ -124,96 +115,66 @@ async function restoreSessionFromRefreshToken(refreshToken) {
   window.location.replace(next)
 }
 
+function decodeSsoPayload(raw) {
+  // Formats:
+  //   rt.<refreshToken>
+  //   ct.<customToken>   (future Blaze / Cloud Functions)
+  //   bare string treated as refresh token (legacy)
+  if (!raw) return null
+  if (raw.startsWith('rt.')) {
+    return { type: 'refresh', value: decodeURIComponent(raw.slice(3)) }
+  }
+  if (raw.startsWith('ct.')) {
+    return { type: 'custom', value: decodeURIComponent(raw.slice(3)) }
+  }
+  return { type: 'refresh', value: decodeURIComponent(raw) }
+}
+
 /**
- * Consume a handoff document and sign in on this origin.
- * Returns true if a session was established.
+ * Consume an SSO payload from the URL and sign in on this origin.
+ * Returns true if a session was established (may reload the page).
  */
 export async function consumeSsoTokenIfPresent() {
-  const handoffId = takeSsoTokenFromUrl()
-  if (!handoffId) return false
+  const raw = takeSsoTokenFromUrl()
+  if (!raw) return false
 
-  if (auth.currentUser) {
-    try {
-      await deleteDoc(doc(db, 'ssoHandoffs', handoffId))
-    } catch {
-      /* ignore */
-    }
-    return false
-  }
+  if (auth.currentUser) return false
 
-  const snap = await getDoc(doc(db, 'ssoHandoffs', handoffId))
-  if (!snap.exists()) {
-    throw new Error('SSO handoff not found or already used')
-  }
+  const payload = decodeSsoPayload(raw)
+  if (!payload?.value) throw new Error('Invalid SSO payload')
 
-  const data = snap.data()
-  try {
-    await deleteDoc(doc(db, 'ssoHandoffs', handoffId))
-  } catch {
-    /* ignore — consumer may lack delete rights; TTL cleanup covers it */
-  }
-
-  const createdMs =
-    data.createdAt instanceof Timestamp
-      ? data.createdAt.toMillis()
-      : data.createdAt?.toMillis?.() || 0
-  if (createdMs && Date.now() - createdMs > HANDOFF_TTL_MS) {
-    throw new Error('SSO handoff expired')
-  }
-
-  if (data.customToken) {
-    await signInWithCustomToken(auth, data.customToken)
+  if (payload.type === 'custom') {
+    await signInWithCustomToken(auth, payload.value)
     return true
   }
 
-  if (data.refreshToken) {
-    await restoreSessionFromRefreshToken(data.refreshToken)
-    return true
-  }
-
-  throw new Error('SSO handoff missing credentials')
+  await restoreSessionFromRefreshToken(payload.value)
+  return true
 }
 
-/** Create a short-lived handoff doc for the current user. */
-export async function createSsoHandoff() {
-  const user = auth.currentUser
-  if (!user) throw new Error('Not signed in')
-
-  const refreshToken = user.refreshToken
-  if (!refreshToken) throw new Error('No refresh token available')
-
-  const ref = await addDoc(collection(db, 'ssoHandoffs'), {
-    uid: user.uid,
-    email: (user.email || '').toLowerCase(),
-    refreshToken,
-    createdAt: serverTimestamp(),
-  })
-  return ref.id
-}
-
-/** Alias used by older call sites. */
-export async function createSsoToken() {
-  return createSsoHandoff()
-}
-
-export function withSsoToken(href, handoffId) {
+/** Build a destination URL that carries an SSO payload in the hash. */
+export function withSsoToken(href, payload) {
   const url = new URL(href, window.location.origin)
-  url.searchParams.set(SSO_PARAM, handoffId)
+  // Keep credentials in the hash so they are not sent to Hosting / referrers.
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''))
+  hashParams.set(SSO_PARAM, payload)
+  url.hash = hashParams.toString()
+  url.searchParams.delete(SSO_PARAM)
   return url.toString()
 }
 
 /**
  * Navigate to another HAE app while carrying the current session.
- * Falls back to a plain navigation if handoff creation fails.
+ * Falls back to a plain navigation if no refresh token is available.
  */
 export async function navigateToModule(module, { openInNewTab = false } = {}) {
   const href = moduleHref(module)
   let destination = href
 
   try {
-    if (auth.currentUser) {
-      const handoffId = await createSsoHandoff()
-      destination = withSsoToken(href, handoffId)
+    const user = auth.currentUser
+    if (user?.refreshToken) {
+      destination = withSsoToken(href, `rt.${encodeURIComponent(user.refreshToken)}`)
     }
   } catch (err) {
     console.warn('SSO handoff unavailable, opening app without session', err)
@@ -224,4 +185,11 @@ export async function navigateToModule(module, { openInNewTab = false } = {}) {
     return
   }
   window.location.assign(destination)
+}
+
+/** @deprecated kept for callers; returns a hash payload string */
+export async function createSsoToken() {
+  const user = auth.currentUser
+  if (!user?.refreshToken) throw new Error('Not signed in')
+  return `rt.${encodeURIComponent(user.refreshToken)}`
 }
