@@ -43,7 +43,7 @@ export const MODULES = [
     milestone: 4,
     path: 'https://hae-ams.web.app',
     localPort: 5176,
-    description: 'Members, renewals, events',
+    description: 'Members, memberships, events',
   },
 ]
 

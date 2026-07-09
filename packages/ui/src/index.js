@@ -5,6 +5,12 @@ export { default as ModuleShell } from './ModuleShell.jsx'
 export { default as Can } from './Can.jsx'
 export { MODULES, moduleHref } from './modules.js'
 export {
+  consumeSsoTokenIfPresent,
+  createSsoToken,
+  navigateToModule,
+  withSsoToken,
+} from './sso.js'
+export {
   ROLES,
   ROLE_OPTIONS,
   PERMISSIONS,

@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 import { MODULES, moduleHref } from './modules.js'
 import { hasAnyPermission, hasPermission } from './rbac.js'
+import { navigateToModule } from './sso.js'
 
 /**
  * Shared shell for LMS / CRM / AMS / EiR apps.
@@ -102,7 +103,7 @@ export default function ModuleShell({
                     >
                       {m.short}
                       <div className="text-[11px] font-normal text-hae-slate">
-                        Milestone {m.milestone}
+                        {m.description}
                       </div>
                     </div>
                   )
@@ -111,6 +112,13 @@ export default function ModuleShell({
                   <a
                     key={m.id}
                     href={moduleHref(m)}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                        return
+                      }
+                      e.preventDefault()
+                      navigateToModule(m)
+                    }}
                     className="block rounded-md px-3 py-2 text-sm text-hae-ink/80 hover:bg-black/5"
                   >
                     {m.short}

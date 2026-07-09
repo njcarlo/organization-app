@@ -16,6 +16,7 @@ import {
   permissionsForRole,
   roleLabel,
 } from '../../../../packages/ui/src/rbac.js'
+import { consumeSsoTokenIfPresent } from '../../../../packages/ui/src/sso.js'
 
 const AuthContext = createContext(null)
 
@@ -25,21 +26,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
-      if (firebaseUser) {
-        try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-          setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
-        } catch {
+    let cancelled = false
+    let unsub = () => {}
+
+    ;(async () => {
+      try {
+        await consumeSsoTokenIfPresent()
+      } catch (err) {
+        console.warn('SSO sign-in failed', err)
+      }
+      if (cancelled) return
+
+      unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+        setUser(firebaseUser)
+        if (firebaseUser) {
+          try {
+            const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+            setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+          } catch {
+            setUserProfile(null)
+          }
+        } else {
           setUserProfile(null)
         }
-      } else {
-        setUserProfile(null)
-      }
-      setLoading(false)
-    })
-    return unsub
+        setLoading(false)
+      })
+    })()
+
+    return () => {
+      cancelled = true
+      unsub()
+    }
   }, [])
 
   const login = (email, password) =>
