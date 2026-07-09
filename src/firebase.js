@@ -3,13 +3,12 @@ import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBeoG-8bFneTzgOx-2IDHZixpozHCChjUQ',
-  authDomain: 'hae-tracker-516ee.firebaseapp.com',
-  projectId: 'hae-tracker-516ee',
-  storageBucket: 'hae-tracker-516ee.firebasestorage.app',
-  messagingSenderId: '1052897331519',
-  appId: '1:1052897331519:web:d88605854ca70de9fd2b8a',
-  measurementId: 'G-FYCZT899ZZ',
+  apiKey: 'AIzaSyDuaK_y5RvYzSTHly9xO9gU2ywEEBuKirQ',
+  authDomain: 'hae-operating-tracker.firebaseapp.com',
+  projectId: 'hae-operating-tracker',
+  storageBucket: 'hae-operating-tracker.firebasestorage.app',
+  messagingSenderId: '63445249864',
+  appId: '1:63445249864:web:66c39d6c6e1c005068cd7d',
 }
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
