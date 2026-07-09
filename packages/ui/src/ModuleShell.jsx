@@ -44,7 +44,7 @@ export default function ModuleShell({
         <img
           src="/hae-logo.webp"
           alt="Harvard Alumni Entrepreneurs"
-          className="h-9 w-auto object-contain"
+          className="h-9 w-auto max-w-[180px] object-contain"
         />
         <div className="mt-2 text-[10px] font-semibold tracking-[0.14em] text-hae-slate uppercase">
           {title}
@@ -170,7 +170,7 @@ export default function ModuleShell({
           <img
             src="/hae-logo.webp"
             alt=""
-            className="h-7 w-auto object-contain"
+            className="h-7 w-auto max-w-[120px] object-contain"
           />
         </header>
 
