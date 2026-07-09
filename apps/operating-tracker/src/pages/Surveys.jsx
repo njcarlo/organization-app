@@ -11,11 +11,15 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { SURVEY_STATUSES } from '../surveys'
+import { useAuth } from '../context/AuthContext'
+import ModuleImportPanel from '../components/ModuleImportPanel'
 
 export default function Surveys() {
+  const { isAdmin, isStaff } = useAuth()
   const [surveys, setSurveys] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showImport, setShowImport] = useState(false)
 
   const load = useCallback(async () => {
     setError('')
@@ -68,15 +72,35 @@ export default function Surveys() {
             Create surveys, share a link, and invite people by email from your own inbox
           </p>
         </div>
-        <Link
-          to="/surveys/new"
-          className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white hover:bg-hae-crimson-dark"
-        >
-          + New survey
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {(isAdmin || isStaff) && (
+            <button
+              type="button"
+              onClick={() => setShowImport((v) => !v)}
+              className="rounded-md border border-hae-line bg-white px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist"
+            >
+              {showImport ? 'Hide import' : 'Import surveys'}
+            </button>
+          )}
+          <Link
+            to="/surveys/new"
+            className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white hover:bg-hae-crimson-dark"
+          >
+            + New survey
+          </Link>
+        </div>
       </header>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
+
+      {showImport && (isAdmin || isStaff) && (
+        <ModuleImportPanel
+          moduleIds={['surveys']}
+          onImported={() => {
+            load()
+          }}
+        />
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
         <table className="w-full min-w-[640px] text-left">

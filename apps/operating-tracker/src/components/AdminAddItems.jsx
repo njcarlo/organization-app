@@ -493,7 +493,9 @@ export default function AdminAddItems() {
       <p className="text-sm text-hae-slate">
         Create records for any HAE app from here. Users and programs stay on
         their own tabs. Use the learner/member login email so student and member
-        views can find their records.
+        views can find their records. For CSV/JSON lists, use the{' '}
+        <strong>Bulk import</strong> tab (includes format instructions and
+        examples).
       </p>
 
       <div className="space-y-3">

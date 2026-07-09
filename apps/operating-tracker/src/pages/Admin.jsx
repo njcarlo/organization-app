@@ -22,6 +22,7 @@ import {
   importCollections,
 } from '../utils/dataTransfer'
 import AdminAddItems from '../components/AdminAddItems'
+import ModuleImportPanel from '../components/ModuleImportPanel'
 
 const CREATE_GUIDE = [
   {
@@ -40,31 +41,31 @@ const CREATE_GUIDE = [
       { what: 'Users', where: 'Admin → Users (this page)' },
       { what: 'Programs', where: 'Admin → Programs (this page)' },
       { what: 'Projects & tasks', where: 'Admin → Add items, or Programs → open a program' },
-      { what: 'Surveys', where: 'Tracker → Surveys (share link + email invite via your inbox)' },
+      { what: 'Surveys', where: 'Tracker → Surveys (or Import surveys / Admin → Bulk import)' },
     ],
   },
   {
     app: 'LMS',
     items: [
-      { what: 'Courses, modules, enrollments…', where: 'Admin → Add items (or LMS manage pages)' },
+      { what: 'Courses, modules, enrollments…', where: 'Admin → Add items, Bulk import, or LMS manage pages' },
       { what: 'Learner email', where: 'Must match login email for student views' },
     ],
   },
   {
     app: 'EiR',
-    items: [{ what: 'Experts', where: 'Admin → Add items, or EiR → Manage experts' }],
+    items: [{ what: 'Experts', where: 'Admin → Add items / Bulk import, or EiR → Manage experts' }],
   },
   {
     app: 'CRM',
     items: [
-      { what: 'Contacts & interactions', where: 'Admin → Add items, or CRM pages' },
+      { what: 'Contacts & interactions', where: 'Admin → Add items / Bulk import, or CRM pages' },
       { what: 'Pipeline stage', where: 'CRM → Pipeline (moves existing contacts)' },
     ],
   },
   {
     app: 'AMS',
     items: [
-      { what: 'Members, memberships, events…', where: 'Admin → Add items, or AMS pages' },
+      { what: 'Members, memberships, events…', where: 'Admin → Add items / Bulk import, or AMS pages' },
       { what: 'Member email', where: 'Stored on memberships for member view' },
     ],
   },
@@ -72,6 +73,7 @@ const CREATE_GUIDE = [
 
 const TABS = [
   { id: 'add', label: 'Add items' },
+  { id: 'bulk', label: 'Bulk import' },
   { id: 'users', label: 'Users' },
   { id: 'programs', label: 'Programs' },
   { id: 'data', label: 'Import / Export' },
@@ -311,6 +313,28 @@ export default function Admin() {
       {error && <p className="text-sm text-hae-red">{error}</p>}
 
       {tab === 'add' && <AdminAddItems />}
+
+      {tab === 'bulk' && (
+        <div className="space-y-4">
+          <p className="text-sm text-hae-slate">
+            Import CSV or JSON lists into Surveys, LMS, EiR, CRM, AMS, or Tracker
+            tasks. Expand <strong>How to format your list</strong> for column
+            names, examples, and how to paste data for Cursor / AI.
+          </p>
+          <ModuleImportPanel
+            moduleIds={[
+              'surveys',
+              'contacts',
+              'members',
+              'experts',
+              'courses',
+              'enrollments',
+              'tasks',
+            ]}
+            defaultModuleId="contacts"
+          />
+        </div>
+      )}
 
       {tab === 'users' && (
         <div className="space-y-4">
@@ -639,11 +663,15 @@ export default function Admin() {
           </section>
 
           <section className="rounded-xl border border-hae-line bg-white p-4 sm:p-5">
-            <h2 className="text-sm font-semibold text-hae-ink">Import JSON</h2>
+            <h2 className="text-sm font-semibold text-hae-ink">
+              Import JSON (full backup)
+            </h2>
             <p className="mt-1 text-sm text-hae-slate">
               Upsert documents by <code className="text-xs">_id</code>. User
               import updates profiles only — it does not create Firebase Auth
-              accounts (use Users tab for that).
+              accounts (use Users tab for that). For everyday CSV lists of
+              contacts, members, surveys, etc., prefer the{' '}
+              <strong>Bulk import</strong> tab.
             </p>
 
             <label className="mt-4 flex items-start gap-2 text-sm text-hae-ink">
