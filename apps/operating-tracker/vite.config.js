@@ -12,6 +12,7 @@ export default defineConfig({
     alias: {
       '@hae/firebase': path.resolve(__dirname, '../../packages/firebase/src/index.js'),
       '@hae/branding': path.resolve(__dirname, '../../packages/branding/src'),
+      '@hae/ui': path.resolve(__dirname, '../../packages/ui/src/index.js'),
     },
   },
   server: {

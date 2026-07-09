@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
   signOut,
@@ -14,6 +14,63 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db, secondaryAuth } from '../firebase'
+import {
+  EXPORT_COLLECTIONS,
+  downloadJson,
+  exportCollections,
+  importCollections,
+} from '../utils/dataTransfer'
+
+const CREATE_GUIDE = [
+  {
+    app: 'Operating Tracker',
+    items: [
+      { what: 'Users', where: 'Admin → Users (this page)' },
+      { what: 'Programs', where: 'Admin → Programs (this page)' },
+      { what: 'Projects', where: 'Programs → open a program → Add Project' },
+      { what: 'Tasks', where: 'Programs → expand a project → Add Task' },
+    ],
+  },
+  {
+    app: 'LMS',
+    items: [
+      { what: 'Courses', where: 'LMS → Courses' },
+      { what: 'Modules', where: 'LMS → Courses → open a course' },
+      { what: 'Enrollments', where: 'LMS → Enrollments' },
+      { what: 'Office Hours', where: 'LMS → Sessions' },
+      { what: 'Check-ins', where: 'LMS → Check-ins' },
+      { what: 'Certificates', where: 'LMS → Certificates' },
+    ],
+  },
+  {
+    app: 'EiR',
+    items: [{ what: 'Experts', where: 'EiR → Manage experts (admin only)' }],
+  },
+  {
+    app: 'CRM',
+    items: [
+      { what: 'Contacts', where: 'CRM → Contacts' },
+      { what: 'Interactions', where: 'CRM → Interactions' },
+      { what: 'Pipeline stage', where: 'CRM → Pipeline (moves existing contacts)' },
+    ],
+  },
+  {
+    app: 'AMS',
+    items: [
+      { what: 'Members', where: 'AMS → Members' },
+      { what: 'Memberships', where: 'AMS → Memberships' },
+      { what: 'Events', where: 'AMS → Events' },
+      { what: 'Committees', where: 'AMS → Committees' },
+    ],
+  },
+]
+
+const TABS = [
+  { id: 'users', label: 'Users' },
+  { id: 'programs', label: 'Programs' },
+  { id: 'data', label: 'Import / Export' },
+  { id: 'guide', label: 'Where to create' },
+]
 
 export default function Admin() {
   const [tab, setTab] = useState('users')
@@ -35,6 +92,16 @@ export default function Admin() {
   const [editingProgramId, setEditingProgramId] = useState(null)
   const [programDraft, setProgramDraft] = useState(null)
 
+  const [selectedExport, setSelectedExport] = useState(() =>
+    EXPORT_COLLECTIONS.filter((c) =>
+      ['programs', 'projects', 'tasks', 'users'].includes(c.id)
+    ).map((c) => c.id)
+  )
+  const [replaceExtras, setReplaceExtras] = useState(false)
+  const [dataBusy, setDataBusy] = useState(false)
+  const [dataMessage, setDataMessage] = useState('')
+  const fileRef = useRef(null)
+
   const load = useCallback(async () => {
     const [userSnap, programSnap] = await Promise.all([
       getDocs(collection(db, 'users')),
@@ -52,6 +119,75 @@ export default function Admin() {
   useEffect(() => {
     load()
   }, [load])
+
+  const groupedCollections = useMemo(() => {
+    const map = {}
+    for (const c of EXPORT_COLLECTIONS) {
+      if (!map[c.app]) map[c.app] = []
+      map[c.app].push(c)
+    }
+    return map
+  }, [])
+
+  const toggleExport = (id) => {
+    setSelectedExport((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  const selectApp = (app) => {
+    const ids = EXPORT_COLLECTIONS.filter((c) => c.app === app).map((c) => c.id)
+    setSelectedExport((prev) => Array.from(new Set([...prev, ...ids])))
+  }
+
+  const handleExport = async () => {
+    if (selectedExport.length === 0) {
+      setDataMessage('Select at least one collection to export.')
+      return
+    }
+    setDataBusy(true)
+    setDataMessage('')
+    setError('')
+    try {
+      const payload = await exportCollections(selectedExport)
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`hae-export-${stamp}.json`, payload)
+      const counts = selectedExport
+        .map((id) => `${id}: ${(payload[id] || []).length}`)
+        .join(', ')
+      setDataMessage(`Exported ${counts}`)
+    } catch (err) {
+      setError(err.message || 'Export failed')
+    } finally {
+      setDataBusy(false)
+    }
+  }
+
+  const handleImportFile = async (file) => {
+    if (!file) return
+    setDataBusy(true)
+    setDataMessage('')
+    setError('')
+    try {
+      const text = await file.text()
+      const payload = JSON.parse(text)
+      const summary = await importCollections(payload, { replaceExtras })
+      const parts = Object.entries(summary).map(
+        ([k, v]) => `${k}: ${v.written} upserted${v.deleted ? `, ${v.deleted} removed` : ''}`
+      )
+      setDataMessage(
+        parts.length
+          ? `Import complete — ${parts.join('; ')}`
+          : 'No matching collections found in file.'
+      )
+      await load()
+    } catch (err) {
+      setError(err.message || 'Import failed')
+    } finally {
+      setDataBusy(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   const addUser = async (e) => {
     e.preventDefault()
@@ -141,23 +277,27 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">Admin</h1>
-        <p className="mt-1 text-sm text-hae-slate">Manage users and programs</p>
+        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
+          Admin
+        </h1>
+        <p className="mt-1 text-sm text-hae-slate">
+          Manage users, programs, and platform data import/export
+        </p>
       </header>
 
       <div className="flex flex-wrap gap-2 border-b border-hae-line">
-        {['users', 'programs'].map((t) => (
+        {TABS.map((t) => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            onClick={() => setTab(t)}
-            className={`border-b-2 px-3 py-2 text-sm font-semibold capitalize ${
-              tab === t
+            onClick={() => setTab(t.id)}
+            className={`border-b-2 px-3 py-2 text-sm font-semibold ${
+              tab === t.id
                 ? 'border-hae-crimson text-hae-crimson'
                 : 'border-transparent text-hae-slate'
             }`}
           >
-            {t}
+            {t.label}
           </button>
         ))}
       </div>
@@ -191,7 +331,9 @@ export default function Admin() {
               minLength={6}
               placeholder="Temp password"
               value={newUser.password}
-              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             <select
@@ -311,13 +453,17 @@ export default function Admin() {
               required
               placeholder="Program name"
               value={newProgram.name}
-              onChange={(e) => setNewProgram({ ...newProgram, name: e.target.value })}
+              onChange={(e) =>
+                setNewProgram({ ...newProgram, name: e.target.value })
+              }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             <input
               placeholder="Overall lead"
               value={newProgram.lead}
-              onChange={(e) => setNewProgram({ ...newProgram, lead: e.target.value })}
+              onChange={(e) =>
+                setNewProgram({ ...newProgram, lead: e.target.value })
+              }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             <button
@@ -347,7 +493,10 @@ export default function Admin() {
                           className="w-full rounded border border-hae-line px-2 py-1 text-sm"
                           value={programDraft.name}
                           onChange={(e) =>
-                            setProgramDraft({ ...programDraft, name: e.target.value })
+                            setProgramDraft({
+                              ...programDraft,
+                              name: e.target.value,
+                            })
                           }
                         />
                       </td>
@@ -356,7 +505,10 @@ export default function Admin() {
                           className="w-full rounded border border-hae-line px-2 py-1 text-sm"
                           value={programDraft.lead}
                           onChange={(e) =>
-                            setProgramDraft({ ...programDraft, lead: e.target.value })
+                            setProgramDraft({
+                              ...programDraft,
+                              lead: e.target.value,
+                            })
                           }
                         />
                       </td>
@@ -384,7 +536,10 @@ export default function Admin() {
                             type="button"
                             onClick={() => {
                               setEditingProgramId(p.id)
-                              setProgramDraft({ name: p.name, lead: p.lead || '' })
+                              setProgramDraft({
+                                name: p.name,
+                                lead: p.lead || '',
+                              })
                             }}
                             className="text-xs text-hae-slate hover:text-hae-crimson"
                           >
@@ -405,6 +560,131 @@ export default function Admin() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {tab === 'data' && (
+        <div className="space-y-6">
+          <section className="rounded-xl border border-hae-line bg-white p-4 sm:p-5">
+            <h2 className="text-sm font-semibold text-hae-ink">Export JSON</h2>
+            <p className="mt-1 text-sm text-hae-slate">
+              Download selected Firestore collections. Documents include{' '}
+              <code className="text-xs">_id</code> for round-trip import.
+            </p>
+
+            <div className="mt-4 space-y-4">
+              {Object.entries(groupedCollections).map(([app, cols]) => (
+                <div key={app}>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
+                      {app}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => selectApp(app)}
+                      className="text-xs font-semibold text-hae-crimson"
+                    >
+                      Select all
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {cols.map((c) => {
+                      const on = selectedExport.includes(c.id)
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleExport(c.id)}
+                          className={`rounded-md border px-2.5 py-1.5 text-xs font-medium ${
+                            on
+                              ? 'border-hae-crimson bg-hae-crimson/10 text-hae-crimson'
+                              : 'border-hae-line text-hae-slate hover:bg-hae-mist'
+                          }`}
+                        >
+                          {c.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={dataBusy}
+              onClick={handleExport}
+              className="mt-5 rounded-md bg-hae-crimson px-4 py-2 text-sm font-semibold tracking-wide text-white uppercase disabled:opacity-60"
+            >
+              {dataBusy ? 'Working…' : 'Download export'}
+            </button>
+          </section>
+
+          <section className="rounded-xl border border-hae-line bg-white p-4 sm:p-5">
+            <h2 className="text-sm font-semibold text-hae-ink">Import JSON</h2>
+            <p className="mt-1 text-sm text-hae-slate">
+              Upsert documents by <code className="text-xs">_id</code>. User
+              import updates profiles only — it does not create Firebase Auth
+              accounts (use Users tab for that).
+            </p>
+
+            <label className="mt-4 flex items-start gap-2 text-sm text-hae-ink">
+              <input
+                type="checkbox"
+                checked={replaceExtras}
+                onChange={(e) => setReplaceExtras(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Also delete documents in imported collections that are{' '}
+                <strong>not</strong> in the file (never deletes users)
+              </span>
+            </label>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                className="block w-full max-w-md text-sm text-hae-slate file:mr-3 file:rounded-md file:border-0 file:bg-hae-mist file:px-3 file:py-2 file:text-sm file:font-semibold file:text-hae-ink"
+                onChange={(e) => handleImportFile(e.target.files?.[0])}
+                disabled={dataBusy}
+              />
+            </div>
+          </section>
+
+          {dataMessage && (
+            <p className="text-sm text-hae-green">{dataMessage}</p>
+          )}
+        </div>
+      )}
+
+      {tab === 'guide' && (
+        <div className="space-y-4">
+          <p className="text-sm text-hae-slate">
+            Each app creates its own records on list pages. Users for all apps
+            are created here under <strong>Users</strong> (shared Firebase Auth +
+            directory).
+          </p>
+          {CREATE_GUIDE.map((section) => (
+            <section
+              key={section.app}
+              className="rounded-xl border border-hae-line bg-white p-4"
+            >
+              <h2 className="text-sm font-semibold text-hae-ink">{section.app}</h2>
+              <ul className="mt-3 space-y-2">
+                {section.items.map((item) => (
+                  <li
+                    key={item.what}
+                    className="grid gap-1 text-sm sm:grid-cols-[140px_1fr]"
+                  >
+                    <span className="font-medium text-hae-ink">{item.what}</span>
+                    <span className="text-hae-slate">{item.where}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
       )}
     </div>
