@@ -5,6 +5,7 @@ import {
   ProtectedRoute,
   ModuleShell,
   useAuth,
+  PERMISSIONS,
 } from '@hae/ui'
 import Dashboard from './pages/Dashboard.jsx'
 import StudentHome from './pages/StudentHome.jsx'
@@ -17,29 +18,43 @@ import CheckIns from './pages/CheckIns.jsx'
 import Certificates from './pages/Certificates.jsx'
 import MyCertificates from './pages/MyCertificates.jsx'
 
-const studentNav = [
-  { to: '/', label: 'My learning', end: true },
-  { to: '/catalog', label: 'Catalog' },
-  { to: '/my-certificates', label: 'My certificates' },
-]
+function lmsNav({ hasPermission }) {
+  const items = []
+  if (hasPermission(PERMISSIONS.LMS_LEARN)) {
+    items.push({ to: '/', label: 'My learning', end: true })
+  } else if (hasPermission(PERMISSIONS.LMS_MANAGE)) {
+    items.push({ to: '/', label: 'Dashboard', end: true })
+  } else {
+    items.push({ to: '/catalog', label: 'Catalog', end: true })
+  }
 
-const staffNav = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/catalog', label: 'Catalog' },
-  { to: '/courses', label: 'Manage courses', adminOnly: true },
-  { to: '/enrollments', label: 'Enrollments', adminOnly: true },
-  { to: '/sessions', label: 'Office Hours', adminOnly: true },
-  { to: '/check-ins', label: 'Check-ins', adminOnly: true },
-  { to: '/certificates', label: 'Issue certificates', adminOnly: true },
-]
-
-function lmsNav({ isAdmin }) {
-  return isAdmin ? staffNav : studentNav
+  if (hasPermission(PERMISSIONS.LMS_CATALOG)) {
+    items.push({ to: '/catalog', label: 'Catalog' })
+  }
+  if (hasPermission(PERMISSIONS.LMS_LEARN)) {
+    items.push({ to: '/my-certificates', label: 'My certificates' })
+  }
+  if (hasPermission(PERMISSIONS.LMS_MANAGE)) {
+    items.push(
+      { to: '/courses', label: 'Manage courses', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/enrollments', label: 'Enrollments', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/sessions', label: 'Office Hours', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/check-ins', label: 'Check-ins', permission: PERMISSIONS.LMS_MANAGE },
+      { to: '/certificates', label: 'Issue certificates', permission: PERMISSIONS.LMS_MANAGE }
+    )
+  }
+  return items
 }
 
 function HomeRoute() {
-  const { isAdmin } = useAuth()
-  return isAdmin ? <Dashboard /> : <StudentHome />
+  const { hasPermission } = useAuth()
+  if (hasPermission(PERMISSIONS.LMS_MANAGE) && !hasPermission(PERMISSIONS.LMS_LEARN)) {
+    return <Dashboard />
+  }
+  // Staff have both manage + learn — show staff dashboard; students see My learning
+  if (hasPermission(PERMISSIONS.LMS_MANAGE)) return <Dashboard />
+  if (hasPermission(PERMISSIONS.LMS_LEARN)) return <StudentHome />
+  return <Catalog />
 }
 
 export default function App() {
@@ -48,7 +63,17 @@ export default function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
         <Routes>
           <Route path="/login" element={<LoginPage appName="HAE Academy LMS" />} />
-          <Route element={<ProtectedRoute />}>
+          <Route
+            element={
+              <ProtectedRoute
+                anyOf={[
+                  PERMISSIONS.LMS_CATALOG,
+                  PERMISSIONS.LMS_LEARN,
+                  PERMISSIONS.LMS_MANAGE,
+                ]}
+              />
+            }
+          >
             <Route
               element={
                 <ModuleShell
@@ -63,7 +88,7 @@ export default function App() {
               <Route path="/my-certificates" element={<MyCertificates />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
 
-              <Route element={<ProtectedRoute adminOnly />}>
+              <Route element={<ProtectedRoute permission={PERMISSIONS.LMS_MANAGE} />}>
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/enrollments" element={<Enrollments />} />
                 <Route path="/sessions" element={<Sessions />} />

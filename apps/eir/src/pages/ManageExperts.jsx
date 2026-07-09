@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { EXPERT_STATUSES, EXPERTISE_SUGGESTIONS } from '../constants'
-import { useAuth } from '@hae/ui'
 
 const emptyForm = {
   name: '',
@@ -34,7 +33,6 @@ function parseExpertise(text) {
 }
 
 export default function ManageExperts() {
-  const { isAdmin } = useAuth()
   const [experts, setExperts] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState(emptyForm)
@@ -124,17 +122,6 @@ export default function ManageExperts() {
 
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
 
-  if (!isAdmin) {
-    return (
-      <div className="border border-hae-line bg-white p-6 text-sm text-hae-slate">
-        Only admins can add or edit expert profiles. Browse the{' '}
-        <Link to="/directory" className="text-hae-crimson">
-          Directory
-        </Link>{' '}
-        instead.
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">

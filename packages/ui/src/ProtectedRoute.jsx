@@ -1,8 +1,21 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
+import { hasAnyPermission, hasPermission } from './rbac.js'
 
-export default function ProtectedRoute({ adminOnly = false }) {
-  const { user, userProfile, loading, isAdmin } = useAuth()
+/**
+ * Route guard.
+ * - adminOnly: legacy — requires admin role
+ * - permission: single permission string
+ * - anyOf: array of permissions (OR)
+ * - staffOnly: requires admin or staff
+ */
+export default function ProtectedRoute({
+  adminOnly = false,
+  staffOnly = false,
+  permission = null,
+  anyOf = null,
+}) {
+  const { user, userProfile, loading, isAdmin, isStaff, permissions } = useAuth()
 
   if (loading) {
     return (
@@ -13,7 +26,6 @@ export default function ProtectedRoute({ adminOnly = false }) {
   }
 
   if (!user) return <Navigate to="/login" replace />
-  if (adminOnly && !isAdmin) return <Navigate to="/" replace />
 
   if (!userProfile) {
     return (
@@ -22,6 +34,15 @@ export default function ProtectedRoute({ adminOnly = false }) {
         <p className="text-sm text-hae-slate">Ask an admin to add your user record.</p>
       </div>
     )
+  }
+
+  if (adminOnly && !isAdmin) return <Navigate to="/" replace />
+  if (staffOnly && !isStaff) return <Navigate to="/" replace />
+  if (permission && !hasPermission(permissions, permission)) {
+    return <Navigate to="/" replace />
+  }
+  if (anyOf?.length && !hasAnyPermission(permissions, anyOf)) {
+    return <Navigate to="/" replace />
   }
 
   return <Outlet />

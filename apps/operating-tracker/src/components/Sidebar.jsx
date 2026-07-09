@@ -4,9 +4,10 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { MODULES, moduleHref } from '@hae/ui'
+import { canAccessModule } from '../../../../packages/ui/src/rbac.js'
 
 export default function Sidebar({ open = false, onClose }) {
-  const { userProfile, isAdmin, logout } = useAuth()
+  const { userProfile, isAdmin, logout, roleLabel, permissions } = useAuth()
   const [programs, setPrograms] = useState([])
 
   useEffect(() => {
@@ -103,7 +104,9 @@ export default function Sidebar({ open = false, onClose }) {
           Platform
         </div>
         <div className="space-y-0.5">
-          {MODULES.map((m) => {
+          {MODULES.filter(
+            (m) => m.id === 'tracker' || canAccessModule(permissions, m.id)
+          ).map((m) => {
             if (m.id === 'tracker') {
               return (
                 <div
@@ -135,6 +138,7 @@ export default function Sidebar({ open = false, onClose }) {
         <div className="truncate text-sm font-medium text-hae-ink">
           {userProfile?.name || 'User'}
         </div>
+        <div className="text-[11px] text-hae-slate">{roleLabel}</div>
         <button
           type="button"
           onClick={() => logout()}

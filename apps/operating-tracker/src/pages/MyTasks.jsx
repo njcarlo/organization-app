@@ -33,7 +33,7 @@ const inputClass =
   'w-full rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
 
 export default function MyTasks() {
-  const { userProfile, isAdmin } = useAuth()
+  const { userProfile, isStaff } = useAuth()
   const [tasks, setTasks] = useState([])
   const [programs, setPrograms] = useState([])
   const [projects, setProjects] = useState([])
@@ -75,7 +75,7 @@ export default function MyTasks() {
 
   const filtered = useMemo(() => {
     let list = [...tasks]
-    if (!(isAdmin && viewAll)) {
+    if (!(isStaff && viewAll)) {
       const myName = (userProfile?.name || '').toLowerCase()
       list = list.filter((t) => (t.owner || '').toLowerCase() === myName)
     }
@@ -86,7 +86,7 @@ export default function MyTasks() {
     }
     list.sort(sortByPriorityThenDue)
     return list
-  }, [tasks, isAdmin, viewAll, userProfile, statusFilter])
+  }, [tasks, isStaff, viewAll, userProfile, statusFilter])
 
   useEffect(() => {
     setPage(0)
@@ -159,13 +159,13 @@ export default function MyTasks() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
-            {isAdmin && viewAll ? 'All Tasks' : 'My Tasks'}
+            {isStaff && viewAll ? 'All Tasks' : 'My Tasks'}
           </h1>
           <p className="mt-1 text-sm text-hae-slate">
             {filtered.length} task{filtered.length === 1 ? '' : 's'}
           </p>
         </div>
-        {isAdmin && (
+        {isStaff && (
           <div className="flex rounded-md border border-hae-line bg-white p-0.5 text-xs font-semibold">
             <button
               type="button"
@@ -209,7 +209,7 @@ export default function MyTasks() {
               <tr>
                 <th className="px-3 py-2 font-semibold">Priority</th>
                 <th className="px-3 py-2 font-semibold">Task</th>
-                {isAdmin && viewAll && (
+                {isStaff && viewAll && (
                   <th className="px-3 py-2 font-semibold">Owner</th>
                 )}
                 <th className="px-3 py-2 font-semibold">Program</th>
@@ -226,7 +226,7 @@ export default function MyTasks() {
               {pageItems.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isAdmin && viewAll ? 11 : 10}
+                    colSpan={isStaff && viewAll ? 11 : 10}
                     className="px-3 py-8 text-center text-sm text-hae-slate"
                   >
                     No tasks match this filter
@@ -259,7 +259,7 @@ export default function MyTasks() {
                           onKeyDown={onEditKeyDown}
                         />
                       </td>
-                      {isAdmin && viewAll && (
+                      {isStaff && viewAll && (
                         <td className="px-2 py-1">
                           <input
                             className={inputClass}
@@ -364,7 +364,7 @@ export default function MyTasks() {
                         </span>
                       </td>
                       <td className="px-3 py-2 text-sm font-medium">{task.name}</td>
-                      {isAdmin && viewAll && (
+                      {isStaff && viewAll && (
                         <td className="px-3 py-2 text-sm text-hae-slate">
                           {task.owner || '—'}
                         </td>

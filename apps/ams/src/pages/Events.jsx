@@ -7,9 +7,12 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission(PERMISSIONS.AMS_MANAGE)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({
@@ -70,6 +73,7 @@ export default function Events() {
         </p>
       </header>
 
+      {canManage ? (
       <form
         onSubmit={create}
         className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2"
@@ -113,6 +117,7 @@ export default function Events() {
           Add event
         </button>
       </form>
+      ) : null}
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">
@@ -122,13 +127,16 @@ export default function Events() {
               <th className="px-3 py-2 font-semibold">Event</th>
               <th className="px-3 py-2 font-semibold">Location</th>
               <th className="px-3 py-2 font-semibold">Capacity</th>
-              <th className="px-3 py-2 font-semibold w-20" />
+              {canManage ? <th className="px-3 py-2 font-semibold w-20" /> : null}
             </tr>
           </thead>
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td
+                  colSpan={canManage ? 5 : 4}
+                  className="px-3 py-8 text-center text-sm text-hae-slate"
+                >
                   No events yet
                 </td>
               </tr>
@@ -148,15 +156,17 @@ export default function Events() {
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {e.capacity ?? '—'}
                   </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => remove(e.id)}
-                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  {canManage ? (
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => remove(e.id)}
+                        className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))
             )}

@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore'
 import { useAuth } from '@hae/ui'
 import { db } from '../firebase'
-import { matchesLearner } from '../utils/learner'
 
 export default function StudentHome() {
   const { userProfile } = useAuth()
@@ -13,14 +17,20 @@ export default function StudentHome() {
   const [certificates, setCertificates] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const email = (userProfile?.email || '').trim().toLowerCase()
+
   useEffect(() => {
+    if (!email) {
+      setLoading(false)
+      return undefined
+    }
     let cancelled = false
     ;(async () => {
       const [e, s, k, c] = await Promise.all([
-        getDocs(collection(db, 'enrollments')),
+        getDocs(query(collection(db, 'enrollments'), where('learnerEmail', '==', email))),
         getDocs(collection(db, 'sessions')),
-        getDocs(collection(db, 'checkIns')),
-        getDocs(collection(db, 'certificates')),
+        getDocs(query(collection(db, 'checkIns'), where('learnerEmail', '==', email))),
+        getDocs(query(collection(db, 'certificates'), where('learnerEmail', '==', email))),
       ])
       if (cancelled) return
       setEnrollments(e.docs.map((d) => ({ id: d.id, ...d.data() })))
@@ -32,40 +42,29 @@ export default function StudentHome() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [email])
 
   const mine = useMemo(() => {
-    const myEnrollments = enrollments.filter((e) =>
-      matchesLearner(e, userProfile)
-    )
-    const courseIds = new Set(myEnrollments.map((e) => e.courseId).filter(Boolean))
+    const courseIds = new Set(enrollments.map((e) => e.courseId).filter(Boolean))
     const today = new Date().toISOString().slice(0, 10)
     const upcomingSessions = sessions
       .filter((s) => courseIds.has(s.courseId) && s.date && s.date >= today)
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
       .slice(0, 5)
     const upcomingCheckIns = checkIns
-      .filter(
-        (c) =>
-          matchesLearner(c, userProfile) &&
-          c.dueDate &&
-          c.dueDate >= today &&
-          c.status !== 'Completed'
-      )
+      .filter((c) => c.dueDate && c.dueDate >= today && c.status !== 'Completed')
       .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
       .slice(0, 5)
-    const myCerts = certificates.filter((c) => matchesLearner(c, userProfile))
-    const inProgress = myEnrollments.filter((e) =>
+    const inProgress = enrollments.filter((e) =>
       ['Enrolled', 'In Progress'].includes(e.status)
     ).length
     return {
-      myEnrollments,
       upcomingSessions,
       upcomingCheckIns,
-      myCerts,
+      myCerts: certificates,
       inProgress,
     }
-  }, [enrollments, sessions, checkIns, certificates, userProfile])
+  }, [enrollments, sessions, checkIns, certificates])
 
   if (loading) return <p className="text-sm text-hae-slate">Loading your learning…</p>
 
@@ -86,7 +85,7 @@ export default function StudentHome() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: 'My courses', value: mine.myEnrollments.length },
+          { label: 'My courses', value: enrollments.length },
           { label: 'In progress', value: mine.inProgress },
           { label: 'Certificates', value: mine.myCerts.length },
         ].map((s) => (
@@ -118,15 +117,18 @@ export default function StudentHome() {
         <div className="border-b border-hae-line px-4 py-3">
           <h2 className="text-sm font-semibold">Your courses</h2>
         </div>
-        {mine.myEnrollments.length === 0 ? (
+        {enrollments.length === 0 ? (
           <p className="px-4 py-6 text-sm text-hae-slate">
             You are not enrolled in any courses yet. Browse the catalog, or ask
-            staff to enroll you.
+            staff to enroll you with this email ({email || 'your login email'}).
           </p>
         ) : (
           <ul className="divide-y divide-hae-line">
-            {mine.myEnrollments.map((e) => (
-              <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+            {enrollments.map((e) => (
+              <li
+                key={e.id}
+                className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
+              >
                 <div>
                   <Link
                     to={`/courses/${e.courseId}`}

@@ -4,6 +4,7 @@ import {
   LoginPage,
   ProtectedRoute,
   ModuleShell,
+  PERMISSIONS,
 } from '@hae/ui'
 import Dashboard from './pages/Dashboard.jsx'
 import Contacts from './pages/Contacts.jsx'
@@ -23,7 +24,13 @@ export default function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
         <Routes>
           <Route path="/login" element={<LoginPage appName="HAE Relationships" />} />
-          <Route element={<ProtectedRoute />}>
+          <Route
+            element={
+              <ProtectedRoute
+                anyOf={[PERMISSIONS.CRM_READ, PERMISSIONS.CRM_WRITE]}
+              />
+            }
+          >
             <Route
               element={
                 <ModuleShell

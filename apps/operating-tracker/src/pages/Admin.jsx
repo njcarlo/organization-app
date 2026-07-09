@@ -13,6 +13,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
+import { ROLE_OPTIONS } from '../../../../packages/ui/src/rbac.js'
 import { db, secondaryAuth } from '../firebase'
 import {
   EXPORT_COLLECTIONS,
@@ -22,6 +23,16 @@ import {
 } from '../utils/dataTransfer'
 
 const CREATE_GUIDE = [
+  {
+    app: 'Roles (RBAC)',
+    items: [
+      { what: 'Admin', where: 'Full access — users, import/export, all apps' },
+      { what: 'Staff', where: 'HAE team — Tracker, LMS manage, EiR manage, CRM, AMS' },
+      { what: 'Member', where: 'Alumni — EiR directory/booking, AMS events & own membership' },
+      { what: 'Student', where: 'Academy — LMS My learning, catalog, certificates; EiR browse' },
+      { what: 'Legacy "user"', where: 'Treated as Staff automatically' },
+    ],
+  },
   {
     app: 'Operating Tracker',
     items: [
@@ -34,22 +45,22 @@ const CREATE_GUIDE = [
   {
     app: 'LMS',
     items: [
-      { what: 'Courses', where: 'LMS → Courses' },
+      { what: 'Courses', where: 'LMS → Manage courses (staff)' },
       { what: 'Modules', where: 'LMS → Courses → open a course' },
-      { what: 'Enrollments', where: 'LMS → Enrollments' },
+      { what: 'Enrollments', where: 'LMS → Enrollments (use learner email = login email)' },
       { what: 'Office Hours', where: 'LMS → Sessions' },
       { what: 'Check-ins', where: 'LMS → Check-ins' },
-      { what: 'Certificates', where: 'LMS → Certificates' },
+      { what: 'Certificates', where: 'LMS → Issue certificates' },
     ],
   },
   {
     app: 'EiR',
-    items: [{ what: 'Experts', where: 'EiR → Manage experts (admin only)' }],
+    items: [{ what: 'Experts', where: 'EiR → Manage experts (staff/admin)' }],
   },
   {
     app: 'CRM',
     items: [
-      { what: 'Contacts', where: 'CRM → Contacts' },
+      { what: 'Contacts', where: 'CRM → Contacts (staff)' },
       { what: 'Interactions', where: 'CRM → Interactions' },
       { what: 'Pipeline stage', where: 'CRM → Pipeline (moves existing contacts)' },
     ],
@@ -57,8 +68,8 @@ const CREATE_GUIDE = [
   {
     app: 'AMS',
     items: [
-      { what: 'Members', where: 'AMS → Members' },
-      { what: 'Memberships', where: 'AMS → Memberships' },
+      { what: 'Members', where: 'AMS → Members (staff)' },
+      { what: 'Memberships', where: 'AMS → Memberships (stores memberEmail for member view)' },
       { what: 'Events', where: 'AMS → Events' },
       { what: 'Committees', where: 'AMS → Committees' },
     ],
@@ -83,7 +94,7 @@ export default function Admin() {
     name: '',
     email: '',
     password: '',
-    role: 'user',
+    role: 'staff',
   })
   const [editingUserId, setEditingUserId] = useState(null)
   const [userDraft, setUserDraft] = useState(null)
@@ -205,7 +216,7 @@ export default function Admin() {
         createdAt: serverTimestamp(),
       })
       await signOut(secondaryAuth)
-      setNewUser({ name: '', email: '', password: '', role: 'user' })
+      setNewUser({ name: '', email: '', password: '', role: 'staff' })
       await load()
     } catch (err) {
       setError(err.message || 'Failed to create user')
@@ -341,8 +352,11 @@ export default function Admin() {
               onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              {ROLE_OPTIONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
             </select>
             <button
               type="submit"
@@ -379,13 +393,16 @@ export default function Admin() {
                       <td className="px-3 py-2">
                         <select
                           className="rounded border border-hae-line px-2 py-1 text-sm"
-                          value={userDraft.role}
+                          value={userDraft.role === 'user' ? 'staff' : userDraft.role}
                           onChange={(e) =>
                             setUserDraft({ ...userDraft, role: e.target.value })
                           }
                         >
-                          <option value="user">user</option>
-                          <option value="admin">admin</option>
+                          {ROLE_OPTIONS.map((r) => (
+                            <option key={r.value} value={r.value}>
+                              {r.label}
+                            </option>
+                          ))}
                         </select>
                       </td>
                       <td className="px-3 py-2 text-right text-xs">
@@ -407,10 +424,14 @@ export default function Admin() {
                           className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                             u.role === 'admin'
                               ? 'bg-purple-100 text-purple-700'
-                              : 'bg-slate-100 text-hae-slate'
+                              : u.role === 'staff' || u.role === 'user'
+                                ? 'bg-sky-100 text-sky-800'
+                                : u.role === 'student'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-slate-100 text-hae-slate'
                           }`}
                         >
-                          {u.role}
+                          {u.role === 'user' ? 'staff' : u.role}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-right">
