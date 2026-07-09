@@ -2,7 +2,7 @@
 
 Web app for **Harvard Alumni Entrepreneurs (HAE)** leadership and staff to monitor programs, projects, and tasks.
 
-**Live:** https://hae-tracker.vercel.app
+**Live:** https://hae-operating-tracker.web.app
 
 ## Tech stack
 
@@ -55,12 +55,13 @@ service cloud.firestore {
 
 ### Deploy to Firebase Hosting
 
-Project: `hae-tracker-516ee` (configured in `.firebaserc` / `firebase.json`).
+Project: `hae-operating-tracker` (configured in `.firebaserc` / `firebase.json`).
 
 ```bash
 npm install
 npx firebase login          # one-time browser login
 npm run deploy              # builds to dist/ then deploys hosting
+# Auth email/password is configured via firebase.json auth.providers
 ```
 
 Or step by step:
@@ -70,7 +71,7 @@ npm run build
 npx firebase deploy --only hosting
 ```
 
-Hosting URL after deploy: `https://hae-tracker-516ee.web.app` (also `*.firebaseapp.com`).
+Hosting URL after deploy: `https://hae-operating-tracker.web.app` (also `*.firebaseapp.com`).
 
 SPA rewrites are already set in `firebase.json` so React Router routes work.
 
