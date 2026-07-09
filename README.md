@@ -48,8 +48,19 @@ npm run dev:ams       # :5176
 npm run dev:eir       # :5177
 
 npm run build:all
-npm run deploy        # Operating Tracker hosting
+npm run deploy        # all hosting targets + firestore rules
+npm run import:real   # upsert production programs/projects/tasks/users
 ```
+
+---
+
+## Live URLs
+
+- Tracker: https://hae-operating-tracker.web.app
+- LMS: https://hae-lms.web.app
+- EiR: https://hae-eir.web.app
+- CRM: https://hae-crm.web.app
+- AMS: https://hae-ams.web.app
 
 ---
 
@@ -77,3 +88,23 @@ Collections: `courses`, `modules`, `enrollments`, `sessions`, `checkIns`, `certi
 
 - CRM: `contacts`, `interactions` (+ pipeline stages)
 - AMS: `members`, `memberships`, `events`, `committees`
+
+---
+
+## Firebase
+
+- Project: `hae-operating-tracker`
+- Multi-site Hosting targets: `tracker`, `lms`, `eir`, `crm`, `ams`
+- Auth: email/password
+- Rules: authenticated read/write (`firestore.rules`)
+
+### Operating Tracker modules
+
+- **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins
+- **Programs** (`/programs/:programId`) — projects + inline tasks
+- **My Tasks** (`/my-tasks`) — personal / all-tasks (admin) with filters
+- **Admin** (`/admin`) — users (via secondary Auth app) + programs
+
+### Tracker collections
+
+`users`, `programs`, `projects`, `tasks`

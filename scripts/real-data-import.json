@@ -1,0 +1,336 @@
+{
+  "programs": [
+    {
+      "_id": "837y3S6Hd1XAF81KJZZI",
+      "name": "Operations & Technology",
+      "order": 5
+    },
+    {
+      "_id": "8nu4nP9xyGv8Fyrp1yng",
+      "name": "Accelerator",
+      "order": 10
+    },
+    {
+      "_id": "DkClrQP06t9HjjSlKzGN",
+      "name": "1636 Partners",
+      "order": 6
+    },
+    {
+      "_id": "LxwU6gdqZW0LsrXeIMy0",
+      "name": "Strategic Advisory Network",
+      "order": 1
+    },
+    {
+      "_id": "R48hmRRWkKHlpYsWXwON",
+      "order": 0,
+      "name": "Startup World Cup 2026"
+    },
+    {
+      "_id": "VWoh6JFurLHhLlT8BGJT",
+      "order": 7,
+      "name": "A Foundery"
+    },
+    {
+      "_id": "Y0ghwNHDZviZnEWRMpoB",
+      "order": 2,
+      "name": "Membership & Community"
+    },
+    {
+      "_id": "c9wglZlqECzOJe5e27AK",
+      "name": "Chapters",
+      "order": 4
+    },
+    {
+      "_id": "cu24Y0L0ei2swhh8MuTn",
+      "name": "Investor Network",
+      "order": 9
+    },
+    {
+      "_id": "feqUKgZmAUgZy5hU5DZK",
+      "order": 3,
+      "name": "Sponsorship & Partnerships"
+    },
+    {
+      "_id": "wg5lLjLHRIOBVDGTfpea",
+      "order": 8,
+      "name": "EiR"
+    }
+  ],
+  "projects": [
+    {
+      "_id": "fRpGTOmDHAjBIyrxgkfz",
+      "health": "needs-attention",
+      "promise": "Recruit 15 judges",
+      "lead": "Denisse",
+      "createdAt": "2026-07-09T13:51:26.482Z",
+      "targetDate": "2026-07-12",
+      "programId": "R48hmRRWkKHlpYsWXwON",
+      "name": "Judge Recruitment"
+    },
+    {
+      "_id": "mWsANjdjupBYjpBINPcY",
+      "name": "Membership Campaign",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "targetDate": "2026-07-25",
+      "createdAt": "2026-07-09T15:24:48.840Z",
+      "promise": "Launch FY27 membership campaign",
+      "lead": "Carolina",
+      "health": "needs-attention"
+    },
+    {
+      "_id": "z39bfX6zHYunmxPhyphQ",
+      "health": "on-track",
+      "targetDate": "2026-07-18",
+      "createdAt": "2026-07-09T14:44:19.829Z",
+      "promise": " Launch Office Hours to members by July 18",
+      "lead": "Carolina",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "name": "Office Hours Rollout"
+    }
+  ],
+  "tasks": [
+    {
+      "_id": "1ljUA86LLB82uTerUYna",
+      "projectName": "Membership Campaign",
+      "projectId": "mWsANjdjupBYjpBINPcY",
+      "waitingOn": "Brochure",
+      "createdAt": "2026-07-09T15:25:34.732Z",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-18",
+      "nextAction": "Update page",
+      "programName": "Membership & Community",
+      "owner": "Carolina",
+      "leadershipAttention": "None",
+      "priority": "",
+      "name": "Update website",
+      "status": "Not Started"
+    },
+    {
+      "_id": "Ec6zkp9vFroqHDztUsGj",
+      "createdAt": "2026-07-09T14:50:18.679Z",
+      "waitingOn": "",
+      "leadershipAttention": "None",
+      "owner": "Denisse",
+      "projectName": "Office Hours Rollout",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "programName": "Membership & Community",
+      "nextAction": "Draft email",
+      "status": "Not Started",
+      "name": "Draft eNews",
+      "dueDate": "2026-07-14",
+      "programId": "Y0ghwNHDZviZnEWRMpoB"
+    },
+    {
+      "_id": "EcDkBUgZu1cl0p62p4u8",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-13",
+      "name": "Design graphics",
+      "status": "Waiting",
+      "nextAction": "",
+      "programName": "Membership & Community",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "projectName": "Office Hours Rollout",
+      "owner": "Designer",
+      "leadershipAttention": "None",
+      "createdAt": "2026-07-09T14:49:30.967Z",
+      "waitingOn": "Copy finalized"
+    },
+    {
+      "_id": "GZokSKlGowa5VvHyG11Q",
+      "leadershipAttention": "None",
+      "waitingOn": "",
+      "createdAt": "2026-07-09T14:48:37.175Z",
+      "projectName": "Office Hours Rollout",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "owner": "Regina",
+      "status": "Complete",
+      "nextAction": "",
+      "programName": "Membership & Community",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-10",
+      "name": "Finalize messaging"
+    },
+    {
+      "_id": "IkXSmsneeVl9T9ZGWHis",
+      "createdAt": "2026-07-09T14:49:52.991Z",
+      "waitingOn": "Graphics",
+      "leadershipAttention": "None",
+      "owner": "Carolina",
+      "projectName": "Office Hours Rollout",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "programName": "Membership & Community",
+      "nextAction": "",
+      "status": "Not Started",
+      "name": "Build webpage",
+      "dueDate": "2026-07-15",
+      "programId": "Y0ghwNHDZviZnEWRMpoB"
+    },
+    {
+      "_id": "QshauD2mS7JgpVB5cpjZ",
+      "nextAction": "Schedule posts",
+      "status": "Not Started",
+      "programName": "Membership & Community",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "name": "Schedule LinkedIn",
+      "dueDate": "2026-07-15",
+      "leadershipAttention": "None",
+      "createdAt": "2026-07-09T14:50:45.218Z",
+      "waitingOn": "Graphics",
+      "owner": "Denisse",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "projectName": "Office Hours Rollout"
+    },
+    {
+      "_id": "XeJkK7ipclQ9f7t9kLlC",
+      "createdAt": "2026-07-09T14:51:07.349Z",
+      "waitingOn": "",
+      "leadershipAttention": "Decision Needed",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "projectName": "Office Hours Rollout",
+      "owner": "Carolina",
+      "programName": "Membership & Community",
+      "status": "Not Started",
+      "nextAction": "Go live",
+      "dueDate": "2026-07-18",
+      "name": "Launch Office Hours",
+      "programId": "Y0ghwNHDZviZnEWRMpoB"
+    },
+    {
+      "_id": "ecgqzzzIySoBM6VP4nWq",
+      "nextAction": "Board outreach",
+      "status": "Waiting",
+      "name": "Follow-up remaining judges",
+      "dueDate": "2026-07-11",
+      "programId": "R48hmRRWkKHlpYsWXwON",
+      "createdAt": "2026-07-09T13:56:51.093Z",
+      "waitingOn": "Responses",
+      "leadershipAttention": "Review Needed",
+      "owner": "Jeffrey",
+      "projectId": "fRpGTOmDHAjBIyrxgkfz",
+      "projectName": "Judge Recruitment"
+    },
+    {
+      "_id": "fMRFO0VwKEaMk97Zdk52",
+      "projectName": "Membership Campaign",
+      "projectId": "mWsANjdjupBYjpBINPcY",
+      "waitingOn": "Copy",
+      "createdAt": "2026-07-09T15:26:58.620Z",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-19",
+      "nextAction": "Design graphics",
+      "programName": "Membership & Community",
+      "owner": "Designer",
+      "priority": "",
+      "leadershipAttention": "None",
+      "name": "Create social assets",
+      "status": "Waiting"
+    },
+    {
+      "_id": "psXQ4vbysuUNFalcLZjm",
+      "projectName": "Office Hours Rollout",
+      "projectId": "z39bfX6zHYunmxPhyphQ",
+      "owner": "Carolina",
+      "createdAt": "2026-07-09T14:49:10.525Z",
+      "waitingOn": "Regina's approval",
+      "leadershipAttention": "Review Needed",
+      "dueDate": "2026-07-12",
+      "name": "Write webpage copy",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "programName": "Membership & Community",
+      "status": "In Progress",
+      "nextAction": "Finish final draft"
+    },
+    {
+      "_id": "r5v3hYgyGwTyhSu9motF",
+      "owner": "Denisse",
+      "priority": "",
+      "leadershipAttention": "None",
+      "name": "Schedule emails",
+      "status": "Not Started",
+      "projectName": "Membership Campaign",
+      "projectId": "mWsANjdjupBYjpBINPcY",
+      "waitingOn": "",
+      "createdAt": "2026-07-09T15:27:42.133Z",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-21",
+      "nextAction": "Schedule",
+      "programName": "Membership & Community"
+    },
+    {
+      "_id": "vvg1nEWQXsQ8xl0u4che",
+      "projectName": "Judge Recruitment",
+      "projectId": "fRpGTOmDHAjBIyrxgkfz",
+      "owner": "Denisse",
+      "leadershipAttention": "Decision Needed",
+      "waitingOn": "Confirmations",
+      "createdAt": "2026-07-09T14:00:55.129Z",
+      "programId": "R48hmRRWkKHlpYsWXwON",
+      "dueDate": "2026-07-11",
+      "name": "Finalize Panel",
+      "status": "Not Started",
+      "nextAction": "Publish list"
+    },
+    {
+      "_id": "w11rs4W8xfxLL8phaAAn",
+      "projectId": "mWsANjdjupBYjpBINPcY",
+      "projectName": "Membership Campaign",
+      "createdAt": "2026-07-09T15:25:17.687Z",
+      "waitingOn": "",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "dueDate": "2026-07-14",
+      "nextAction": "Approve brochure",
+      "programName": "Membership & Community",
+      "owner": "Regina",
+      "priority": "",
+      "leadershipAttention": "Decision Needed",
+      "name": "Finalize brochure",
+      "status": "Review"
+    },
+    {
+      "_id": "wost1900zIjWGB8AMKte",
+      "createdAt": "2026-07-09T15:28:05.428Z",
+      "waitingOn": "",
+      "projectId": "mWsANjdjupBYjpBINPcY",
+      "projectName": "Membership Campaign",
+      "programName": "Membership & Community",
+      "nextAction": "Launch",
+      "dueDate": "2026-07-25",
+      "programId": "Y0ghwNHDZviZnEWRMpoB",
+      "priority": "",
+      "leadershipAttention": "Decision Needed",
+      "owner": "Carolina",
+      "status": "Not Started",
+      "name": "Launch campaign"
+    }
+  ],
+  "users": [
+    {
+      "_id": "OymlgLWLpPf4T0LSdd5rtWepNBk2",
+      "email": "cstewart@harvardae.org",
+      "role": "admin",
+      "createdAt": "2026-07-09T14:39:04.991Z",
+      "name": "Carolina"
+    },
+    {
+      "_id": "RRvVsBN2c5Vo9IWnn4Nmf5pXbwE3",
+      "role": "admin",
+      "name": "Jamie",
+      "createdAt": "2026-07-09T14:30:33.573Z",
+      "email": "jnies@harvardae.org"
+    },
+    {
+      "_id": "RlE2ju9PCqcVeVge9RNOmJMbwvE3",
+      "email": "rmarchadesch@harvardae.org",
+      "name": "Inah",
+      "createdAt": "2026-07-09T17:11:10.557Z",
+      "role": "admin"
+    },
+    {
+      "_id": "aOKYtKwnahZFwfHc2M77OafhuhD3",
+      "email": "rryan@harvardae.org",
+      "name": "Regina",
+      "createdAt": "2026-07-09T14:25:02.473Z",
+      "role": "admin"
+    }
+  ]
+}

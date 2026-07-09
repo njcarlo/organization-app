@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "hae-operating-tracker"
-  }
+  },
+  "targets": {
+    "hae-operating-tracker": {
+      "hosting": {
+        "tracker": ["hae-operating-tracker"],
+        "lms": ["hae-lms"],
+        "eir": ["hae-eir"],
+        "crm": ["hae-crm"],
+        "ams": ["hae-ams"]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -22,8 +22,14 @@
     "build:ams": "npm run build -w @hae/ams",
     "build:all": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "deploy": "npm run build:tracker && firebase deploy --only hosting,firestore:rules,auth",
-    "deploy:hosting": "npm run build:tracker && firebase deploy --only hosting"
+    "import:real": "node scripts/import-real-data.mjs",
+    "deploy": "npm run build:all && firebase deploy --only hosting,firestore:rules,auth",
+    "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
+    "deploy:tracker": "npm run build:tracker && firebase deploy --only hosting:tracker",
+    "deploy:lms": "npm run build:lms && firebase deploy --only hosting:lms",
+    "deploy:eir": "npm run build:eir && firebase deploy --only hosting:eir",
+    "deploy:crm": "npm run build:crm && firebase deploy --only hosting:crm",
+    "deploy:ams": "npm run build:ams && firebase deploy --only hosting:ams"
   },
   "devDependencies": {
     "firebase-tools": "^15.22.4"
