@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import { MODULES, moduleHref } from '@hae/ui'
 
 export default function Sidebar({ open = false, onClose }) {
   const { userProfile, isAdmin, logout } = useAuth()
@@ -57,7 +58,7 @@ export default function Sidebar({ open = false, onClose }) {
         <img
           src="/hae-logo.webp"
           alt="Harvard Alumni Entrepreneurs"
-          className="h-10 w-auto object-contain"
+          className="h-10 w-auto max-w-[180px] object-contain"
         />
         <div className="mt-2 text-[10px] font-semibold tracking-[0.14em] text-hae-slate uppercase">
           Operating Tracker
@@ -82,7 +83,7 @@ export default function Sidebar({ open = false, onClose }) {
         <div className="mb-1 px-3 text-[10px] font-semibold tracking-wider text-hae-slate uppercase">
           Programs
         </div>
-        <div className="space-y-0.5">
+        <div className="mb-4 space-y-0.5">
           {programs.map((p) => (
             <NavLink
               key={p.id}
@@ -96,6 +97,37 @@ export default function Sidebar({ open = false, onClose }) {
               ) : null}
             </NavLink>
           ))}
+        </div>
+
+        <div className="mb-1 px-3 text-[10px] font-semibold tracking-wider text-hae-slate uppercase">
+          Platform
+        </div>
+        <div className="space-y-0.5">
+          {MODULES.map((m) => {
+            if (m.id === 'tracker') {
+              return (
+                <div
+                  key={m.id}
+                  className="rounded-md bg-hae-crimson/10 px-3 py-2 text-sm font-semibold text-hae-crimson"
+                >
+                  {m.short}
+                  <div className="text-[11px] font-normal text-hae-slate">
+                    {m.description}
+                  </div>
+                </div>
+              )
+            }
+            return (
+              <a
+                key={m.id}
+                href={moduleHref(m)}
+                className="block rounded-md px-3 py-2 text-sm text-hae-ink/80 hover:bg-black/5"
+              >
+                {m.short}
+                <div className="text-[11px] text-hae-slate">{m.description}</div>
+              </a>
+            )
+          })}
         </div>
       </nav>
 
