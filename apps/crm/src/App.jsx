@@ -10,12 +10,14 @@ import Dashboard from './pages/Dashboard.jsx'
 import Contacts from './pages/Contacts.jsx'
 import Interactions from './pages/Interactions.jsx'
 import Pipeline from './pages/Pipeline.jsx'
+import Help from './pages/Help.jsx'
 
 const nav = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/contacts', label: 'Contacts' },
   { to: '/interactions', label: 'Interactions' },
   { to: '/pipeline', label: 'Pipeline' },
+  { to: '/help', label: 'Help' },
 ]
 
 export default function App() {
@@ -44,6 +46,7 @@ export default function App() {
               <Route path="/contacts" element={<Contacts />} />
               <Route path="/interactions" element={<Interactions />} />
               <Route path="/pipeline" element={<Pipeline />} />
+              <Route path="/help" element={<Help />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

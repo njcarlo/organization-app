@@ -11,6 +11,7 @@ import Directory from './pages/Directory.jsx'
 import ExpertDetail from './pages/ExpertDetail.jsx'
 import ManageExperts from './pages/ManageExperts.jsx'
 import HowItWorks from './pages/HowItWorks.jsx'
+import Help from './pages/Help.jsx'
 
 function eirNav({ hasPermission }) {
   const items = [
@@ -25,6 +26,7 @@ function eirNav({ hasPermission }) {
       permission: PERMISSIONS.EIR_MANAGE,
     })
   }
+  items.push({ to: '/help', label: 'Help' })
   return items
 }
 
@@ -57,6 +59,7 @@ export default function App() {
               <Route path="/directory" element={<Directory />} />
               <Route path="/experts/:expertId" element={<ExpertDetail />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/help" element={<Help />} />
               <Route element={<ProtectedRoute permission={PERMISSIONS.EIR_MANAGE} />}>
                 <Route path="/manage" element={<ManageExperts />} />
               </Route>

@@ -75,6 +75,8 @@ export default function Sidebar({ open = false, onClose }) {
           <NavLink to="/my-tasks" className={linkClass} onClick={handleNav}>
             My Tasks
           </NavLink>
+          <NavLink to="/help" className={linkClass} onClick={handleNav}>
+            Help
           <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
             Surveys
           </NavLink>
@@ -150,13 +152,22 @@ export default function Sidebar({ open = false, onClose }) {
           {userProfile?.name || 'User'}
         </div>
         <div className="text-[11px] text-hae-slate">{roleLabel}</div>
-        <button
-          type="button"
-          onClick={() => logout()}
-          className="mt-1 text-xs text-hae-slate hover:text-hae-crimson"
-        >
-          Sign out
-        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <NavLink
+            to="/help"
+            onClick={handleNav}
+            className="text-xs font-semibold text-hae-crimson hover:underline"
+          >
+            Help
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="text-xs text-hae-slate hover:text-hae-crimson"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </aside>
   )
