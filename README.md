@@ -12,26 +12,27 @@ One repo, **one app per milestone module**. Shared Firebase + branding packages.
 ```
 hae-platform/
 ├── apps/
-│   ├── operating-tracker/   ✅ Milestone 1 — COMPLETE / live
-│   ├── lms/                 🔲 Milestone 2 — stub
-│   ├── crm/                 🔲 Milestone 3 — stub
-│   └── ams/                 🔲 Milestone 4 — stub
+│   ├── operating-tracker/   ✅ Milestone 1 — COMPLETE
+│   ├── lms/                 ✅ Milestone 2 — Academy LMS
+│   ├── eir/                 ✅ Expert Office Hours (EiR directory)
+│   ├── crm/                 ✅ Milestone 3 — CRM
+│   └── ams/                 ✅ Milestone 4 — AMS
 ├── packages/
 │   ├── firebase/            Shared Auth + Firestore clients
-│   └── branding/            HAE fonts, colors, theme CSS
-├── firebase.json            Hosting / Auth / Firestore (root)
+│   ├── branding/            HAE fonts, colors, theme CSS
+│   └── ui/                  Shared auth shell + module nav
+├── firebase.json
 ├── firestore.rules
-└── package.json             npm workspaces root
+└── package.json
 ```
 
-| App | Package name | Milestone | Status |
-|-----|--------------|-----------|--------|
-| Operating Tracker | `@hae/operating-tracker` | 1 | **Complete** / Live |
-| LMS | `@hae/lms` | 2 | Planned stub |
-| CRM | `@hae/crm` | 3 | Planned stub |
-| AMS | `@hae/ams` | 4 | Planned stub |
-
-**Yes — this is a monorepo:** each milestone is its own Vite/React app under `apps/`, with shared code in `packages/`. Later you can host each app on its own Firebase Hosting site or subdomain without splitting repos.
+| App | Package | Milestone | Status |
+|-----|---------|-----------|--------|
+| Operating Tracker | `@hae/operating-tracker` | 1 | Complete / Live |
+| LMS (Academy) | `@hae/lms` | 2 | Built |
+| Experts (EiR) | `@hae/eir` | 2 | Built (dynamic directory) |
+| CRM | `@hae/crm` | 3 | Built |
+| AMS | `@hae/ams` | 4 | Built |
 
 ---
 
@@ -40,50 +41,60 @@ hae-platform/
 ```bash
 npm install
 
-# Milestone 1 (default)
-npm run dev                 # same as dev:tracker
-npm run build:tracker
-npm run deploy              # build tracker + firebase deploy
+npm run dev:tracker   # :5173
+npm run dev:lms       # :5174
+npm run dev:crm       # :5175
+npm run dev:ams       # :5176
+npm run dev:eir       # :5177
 
-# Future modules (stubs until scaffolded)
-npm run dev:lms
-npm run dev:crm
-npm run dev:ams
+npm run build:all
+npm run deploy        # all hosting targets + firestore rules
+npm run import:real   # upsert production programs/projects/tasks/users
 ```
 
 ---
 
-## Shared packages
+## Live URLs
 
-### `@hae/firebase`
-Primary + secondary Auth apps and Firestore `db` for `hae-operating-tracker`.
-
-### `@hae/branding`
-Tokens and Tailwind theme from harvardae.org (Archivo Black, Libre Franklin, crimson `#b80028`).
-
----
-
-## First-time setup (Operating Tracker)
-
-1. Open https://hae-operating-tracker.web.app/setup (only when `users` is empty)
-2. Create admin — seeds 11 programs
-3. Sign in at `/login`
+- Tracker: https://hae-operating-tracker.web.app
+- LMS: https://hae-lms.web.app
+- EiR: https://hae-eir.web.app
+- CRM: https://hae-crm.web.app
+- AMS: https://hae-ams.web.app
 
 ---
 
-## Adding the next milestone
+## EiR / Expert Office Hours
 
-1. Replace the stub in `apps/<module>/` with a Vite React app (copy `operating-tracker` as a starting point)
-2. Depend on `@hae/firebase` and `@hae/branding`
-3. Add a Hosting target in `firebase.json` when ready to deploy separately
-4. Keep module-specific Firestore collections in that app’s domain
+Dynamic SME directory staff can manage (add/edit experts with bio, expertise, LinkedIn, booking link).
+
+**Reference only (not a data copy):** https://sites.google.com/harvardae.org/experts/home
+
+Firestore collection: `experts`
+
+---
+
+## LMS (Academy)
+
+Aligned to HAE Academy model: Academy vs Flagship paths, enrollments, office hours, 30/60/180-day check-ins, certificates.
+
+**Public LMS sample was private** (Google Site login). Built from [harvardae-academy.org](https://www.harvardae-academy.org/) + Academy 2026 as reference.
+
+Collections: `courses`, `modules`, `enrollments`, `sessions`, `checkIns`, `certificates`
+
+---
+
+## CRM / AMS
+
+- CRM: `contacts`, `interactions` (+ pipeline stages)
+- AMS: `members`, `memberships`, `events`, `committees`
 
 ---
 
 ## Firebase
 
 - Project: `hae-operating-tracker`
-- Hosting currently serves **Operating Tracker** (`apps/operating-tracker/dist`)
+- Multi-site Hosting targets: `tracker`, `lms`, `eir`, `crm`, `ams`
 - Auth: email/password
 - Rules: authenticated read/write (`firestore.rules`)
 
@@ -94,6 +105,6 @@ Tokens and Tailwind theme from harvardae.org (Archivo Black, Libre Franklin, cri
 - **My Tasks** (`/my-tasks`) — personal / all-tasks (admin) with filters
 - **Admin** (`/admin`) — users (via secondary Auth app) + programs
 
-### Collections
+### Tracker collections
 
 `users`, `programs`, `projects`, `tasks`

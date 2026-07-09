@@ -1,12 +1,12 @@
 {
-  "name": "@hae/ams",
+  "name": "@hae/eir",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5176",
+    "dev": "vite --port 5177",
     "build": "vite build",
-    "preview": "vite preview --port 5176"
+    "preview": "vite preview --port 5177"
   },
   "dependencies": {
     "@hae/branding": "*",

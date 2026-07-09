@@ -1,23 +1,26 @@
-# @hae/lms — Learning Management System
+# @hae/lms — HAE Academy LMS
 
-**Milestone 2 — Planned**
+**Milestone 2**
 
-Manage HAE educational programs, courses, and learner progress.
+Staff tools for Academy Fast Track and Flagship Deep Dive courses.
 
-## Planned scope
+## Features
 
-- Course catalog (modules + sessions)
-- Enrollment tracking (members from AMS)
-- Progress tracking per learner per module
-- Facilitator assignments
-- Session scheduling (dates, locations, Zoom)
-- Certificates / completion records
-- Dashboard widgets: upcoming sessions, enrollment, completion rates
+- Course catalog (path: academy / flagship)
+- Modules (lessons, office hours, quizzes, workbooks, AMA, check-ins)
+- Enrollments + progress
+- Office Hours scheduling (Zoom / location)
+- 30 / 60 / 180-day check-ins
+- Certificate of Completion records
 
-## Firestore collections (planned)
+## References (not copies)
 
-`courses`, `modules`, `enrollments`, `sessions`
+- https://www.harvardae-academy.org/
+- https://www.harvardae.org/academy-2026
+- Google Site LMS sample (private) — structure only when accessible
 
-## Status
+## Run
 
-Stub only. Scaffold when Milestone 2 starts. Will share `@hae/firebase` and `@hae/branding`.
+```bash
+npm run dev:lms
+```
