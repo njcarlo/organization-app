@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { PlatformHeader } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from './Sidebar'
+import NotificationsBell from './NotificationsBell'
 
 export default function Layout() {
   const { userProfile, roleLabel, canAccessModule } = useAuth()
@@ -32,6 +33,7 @@ export default function Layout() {
           canAccessModule={canAccessModule}
           onMenuClick={() => setNavOpen(true)}
           menuOpen={navOpen}
+          actions={<NotificationsBell />}
         />
       </div>
 
