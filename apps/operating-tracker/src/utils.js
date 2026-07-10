@@ -1,3 +1,5 @@
+import { TASK_STATUSES } from './constants'
+
 /** Days until due date (negative if overdue). Returns null if no date. */
 export function daysUntil(dueDate) {
   if (!dueDate) return null
@@ -25,12 +27,21 @@ export function effectivePriority(task) {
 const PRIORITY_RANK = { HIGH: 0, MEDIUM: 1, LOW: 2 }
 
 export function sortByPriorityThenDue(a, b) {
+  const ta = a.status === 'Time Sensitive'
+  const tb = b.status === 'Time Sensitive'
+  if (ta !== tb) return ta ? -1 : 1
   const pa = PRIORITY_RANK[effectivePriority(a)] ?? 3
   const pb = PRIORITY_RANK[effectivePriority(b)] ?? 3
   if (pa !== pb) return pa - pb
   const da = a.dueDate || '9999-99-99'
   const db = b.dueDate || '9999-99-99'
   return da.localeCompare(db)
+}
+
+export function sortByStatus(a, b) {
+  const ra = TASK_STATUSES.indexOf(a.status)
+  const rb = TASK_STATUSES.indexOf(b.status)
+  return (ra === -1 ? TASK_STATUSES.length : ra) - (rb === -1 ? TASK_STATUSES.length : rb)
 }
 
 export function formatDate(dateStr) {
@@ -55,6 +66,7 @@ export function priorityBadgeClass(priority) {
 }
 
 export function healthBadgeClass(health) {
+  if (health === 'not-started') return 'bg-slate-100 text-hae-slate'
   if (health === 'on-track') return 'bg-emerald-100 text-hae-green'
   if (health === 'needs-attention') return 'bg-amber-100 text-hae-yellow'
   if (health === 'at-risk') return 'bg-red-100 text-hae-red'
@@ -62,7 +74,16 @@ export function healthBadgeClass(health) {
   return 'bg-slate-100 text-hae-slate'
 }
 
+export function statusBadgeClass(status) {
+  if (status === 'Time Sensitive') return 'bg-red-100 text-hae-red'
+  if (status === 'Complete') return 'bg-emerald-50 text-hae-green'
+  if (status === 'Waiting' || status === 'Review') return 'bg-amber-50 text-hae-yellow'
+  if (status === 'In Progress') return 'bg-sky-50 text-sky-800'
+  return 'bg-hae-mist text-hae-slate'
+}
+
 export function healthLabel(health) {
+  if (health === 'not-started') return 'Not Started'
   if (health === 'on-track') return 'On Track'
   if (health === 'needs-attention') return 'Needs Attention'
   if (health === 'at-risk') return 'At Risk'
