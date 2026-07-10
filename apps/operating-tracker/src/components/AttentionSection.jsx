@@ -22,7 +22,11 @@ export default function AttentionSection({
     const rows = []
 
     for (const project of projects) {
-      if (project.health === 'needs-attention' || project.health === 'at-risk') {
+      if (
+        project.health === 'time-sensitive' ||
+        project.health === 'needs-attention' ||
+        project.health === 'at-risk'
+      ) {
         rows.push({
           id: `project-${project.id}`,
           kind: 'project',
@@ -94,7 +98,7 @@ export default function AttentionSection({
                 <div className="hae-mobile-card__title">{row.taskName}</div>
                 <div className="hae-mobile-card__meta">
                   <span>{row.issue}</span>
-                  <span>Due {formatDate(row.dueDate)}</span>
+                  <span>Needed by {formatDate(row.dueDate)}</span>
                   <span>{row.owner}</span>
                   <span className="line-clamp-1">
                     {row.programName || '—'}
@@ -110,34 +114,26 @@ export default function AttentionSection({
         <table className="w-full min-w-[640px] text-left lg:min-w-[900px]">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
-              <th className="px-3 py-2 font-semibold">Task</th>
+              <th className="px-3 py-2 font-semibold">Issue</th>
               <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
               <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
-              <th className="px-3 py-2 font-semibold">Issue</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Waiting On</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Leadership Action</th>
-              <th className="px-3 py-2 font-semibold">Owner</th>
-              <th className="px-3 py-2 font-semibold">Due</th>
+              <th className="px-3 py-2 font-semibold">Task</th>
+              <th className="px-3 py-2 font-semibold">Project Owner</th>
+              <th className="px-3 py-2 font-semibold">Needed By</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) =>
               row ? (
                 <tr key={row.id} className="h-11 border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm font-medium">{row.taskName}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{row.issue}</td>
                   <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {row.programName || '—'}
                   </td>
                   <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {row.projectName}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{row.issue}</td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                    {row.waitingOn || '—'}
-                  </td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                    {row.leadershipAction}
-                  </td>
+                  <td className="px-3 py-2 text-sm font-medium">{row.taskName}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.owner}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {formatDate(row.dueDate)}
@@ -145,7 +141,7 @@ export default function AttentionSection({
                 </tr>
               ) : (
                 <tr key={`pad-${i}`} className="h-11 border-b border-hae-line/40">
-                  <td colSpan={8} className="px-3 py-2">
+                  <td colSpan={6} className="px-3 py-2">
                     &nbsp;
                   </td>
                 </tr>

@@ -50,9 +50,6 @@ function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel, onOpen
                 ? ` · ${projectNameOf(task, projectsById)}`
                 : ''}
             </span>
-            {task.nextAction ? (
-              <span className="line-clamp-2 w-full">Next: {task.nextAction}</span>
-            ) : null}
           </div>
         </button>
       ))}
@@ -67,18 +64,17 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
         <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
           <tr>
             <th className="px-3 py-2 font-semibold">Priority</th>
-            <th className="px-3 py-2 font-semibold">Task</th>
             <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
             <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
+            <th className="px-3 py-2 font-semibold">Task</th>
             <th className="hae-col-sm-hide px-3 py-2 font-semibold">Project Owner</th>
             <th className="px-3 py-2 font-semibold">Due</th>
-            <th className="hae-col-sm-hide px-3 py-2 font-semibold">Next Action</th>
           </tr>
         </thead>
         <tbody>
           {tasks.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
+              <td colSpan={6} className="px-3 py-6 text-center text-sm text-hae-slate">
                 {emptyLabel}
               </td>
             </tr>
@@ -88,21 +84,18 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
                 <td className="px-3 py-2">
                   <PriorityCell task={task} />
                 </td>
-                <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
                 <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                   {programNameOf(task, programsById)}
                 </td>
                 <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                   {projectNameOf(task, projectsById)}
                 </td>
+                <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
                 <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
                   {projectsById[task.projectId]?.lead || '—'}
                 </td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
                   {formatDate(task.dueDate)}
-                </td>
-                <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                  {task.nextAction || '—'}
                 </td>
               </tr>
             ))

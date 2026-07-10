@@ -32,6 +32,7 @@ export const LEADERSHIP_ATTENTION = [
 export const EXEC_INBOX_EMAILS = ['rmarchadesch@harvardae.org', 'rryan@harvardae.org']
 
 export const HEALTH_OPTIONS = [
+  { value: 'time-sensitive', label: 'Time Sensitive', className: 'bg-hae-crimson text-white' },
   { value: 'not-started', label: 'Not Started', className: 'bg-slate-100 text-hae-slate' },
   { value: 'on-track', label: 'On Track', className: 'bg-emerald-100 text-hae-green' },
   { value: 'needs-attention', label: 'Needs Attention', className: 'bg-amber-100 text-hae-yellow' },

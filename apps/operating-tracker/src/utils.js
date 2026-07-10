@@ -66,11 +66,12 @@ export function priorityBadgeClass(priority) {
 }
 
 const HEALTH_RANK = {
-  'at-risk': 0,
-  'needs-attention': 1,
-  'not-started': 2,
-  'on-track': 3,
-  completed: 4,
+  'time-sensitive': 0,
+  'at-risk': 1,
+  'needs-attention': 2,
+  'not-started': 3,
+  'on-track': 4,
+  completed: 5,
 }
 
 export function sortByHealth(a, b) {
@@ -81,6 +82,7 @@ export function sortByHealth(a, b) {
 }
 
 export function healthBadgeClass(health) {
+  if (health === 'time-sensitive') return 'bg-hae-crimson text-white'
   if (health === 'not-started') return 'bg-slate-100 text-hae-slate'
   if (health === 'on-track') return 'bg-emerald-100 text-hae-green'
   if (health === 'needs-attention') return 'bg-amber-100 text-hae-yellow'
@@ -90,7 +92,7 @@ export function healthBadgeClass(health) {
 }
 
 export function statusBadgeClass(status) {
-  if (status === 'Time Sensitive') return 'bg-red-100 text-hae-red'
+  if (status === 'Time Sensitive') return 'bg-hae-crimson text-white'
   if (status === 'Complete') return 'bg-emerald-50 text-hae-green'
   if (status === 'Waiting' || status === 'Review') return 'bg-amber-50 text-hae-yellow'
   if (status === 'In Progress') return 'bg-sky-50 text-sky-800'
@@ -98,6 +100,7 @@ export function statusBadgeClass(status) {
 }
 
 export function healthLabel(health) {
+  if (health === 'time-sensitive') return 'Time Sensitive'
   if (health === 'not-started') return 'Not Started'
   if (health === 'on-track') return 'On Track'
   if (health === 'needs-attention') return 'Needs Attention'
