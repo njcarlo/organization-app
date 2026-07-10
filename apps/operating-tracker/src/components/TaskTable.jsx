@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
-import { effectivePriority, formatDate, priorityBadgeClass } from '../utils'
+import { effectivePriority, formatDate, priorityBadgeClass, sortByStatus, statusBadgeClass } from '../utils'
 
 const emptyNew = {
   name: '',
@@ -42,16 +42,12 @@ function Field({ label, children, className = '' }) {
 
 function StatusPill({ status }) {
   const s = status || '—'
-  const tone =
-    s === 'Complete'
-      ? 'bg-emerald-50 text-hae-green'
-      : s === 'Waiting' || s === 'Review'
-        ? 'bg-amber-50 text-hae-yellow'
-        : s === 'In Progress'
-          ? 'bg-sky-50 text-sky-800'
-          : 'bg-hae-mist text-hae-slate'
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${tone}`}>
+    <span
+      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(
+        status
+      )}`}
+    >
       {s}
     </span>
   )
@@ -201,6 +197,7 @@ const TaskTable = forwardRef(function TaskTable(
       if (isComplete(t)) c.push(t)
       else a.push(t)
     }
+    a.sort(sortByStatus)
     return { active: a, completed: c }
   }, [tasks])
 

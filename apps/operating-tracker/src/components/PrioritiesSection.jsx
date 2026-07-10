@@ -122,6 +122,10 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
     const week = []
     const later = []
     for (const t of active) {
+      if (t.status === 'Time Sensitive') {
+        week.push(t)
+        continue
+      }
       const d = daysUntil(t.dueDate)
       if (d === null || d <= 7) week.push(t)
       else later.push(t)
@@ -139,7 +143,8 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
         <div className="border-b border-hae-line px-4 py-3">
           <h2 className="text-sm font-semibold text-hae-ink">This Week&apos;s Priorities</h2>
           <p className="text-xs text-hae-slate">
-            Incomplete tasks due within 7 days (or with no due date)
+            Incomplete tasks due within 7 days (or with no due date), plus any flagged Time
+            Sensitive
           </p>
         </div>
         <div className="hae-mobile-only">
