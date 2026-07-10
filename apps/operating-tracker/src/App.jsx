@@ -9,6 +9,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
 import MyTasks from './pages/MyTasks'
+import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
 import ExecutiveInbox from './pages/ExecutiveInbox'
 import Admin from './pages/Admin'
@@ -65,6 +66,7 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
+                <Route path="/calendar" element={<Calendar />} />
                 <Route
                   path="/executive-inbox"
                   element={

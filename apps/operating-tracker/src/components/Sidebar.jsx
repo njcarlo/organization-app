@@ -30,6 +30,7 @@ export default function Sidebar({ open = false, onClose }) {
     const workspaceItems = [
       { to: '/', label: 'Dashboard', end: true, icon: 'home' },
       { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
+      { to: '/calendar', label: 'Calendar', icon: 'calendar' },
     ]
     if (isExecInboxUser) {
       workspaceItems.push({
