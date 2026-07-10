@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
 } from 'firebase/auth'
@@ -62,6 +63,9 @@ export function AuthProvider({ children }) {
   const login = (email, password) =>
     signInWithEmailAndPassword(auth, email, password)
 
+  const requestPasswordReset = (email) =>
+    sendPasswordResetEmail(auth, String(email || '').trim())
+
   const logout = () => firebaseSignOut(auth)
 
   const refreshProfile = async () => {
@@ -81,6 +85,7 @@ export function AuthProvider({ children }) {
       userProfile,
       loading,
       login,
+      requestPasswordReset,
       logout,
       refreshProfile,
       role,

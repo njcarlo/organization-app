@@ -34,19 +34,22 @@ hae-platform/
 | Experts (EiR) | `@hae/eir` | 2 | Built (dynamic directory) |
 | CRM | `@hae/crm` | 3 | Built |
 | AMS | `@hae/ams` | 4 | Built |
-| Platform insights | cross-app | **5** | In progress |
+| Platform insights | cross-app | **5** | Complete |
 
 ### Milestone 5 — Platform insights & ops polish
 
-Cross-app improvements for feedback, awareness, and calendar handoff (Spark-safe; no Cloud Functions).
+Cross-app improvements for feedback, awareness, calendar handoff, person linking, and account recovery (Spark-safe; no Cloud Functions).
 
 | Feature | Where | Notes |
-|---------|-------|--------|
+|---------|--------|--------|
 | Survey analytics + CSV export | Tracker → Surveys → editor | Choice/rating breakdowns, text samples, CSV download |
 | Notifications digest | Tracker → Notifications | Overdue / due-soon tasks + LMS check-ins; optional mailto digest |
 | ICS calendar export | Tracker My Tasks, LMS Office Hours, AMS Events | Download `.ics` for Google/Apple/Outlook |
+| CRM ↔ AMS/LMS person linking | CRM → Contacts → Edit | Match by email; show members, memberships, enrollments, certificates |
+| URL attachments | CRM contacts & interactions | Paste Drive/Dropbox/SharePoint links (no Storage required) |
+| Password reset | All login pages + Admin → Users | Firebase `sendPasswordResetEmail`; admin can trigger per user |
 
-Later candidates (not in this slice): CRM↔AMS/LMS person linking, file attachments, password-reset UX, Blaze Functions for push email.
+Deferred (needs Blaze / custom domain): automated push email via Cloud Functions, nested `app.hae.web.app` DNS.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
 } from 'firebase/auth'
 import {
@@ -86,6 +87,7 @@ export default function Admin() {
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   const [newUser, setNewUser] = useState({
     name: '',
@@ -243,6 +245,21 @@ export default function Admin() {
     await load()
   }
 
+  const sendReset = async (email) => {
+    if (!email) {
+      setError('User has no email')
+      return
+    }
+    setError('')
+    setNotice('')
+    try {
+      await sendPasswordResetEmail(secondaryAuth, String(email).trim())
+      setNotice(`Password reset email sent to ${email}`)
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email')
+    }
+  }
+
   const addProgram = async (e) => {
     e.preventDefault()
     if (!newProgram.name.trim()) return
@@ -311,6 +328,7 @@ export default function Admin() {
       </div>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
+      {notice && <p className="text-sm text-hae-green">{notice}</p>}
 
       {tab === 'add' && <AdminAddItems />}
 
@@ -466,6 +484,13 @@ export default function Admin() {
                             className="text-xs text-hae-slate hover:text-hae-crimson"
                           >
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => sendReset(u.email)}
+                            className="text-xs text-hae-slate hover:text-hae-crimson"
+                          >
+                            Reset pw
                           </button>
                           <button
                             type="button"

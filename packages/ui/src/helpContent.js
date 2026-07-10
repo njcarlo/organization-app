@@ -15,7 +15,8 @@ export const HELP_SECTIONS = [
         steps: [
           'Open the app URL you were given (Tracker, LMS, EiR, CRM, or AMS).',
           'Sign in with your HAE email and password.',
-          'If you cannot sign in, ask an admin to create your account under Tracker → Admin → Users.',
+          'Forgot password? Use Forgot password on the sign-in screen — Firebase emails a reset link.',
+          'If you have no account yet, ask an admin to create one under Tracker → Admin → Users.',
         ],
       },
       {
@@ -102,6 +103,7 @@ export const HELP_SECTIONS = [
         heading: 'Admin (admins only)',
         steps: [
           'Users — create login accounts and set roles (admin / staff / member / student).',
+          'Users — Reset pw sends a Firebase password-reset email to that person.',
           'Programs — add or rename programs.',
           'Add items — create records for LMS, EiR, CRM, and AMS from one place.',
           'Import / Export — download or upload JSON backups of collections.',
@@ -172,7 +174,9 @@ export const HELP_SECTIONS = [
         heading: 'Contacts & pipeline',
         steps: [
           'Contacts — add alumni, donors, partners, or prospects with region, tags, and stage.',
-          'Interactions — log emails, calls, meetings, and notes linked to a contact.',
+          'Edit a contact to see Linked across platform — AMS members/memberships and LMS enrollments/certificates matched by the same email.',
+          'Attachments — paste Drive/Dropbox/SharePoint URLs (one per line; optional “Label | URL”).',
+          'Interactions — log emails, calls, meetings, and notes linked to a contact (attachments supported).',
           'Pipeline — move contacts between Prospect → Engaged → Committed → Closed.',
         ],
       },
@@ -213,6 +217,7 @@ export const HELP_SECTIONS = [
         steps: [
           'I do not see my LMS data — ask staff to set learner email to your exact login email.',
           'I do not see my AMS membership — memberships need memberEmail matching your login.',
+          'Forgot password — use Forgot password on any app’s sign-in page, or ask an admin to click Reset pw.',
           'Wrong app access — ask an admin to change your role under Tracker → Admin → Users.',
           'Page looks unstyled or huge logo — hard-refresh (Ctrl/Cmd+Shift+R); you may be on a cached build.',
           'Signed out after switching apps — sign in once on that app; later switches should stay signed in.',

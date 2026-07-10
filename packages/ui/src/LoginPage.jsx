@@ -3,11 +3,13 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 
 export default function LoginPage({ appName = 'HAE Platform' }) {
-  const { user, login, loading } = useAuth()
+  const { user, login, requestPasswordReset, loading } = useAuth()
   const navigate = useNavigate()
+  const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   if (!loading && user) return <Navigate to="/" replace />
@@ -15,12 +17,20 @@ export default function LoginPage({ appName = 'HAE Platform' }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setMessage('')
     setSubmitting(true)
     try {
-      await login(email.trim(), password)
-      navigate('/')
+      if (mode === 'reset') {
+        await requestPasswordReset(email.trim())
+        setMessage(
+          'If an account exists for that email, a reset link is on the way. Check your inbox (and spam).'
+        )
+      } else {
+        await login(email.trim(), password)
+        navigate('/')
+      }
     } catch (err) {
-      setError(err.message || 'Sign-in failed')
+      setError(err.message || (mode === 'reset' ? 'Reset failed' : 'Sign-in failed'))
     } finally {
       setSubmitting(false)
     }
@@ -40,7 +50,11 @@ export default function LoginPage({ appName = 'HAE Platform' }) {
             className="mx-auto h-14 w-auto object-contain"
           />
           <h1 className="mt-5 font-display text-2xl text-hae-ink sm:text-3xl">{appName}</h1>
-          <p className="mt-2 text-sm text-hae-slate">Sign in with your HAE account</p>
+          <p className="mt-2 text-sm text-hae-slate">
+            {mode === 'reset'
+              ? 'We will email you a password reset link'
+              : 'Sign in with your HAE account'}
+          </p>
         </div>
         <form
           onSubmit={handleSubmit}
@@ -56,23 +70,43 @@ export default function LoginPage({ appName = 'HAE Platform' }) {
               className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </label>
-          <label className="mt-4 block text-sm font-medium text-hae-ink">
-            Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-          </label>
+          {mode === 'signin' ? (
+            <label className="mt-4 block text-sm font-medium text-hae-ink">
+              Password
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              />
+            </label>
+          ) : null}
           {error && <p className="mt-3 text-sm text-hae-red">{error}</p>}
+          {message && <p className="mt-3 text-sm text-hae-green">{message}</p>}
           <button
             type="submit"
             disabled={submitting}
             className="mt-5 w-full bg-hae-crimson px-4 py-2.5 text-sm font-semibold tracking-wide text-white uppercase hover:bg-hae-crimson-dark disabled:opacity-60"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting
+              ? mode === 'reset'
+                ? 'Sending…'
+                : 'Signing in…'
+              : mode === 'reset'
+                ? 'Send reset link'
+                : 'Sign in'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === 'signin' ? 'reset' : 'signin')
+              setError('')
+              setMessage('')
+            }}
+            className="mt-3 w-full text-center text-sm font-semibold text-hae-crimson hover:underline"
+          >
+            {mode === 'signin' ? 'Forgot password?' : 'Back to sign in'}
           </button>
         </form>
       </div>

@@ -14,6 +14,13 @@ import {
   PIPELINE_STAGES,
   REGIONS,
 } from '../constants'
+import PersonLinks from '../components/PersonLinks'
+import {
+  AttachmentField,
+  AttachmentList,
+  attachmentsToFormLines,
+  formLinesToAttachments,
+} from '../components/Attachments'
 
 const emptyForm = {
   name: '',
@@ -24,6 +31,7 @@ const emptyForm = {
   stage: 'prospect',
   notes: '',
   followUpDate: '',
+  attachmentLines: '',
 }
 
 export default function Contacts() {
@@ -32,6 +40,7 @@ export default function Contacts() {
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
+  const [linkEmail, setLinkEmail] = useState('')
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'contacts'))
@@ -48,10 +57,12 @@ export default function Contacts() {
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
+    setLinkEmail('')
   }
 
   const startEdit = (c) => {
     setEditingId(c.id)
+    setLinkEmail((c.email || '').toLowerCase())
     setForm({
       name: c.name || '',
       email: c.email || '',
@@ -61,6 +72,7 @@ export default function Contacts() {
       stage: c.stage || 'prospect',
       notes: c.notes || '',
       followUpDate: c.followUpDate || '',
+      attachmentLines: attachmentsToFormLines(c.attachments),
     })
   }
 
@@ -79,6 +91,7 @@ export default function Contacts() {
       stage: form.stage,
       notes: form.notes.trim(),
       followUpDate: form.followUpDate || '',
+      attachments: formLinesToAttachments(form.attachmentLines),
     }
     if (editingId) {
       await updateDoc(doc(db, 'contacts', editingId), payload)
@@ -109,7 +122,8 @@ export default function Contacts() {
       <header>
         <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Contacts</h1>
         <p className="mt-1 text-sm text-hae-slate">
-          Alumni, donors, partners, and prospects — type, region, tags, and stage
+          Alumni, donors, partners, and prospects — type, region, tags, stage,
+          links, and attachments
         </p>
       </header>
 
@@ -148,7 +162,10 @@ export default function Contacts() {
           type="email"
           placeholder="Email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={(e) => {
+            setForm({ ...form, email: e.target.value })
+            if (editingId) setLinkEmail(e.target.value.trim().toLowerCase())
+          }}
           className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
         <select
@@ -201,6 +218,16 @@ export default function Contacts() {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson lg:col-span-1"
         />
+        <AttachmentField
+          className="sm:col-span-2 lg:col-span-3"
+          value={form.attachmentLines}
+          onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
+        />
+        {editingId ? (
+          <div className="sm:col-span-2 lg:col-span-3">
+            <PersonLinks email={linkEmail || form.email} />
+          </div>
+        ) : null}
         <div className="flex gap-2 sm:col-span-2 lg:col-span-3">
           <button
             type="submit"
@@ -249,6 +276,7 @@ export default function Contacts() {
                     {c.notes ? (
                       <div className="mt-0.5 text-xs text-hae-slate">{c.notes}</div>
                     ) : null}
+                    <AttachmentList attachments={c.attachments} />
                   </td>
                   <td className="px-3 py-2 text-sm capitalize text-hae-slate">
                     {c.type || '—'}

@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@hae/firebase'
 import {
@@ -76,6 +81,8 @@ export function AuthProvider({ children }) {
       hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
       canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
       login: (email, password) => signInWithEmailAndPassword(auth, email, password),
+      requestPasswordReset: (email) =>
+        sendPasswordResetEmail(auth, String(email || '').trim()),
       logout: () => signOut(auth),
     }),
     [user, userProfile, loading, role, permissions, isAdmin, isStaff]

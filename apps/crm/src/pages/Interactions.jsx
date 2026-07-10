@@ -9,6 +9,11 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
+import {
+  AttachmentField,
+  AttachmentList,
+  formLinesToAttachments,
+} from '../components/Attachments'
 
 export default function Interactions() {
   const [interactions, setInteractions] = useState([])
@@ -20,6 +25,7 @@ export default function Interactions() {
     date: '',
     subject: '',
     notes: '',
+    attachmentLines: '',
   })
 
   const load = useCallback(async () => {
@@ -51,6 +57,7 @@ export default function Interactions() {
       date: form.date || new Date().toISOString().slice(0, 10),
       subject: form.subject.trim(),
       notes: form.notes.trim(),
+      attachments: formLinesToAttachments(form.attachmentLines),
       createdAt: serverTimestamp(),
     })
     setForm({
@@ -59,6 +66,7 @@ export default function Interactions() {
       date: '',
       subject: '',
       notes: '',
+      attachmentLines: '',
     })
     load()
   }
@@ -124,6 +132,11 @@ export default function Interactions() {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
+        <AttachmentField
+          className="sm:col-span-2 lg:col-span-3"
+          value={form.attachmentLines}
+          onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
+        />
         <button
           type="submit"
           className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
@@ -161,6 +174,7 @@ export default function Interactions() {
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {row.subject || '—'}
+                    <AttachmentList attachments={row.attachments} />
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
                   <td className="px-3 py-2 text-right">
