@@ -220,6 +220,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
             >
+              <option value="time-sensitive">Time Sensitive</option>
               <option value="not-started">Not Started</option>
               <option value="on-track">On Track</option>
               <option value="needs-attention">Needs Attention</option>
