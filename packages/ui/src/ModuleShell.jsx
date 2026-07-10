@@ -72,7 +72,7 @@ export default function ModuleShell({
 
   const sidebar = (
     <>
-      <div className="border-b border-hae-line px-4 py-4">
+      <div className="shrink-0 border-b border-hae-line px-4 py-4">
         <div className="text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
           In this app
         </div>
@@ -84,7 +84,10 @@ export default function ModuleShell({
         ) : null}
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label={`${displayTitle} navigation`}>
+      <nav
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3"
+        aria-label={`${displayTitle} navigation`}
+      >
         <div className="space-y-0.5">
           {visibleNav.map((item) => (
             <NavLink
@@ -100,7 +103,7 @@ export default function ModuleShell({
         </div>
       </nav>
 
-      <div className="border-t border-hae-line px-4 py-3">
+      <div className="shrink-0 border-t border-hae-line px-4 py-3">
         <div className="truncate text-sm font-medium text-hae-ink">
           {userProfile?.name || 'User'}
         </div>
@@ -126,18 +129,20 @@ export default function ModuleShell({
   )
 
   return (
-    <div className="flex min-h-screen flex-col bg-hae-mist">
-      <PlatformHeader
-        moduleId={moduleId}
-        title={displayTitle}
-        userName={userProfile?.name}
-        roleLabel={roleLabel}
-        canAccessModule={canAccessModule}
-        onMenuClick={() => setNavOpen(true)}
-        menuOpen={navOpen}
-      />
+    <div className="flex h-dvh flex-col overflow-hidden bg-hae-mist">
+      <div className="shrink-0">
+        <PlatformHeader
+          moduleId={moduleId}
+          title={displayTitle}
+          userName={userProfile?.name}
+          roleLabel={roleLabel}
+          canAccessModule={canAccessModule}
+          onMenuClick={() => setNavOpen(true)}
+          menuOpen={navOpen}
+        />
+      </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {navOpen ? (
           <button
             type="button"
@@ -148,11 +153,11 @@ export default function ModuleShell({
         ) : null}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-60 max-w-[85vw] flex-col border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-auto lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-60 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
             navOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between border-b border-hae-line px-3 py-2 lg:hidden">
+          <div className="flex shrink-0 items-center justify-between border-b border-hae-line px-3 py-2 lg:hidden">
             <span className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
               {displayTitle}
             </span>
@@ -168,7 +173,7 @@ export default function ModuleShell({
           {sidebar}
         </aside>
 
-        <main className="min-w-0 flex-1">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 sm:py-8">
             <Outlet />
           </div>

@@ -22,18 +22,20 @@ export default function Layout() {
   }, [navOpen])
 
   return (
-    <div className="flex min-h-screen flex-col bg-hae-mist">
-      <PlatformHeader
-        moduleId="tracker"
-        title="Operating Tracker"
-        userName={userProfile?.name}
-        roleLabel={roleLabel}
-        canAccessModule={canAccessModule}
-        onMenuClick={() => setNavOpen(true)}
-        menuOpen={navOpen}
-      />
+    <div className="flex h-dvh flex-col overflow-hidden bg-hae-mist">
+      <div className="shrink-0">
+        <PlatformHeader
+          moduleId="tracker"
+          title="Operating Tracker"
+          userName={userProfile?.name}
+          roleLabel={roleLabel}
+          canAccessModule={canAccessModule}
+          onMenuClick={() => setNavOpen(true)}
+          menuOpen={navOpen}
+        />
+      </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {navOpen ? (
           <button
             type="button"
@@ -45,7 +47,7 @@ export default function Layout() {
 
         <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
 
-        <main className="min-w-0 flex-1">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 sm:py-8">
             <Outlet />
           </div>

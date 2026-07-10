@@ -39,11 +39,11 @@ export default function Sidebar({ open = false, onClose }) {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 flex w-60 max-w-[85vw] flex-col border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-auto lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-60 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
         open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="flex items-center justify-between border-b border-hae-line px-3 py-2 lg:hidden">
+      <div className="flex shrink-0 items-center justify-between border-b border-hae-line px-3 py-2 lg:hidden">
         <span className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
           Operating Tracker
         </span>
@@ -57,7 +57,7 @@ export default function Sidebar({ open = false, onClose }) {
         </button>
       </div>
 
-      <div className="border-b border-hae-line px-4 py-4">
+      <div className="shrink-0 border-b border-hae-line px-4 py-4">
         <div className="text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
           In this app
         </div>
@@ -69,7 +69,10 @@ export default function Sidebar({ open = false, onClose }) {
         ) : null}
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Tracker navigation">
+      <nav
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3"
+        aria-label="Tracker navigation"
+      >
         <div className="mb-3 space-y-0.5">
           <NavLink to="/" end className={linkClass} onClick={handleNav}>
             Dashboard
@@ -121,7 +124,7 @@ export default function Sidebar({ open = false, onClose }) {
         </div>
       </nav>
 
-      <div className="border-t border-hae-line px-4 py-3">
+      <div className="shrink-0 border-t border-hae-line px-4 py-3">
         <div className="truncate text-sm font-medium text-hae-ink">
           {userProfile?.name || 'User'}
         </div>
