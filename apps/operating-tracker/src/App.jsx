@@ -41,6 +41,13 @@ export default function App() {
             {/* Public survey response — no login required */}
             <Route path="/s/:surveyId" element={<SurveyRespond />} />
 
+            {/* Help: any signed-in directory user (not only tracker:read) */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/help" element={<Help />} />
+              </Route>
+            </Route>
+
             <Route element={<ProtectedRoute permission={PERMISSIONS.TRACKER_READ} />}>
               <Route element={<Layout />}>
                 <Route path="/" element={<Dashboard />} />
@@ -53,7 +60,6 @@ export default function App() {
                     </FeatureRoute>
                   }
                 />
-                <Route path="/help" element={<Help />} />
                 <Route path="/programs/:programId" element={<ProgramPage />} />
                 <Route
                   element={

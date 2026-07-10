@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from './AuthContext.jsx'
+import { useAuthOptional } from './AuthContext.jsx'
 import { sectionsForRole } from './helpContent.js'
 
 /**
@@ -14,11 +14,12 @@ export default function HelpGuide({
   role: roleProp,
   roleLabel: roleLabelProp,
 }) {
-  if (roleProp != null) {
+  // Prefer explicit props (Tracker) so we never touch @hae/ui AuthContext.
+  if (roleProp !== undefined) {
     return (
       <HelpGuideView
         moduleId={moduleId}
-        role={roleProp}
+        role={roleProp || 'member'}
         roleLabel={roleLabelProp || ''}
       />
     )
@@ -27,9 +28,13 @@ export default function HelpGuide({
 }
 
 function HelpGuideFromAuth({ moduleId }) {
-  const { role, roleLabel } = useAuth()
+  const auth = useAuthOptional()
   return (
-    <HelpGuideView moduleId={moduleId} role={role} roleLabel={roleLabel} />
+    <HelpGuideView
+      moduleId={moduleId}
+      role={auth?.role || 'member'}
+      roleLabel={auth?.roleLabel || ''}
+    />
   )
 }
 

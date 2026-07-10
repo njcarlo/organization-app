@@ -109,3 +109,8 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
+
+/** Returns null when rendered outside @hae/ui AuthProvider (e.g. Tracker). */
+export function useAuthOptional() {
+  return useContext(AuthContext)
+}
