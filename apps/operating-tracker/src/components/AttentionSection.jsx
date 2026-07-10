@@ -5,6 +5,7 @@ import {
   programNameOf,
   projectNameOf,
 } from '../utils'
+import TaskDetailPopup from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
 
@@ -15,6 +16,7 @@ export default function AttentionSection({
   projectsById,
 }) {
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState(null)
 
   const items = useMemo(() => {
     const rows = []
@@ -83,7 +85,12 @@ export default function AttentionSection({
             </div>
           ) : (
             slice.map((row) => (
-              <div key={row.id} className="hae-mobile-card">
+              <button
+                key={row.id}
+                type="button"
+                className="hae-mobile-card"
+                onClick={() => setSelected(row)}
+              >
                 <div className="hae-mobile-card__title">{row.taskName}</div>
                 <div className="hae-mobile-card__meta">
                   <span>{row.issue}</span>
@@ -94,7 +101,7 @@ export default function AttentionSection({
                     {row.projectName ? ` · ${row.projectName}` : ''}
                   </span>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
@@ -173,6 +180,35 @@ export default function AttentionSection({
           </button>
         </div>
       </div>
+
+      <TaskDetailPopup
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title={selected?.taskName || 'Details'}
+        rows={
+          selected
+            ? [
+                { label: 'Type', value: selected.kind === 'project' ? 'Project' : 'Task' },
+                { label: 'Issue', value: selected.issue },
+                { label: 'Program', value: selected.programName || '—' },
+                { label: 'Project', value: selected.projectName || '—' },
+                { label: 'Waiting on', value: selected.waitingOn || '' },
+                { label: 'Leadership', value: selected.leadershipAction || '' },
+                { label: 'Owner', value: selected.owner || '' },
+                { label: 'Due', value: formatDate(selected.dueDate) },
+              ]
+            : []
+        }
+        footer={
+          <button
+            type="button"
+            className="hae-btn-secondary"
+            onClick={() => setSelected(null)}
+          >
+            Close
+          </button>
+        }
+      />
     </section>
   )
 }

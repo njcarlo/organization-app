@@ -6,7 +6,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore'
-import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
+import { downloadIcs, FEATURES, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
@@ -56,6 +56,7 @@ export default function MyTasks() {
   const [statusFilter, setStatusFilter] = useState('Active')
   const [page, setPage] = useState(0)
   const [editingId, setEditingId] = useState(null)
+  const [editSurface, setEditSurface] = useState(null) // 'inline' | 'popup'
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -115,8 +116,9 @@ export default function MyTasks() {
 
   const colCount = isStaff && viewAll ? 11 : 10
 
-  const startEdit = (task) => {
+  const startEdit = (task, surface = 'inline') => {
     setEditingId(task.id)
+    setEditSurface(surface)
     setDraft({
       name: task.name || '',
       owner: task.owner || '',
@@ -131,6 +133,7 @@ export default function MyTasks() {
 
   const cancelEdit = () => {
     setEditingId(null)
+    setEditSurface(null)
     setDraft(null)
   }
 
@@ -158,6 +161,7 @@ export default function MyTasks() {
   const removeTask = async (id) => {
     if (!confirm('Delete this task?')) return
     await deleteDoc(doc(db, 'tasks', id))
+    if (editingId === id) cancelEdit()
     await load()
   }
 
@@ -251,157 +255,166 @@ export default function MyTasks() {
         ))}
       </div>
 
-      {/* Mobile: card stack */}
+      {/* Mobile: card stack — tap opens edit popup */}
       <div className="hae-mobile-only hae-mobile-cards">
         {pageItems.length === 0 ? (
           <div className="hae-mobile-card text-center text-sm text-hae-slate">
             No tasks match this filter
           </div>
         ) : (
-          pageItems.map((task) =>
-            editingId === task.id && draft ? (
-              <div key={task.id} className="hae-mobile-card bg-amber-50/50">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
-                    Editing task
-                  </p>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={cancelEdit} className="hae-btn-secondary">
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={saveEdit}
-                      className="hae-btn disabled:opacity-60"
-                    >
-                      {saving ? 'Saving…' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-                <div className="grid gap-3" onKeyDown={onEditKeyDown}>
-                  <Field label="Task">
-                    <input
-                      autoFocus
-                      className={fieldClass}
-                      value={draft.name}
-                      onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Owner">
-                    <input
-                      className={fieldClass}
-                      value={draft.owner}
-                      onChange={(e) => setDraft({ ...draft, owner: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Status">
-                    <select
-                      className={fieldClass}
-                      value={draft.status}
-                      onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-                    >
-                      {TASK_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Due">
-                    <input
-                      type="date"
-                      className={fieldClass}
-                      value={draft.dueDate}
-                      onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Next action">
-                    <input
-                      className={fieldClass}
-                      value={draft.nextAction}
-                      onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Waiting on">
-                    <input
-                      className={fieldClass}
-                      value={draft.waitingOn}
-                      onChange={(e) => setDraft({ ...draft, waitingOn: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Leadership">
-                    <select
-                      className={fieldClass}
-                      value={draft.leadershipAttention}
-                      onChange={(e) =>
-                        setDraft({ ...draft, leadershipAttention: e.target.value })
-                      }
-                    >
-                      {LEADERSHIP_ATTENTION.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Priority">
-                    <select
-                      className={fieldClass}
-                      value={draft.priority}
-                      onChange={(e) => setDraft({ ...draft, priority: e.target.value })}
-                    >
-                      <option value="">Auto</option>
-                      <option value="HIGH">HIGH</option>
-                      <option value="MEDIUM">MEDIUM</option>
-                      <option value="LOW">LOW</option>
-                    </select>
-                  </Field>
-                </div>
+          pageItems.map((task) => (
+            <button
+              key={task.id}
+              type="button"
+              className="hae-mobile-card"
+              onClick={() => startEdit(task, 'popup')}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                >
+                  {effectivePriority(task)}
+                </span>
               </div>
-            ) : (
-              <div key={task.id} className="hae-mobile-card">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                  >
-                    {effectivePriority(task)}
+              <div className="hae-mobile-card__meta">
+                <span>{task.status || '—'}</span>
+                <span>Due {formatDate(task.dueDate)}</span>
+                {isStaff && viewAll ? <span>{task.owner || 'Unassigned'}</span> : null}
+                <span className="line-clamp-1">
+                  {programNameOf(task, programsById)}
+                  {projectNameOf(task, projectsById)
+                    ? ` · ${projectNameOf(task, projectsById)}`
+                    : ''}
+                </span>
+                {task.nextAction ? (
+                  <span className="line-clamp-2 w-full text-hae-ink/75">
+                    Next: {task.nextAction}
                   </span>
-                </div>
-                <div className="hae-mobile-card__meta">
-                  <span>{task.status || '—'}</span>
-                  <span>Due {formatDate(task.dueDate)}</span>
-                  {isStaff && viewAll ? <span>{task.owner || 'Unassigned'}</span> : null}
-                  <span className="line-clamp-1">
-                    {programNameOf(task, programsById)}
-                    {projectNameOf(task, projectsById)
-                      ? ` · ${projectNameOf(task, projectsById)}`
-                      : ''}
-                  </span>
-                  {task.nextAction ? (
-                    <span className="line-clamp-2 w-full text-hae-ink/75">
-                      Next: {task.nextAction}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="hae-mobile-card__actions">
-                  <button type="button" onClick={() => startEdit(task)} className="hae-btn-secondary">
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeTask(task.id)}
-                    className="text-xs text-hae-slate hover:text-hae-red"
-                  >
-                    Delete
-                  </button>
-                </div>
+                ) : null}
               </div>
-            )
-          )
+            </button>
+          ))
         )}
       </div>
+
+      <Modal
+        open={editSurface === 'popup' && Boolean(editingId && draft)}
+        onClose={cancelEdit}
+        title="Edit task"
+        busy={saving}
+        size="lg"
+        footer={
+          <>
+            <button
+              type="button"
+              className="mr-auto text-xs text-hae-slate hover:text-hae-red"
+              disabled={saving}
+              onClick={() => editingId && removeTask(editingId)}
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              className="hae-btn-secondary"
+              onClick={cancelEdit}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="hae-btn disabled:opacity-60"
+              disabled={saving}
+              onClick={saveEdit}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </>
+        }
+      >
+        {draft ? (
+          <div className="grid gap-3 sm:grid-cols-2" onKeyDown={onEditKeyDown}>
+            <Field label="Task" className="sm:col-span-2">
+              <input
+                autoFocus
+                className={fieldClass}
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </Field>
+            <Field label="Owner">
+              <input
+                className={fieldClass}
+                value={draft.owner}
+                onChange={(e) => setDraft({ ...draft, owner: e.target.value })}
+              />
+            </Field>
+            <Field label="Priority">
+              <select
+                className={fieldClass}
+                value={draft.priority}
+                onChange={(e) => setDraft({ ...draft, priority: e.target.value })}
+              >
+                <option value="">Auto</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
+              </select>
+            </Field>
+            <Field label="Status">
+              <select
+                className={fieldClass}
+                value={draft.status}
+                onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+              >
+                {TASK_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Due">
+              <input
+                type="date"
+                className={fieldClass}
+                value={draft.dueDate}
+                onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
+              />
+            </Field>
+            <Field label="Waiting on">
+              <input
+                className={fieldClass}
+                value={draft.waitingOn}
+                onChange={(e) => setDraft({ ...draft, waitingOn: e.target.value })}
+              />
+            </Field>
+            <Field label="Leadership">
+              <select
+                className={fieldClass}
+                value={draft.leadershipAttention}
+                onChange={(e) =>
+                  setDraft({ ...draft, leadershipAttention: e.target.value })
+                }
+              >
+                {LEADERSHIP_ATTENTION.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Next action" className="sm:col-span-2">
+              <input
+                className={fieldClass}
+                value={draft.nextAction}
+                onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
+              />
+            </Field>
+          </div>
+        ) : null}
+      </Modal>
 
       {/* Desktop: scrollable table with sticky first columns */}
       <div className="hae-desktop-only overflow-hidden rounded-xl border border-hae-line bg-white">
@@ -433,7 +446,7 @@ export default function MyTasks() {
                 </tr>
               ) : (
                 pageItems.map((task) =>
-                  editingId === task.id && draft ? (
+                  editingId === task.id && draft && editSurface === 'inline' ? (
                     <tr key={task.id} className="bg-amber-50/80">
                       <td colSpan={colCount} className="px-4 py-4">
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

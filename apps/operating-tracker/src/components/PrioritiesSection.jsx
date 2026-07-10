@@ -8,6 +8,7 @@ import {
   daysUntil,
 } from '../utils'
 import { useMemo, useState } from 'react'
+import TaskDetailPopup, { taskDetailRows } from './TaskDetailPopup'
 
 function PriorityCell({ task }) {
   const priority = effectivePriority(task)
@@ -22,7 +23,7 @@ function PriorityCell({ task }) {
   )
 }
 
-function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel }) {
+function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel, onOpen }) {
   if (!tasks.length) {
     return (
       <div className="hae-mobile-card text-center text-sm text-hae-slate">{emptyLabel}</div>
@@ -31,7 +32,12 @@ function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel }) {
   return (
     <div className="hae-mobile-cards p-3">
       {tasks.map((task) => (
-        <div key={task.id} className="hae-mobile-card">
+        <button
+          key={task.id}
+          type="button"
+          className="hae-mobile-card"
+          onClick={() => onOpen?.(task)}
+        >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
             <PriorityCell task={task} />
@@ -48,7 +54,7 @@ function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel }) {
               <span className="line-clamp-2 w-full">Next: {task.nextAction}</span>
             ) : null}
           </div>
-        </div>
+        </button>
       ))}
     </div>
   )
@@ -109,6 +115,7 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
 
 export default function PrioritiesSection({ tasks, programsById, projectsById }) {
   const [upcomingOpen, setUpcomingOpen] = useState(false)
+  const [selected, setSelected] = useState(null)
 
   const { thisWeek, upcoming } = useMemo(() => {
     const active = tasks.filter((t) => t.status !== 'Complete')
@@ -141,6 +148,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
             programsById={programsById}
             projectsById={projectsById}
             emptyLabel="No priorities this week"
+            onOpen={setSelected}
           />
         </div>
         <div className="hae-desktop-only">
@@ -175,6 +183,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
                 programsById={programsById}
                 projectsById={projectsById}
                 emptyLabel="No upcoming tasks"
+                onOpen={setSelected}
               />
             </div>
             <div className="hae-desktop-only">
@@ -188,6 +197,22 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
           </>
         ) : null}
       </div>
+
+      <TaskDetailPopup
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title={selected?.name || 'Task'}
+        rows={taskDetailRows(selected, { programsById, projectsById })}
+        footer={
+          <button
+            type="button"
+            className="hae-btn-secondary"
+            onClick={() => setSelected(null)}
+          >
+            Close
+          </button>
+        }
+      />
     </section>
   )
 }

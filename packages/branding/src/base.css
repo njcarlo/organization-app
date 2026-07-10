@@ -156,6 +156,29 @@ body {
   border-radius: 0.75rem;
   background: #fff;
   padding: 0.85rem 1rem;
+  text-align: left;
+}
+
+button.hae-mobile-card {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+button.hae-mobile-card:hover,
+button.hae-mobile-card:focus-visible {
+  border-color: color-mix(in srgb, var(--color-hae-crimson, #a51c30) 45%, var(--color-hae-line, #e7e7e7));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-hae-crimson, #a51c30) 25%, transparent);
+  outline: none;
+}
+
+button.hae-mobile-card:active {
+  background: color-mix(in srgb, var(--color-hae-mist, #f6f6f6) 70%, #fff);
 }
 
 .hae-mobile-card__title {

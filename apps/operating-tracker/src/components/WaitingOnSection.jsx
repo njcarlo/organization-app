@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { formatDate, programNameOf, projectNameOf } from '../utils'
+import TaskDetailPopup, { taskDetailRows } from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
 
 export default function WaitingOnSection({ tasks, programsById, projectsById }) {
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState(null)
 
   const items = useMemo(() => {
     return tasks
@@ -32,7 +34,12 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
             </div>
           ) : (
             slice.map((task) => (
-              <div key={task.id} className="hae-mobile-card">
+              <button
+                key={task.id}
+                type="button"
+                className="hae-mobile-card"
+                onClick={() => setSelected(task)}
+              >
                 <div className="hae-mobile-card__title">{task.name}</div>
                 <div className="hae-mobile-card__meta">
                   <span>Waiting on {task.waitingOn}</span>
@@ -44,7 +51,7 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
                       : ''}
                   </span>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
@@ -113,6 +120,22 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
           </button>
         </div>
       </div>
+
+      <TaskDetailPopup
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title={selected?.name || 'Task'}
+        rows={taskDetailRows(selected, { programsById, projectsById })}
+        footer={
+          <button
+            type="button"
+            className="hae-btn-secondary"
+            onClick={() => setSelected(null)}
+          >
+            Close
+          </button>
+        }
+      />
     </section>
   )
 }
