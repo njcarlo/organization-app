@@ -161,7 +161,23 @@ service cloud.firestore {
         || (signedIn()
             && resource.data.memberEmail is string
             && resource.data.memberEmail.lower() == emailLower());
-      allow write: if isStaff();
+      allow create, delete: if isStaff();
+      allow update: if isStaff()
+        || (signedIn()
+            && resource.data.memberEmail is string
+            && resource.data.memberEmail.lower() == emailLower()
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly([
+                  'paymentAttemptId',
+                  'paymentAttemptAt',
+                  'paymentStatus',
+                  'paidAt',
+                  'paymentMethod',
+                  'amountDueCents',
+                  'amountPaidCents',
+                  'currency',
+                  'stripeClientReference'
+                ]));
     }
     match /events/{id} {
       allow read: if isStaff() || isMember();
@@ -169,6 +185,12 @@ service cloud.firestore {
     }
     match /committees/{id} {
       allow read, write: if isStaff();
+    }
+
+    // AMS dues + Stripe Payment Link URLs
+    match /amsSettings/{id} {
+      allow read: if signedIn();
+      allow write: if isStaff();
     }
 
     // —— Platform settings (feature toggles) ——

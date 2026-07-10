@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   addDoc,
   collection,
@@ -10,11 +11,23 @@ import {
 } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
-import { MEMBERSHIP_TIERS, PAYMENT_STATUSES } from '../constants'
+import {
+  MEMBERSHIP_TIERS,
+  PAYMENT_STATUSES,
+  formatMoney,
+  needsPayment,
+} from '../constants'
+import {
+  buildStripeCheckoutUrl,
+  loadMembershipPricing,
+  newPaymentAttemptId,
+  tierPricing,
+} from '../membershipPricing'
 
 export default function Memberships() {
   const [memberships, setMemberships] = useState([])
   const [members, setMembers] = useState([])
+  const [pricing, setPricing] = useState(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -26,14 +39,16 @@ export default function Memberships() {
   })
 
   const load = useCallback(async () => {
-    const [ms, m] = await Promise.all([
+    const [ms, m, price] = await Promise.all([
       getDocs(collection(db, 'memberships')),
       getDocs(collection(db, 'members')),
+      loadMembershipPricing(),
     ])
     setMembers(m.docs.map((d) => ({ id: d.id, ...d.data() })))
     const list = ms.docs.map((d) => ({ id: d.id, ...d.data() }))
     list.sort((a, b) => (a.renewalDate || '').localeCompare(b.renewalDate || ''))
     setMemberships(list)
+    setPricing(price)
     setLoading(false)
   }, [])
 
@@ -44,29 +59,71 @@ export default function Memberships() {
   const create = async (e) => {
     e.preventDefault()
     const member = members.find((x) => x.id === form.memberId)
-    if (!member) return
-    await addDoc(collection(db, 'memberships'), {
-      memberId: member.id,
-      memberName: member.name,
-      memberEmail: (member.email || '').toLowerCase(),
-      tier: form.tier,
-      renewalDate: form.renewalDate || '',
-      paymentStatus: form.paymentStatus,
-      createdAt: serverTimestamp(),
-    })
-    setForm({
-      memberId: '',
-      tier: 'standard',
-      renewalDate: '',
-      paymentStatus: 'Pending',
-    })
-    setOpen(false)
-    load()
+    if (!member || saving) return
+    setSaving(true)
+    try {
+      const tier = pricing ? tierPricing(pricing, form.tier) : null
+      await addDoc(collection(db, 'memberships'), {
+        memberId: member.id,
+        memberName: member.name,
+        memberEmail: (member.email || '').toLowerCase(),
+        tier: form.tier,
+        renewalDate: form.renewalDate || '',
+        paymentStatus: form.paymentStatus,
+        amountDueCents: tier?.amountCents ?? null,
+        currency: pricing?.currency || 'usd',
+        createdAt: serverTimestamp(),
+      })
+      setForm({
+        memberId: '',
+        tier: 'standard',
+        renewalDate: '',
+        paymentStatus: 'Pending',
+      })
+      setOpen(false)
+      await load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const updatePayment = async (id, paymentStatus) => {
-    await updateDoc(doc(db, 'memberships', id), { paymentStatus })
+    const patch = { paymentStatus }
+    if (paymentStatus === 'Paid') {
+      patch.paidAt = serverTimestamp()
+      patch.paymentMethod = 'manual'
+    }
+    await updateDoc(doc(db, 'memberships', id), patch)
     load()
+  }
+
+  const openStripeFor = async (membership) => {
+    if (!pricing) return
+    const tier = tierPricing(pricing, membership.tier)
+    if (!tier.stripePaymentLinkUrl) {
+      alert(
+        'No Stripe Payment Link for this tier. Open Pricing & Stripe and paste a buy.stripe.com link.'
+      )
+      return
+    }
+    const attemptId = newPaymentAttemptId()
+    await updateDoc(doc(db, 'memberships', membership.id), {
+      paymentAttemptId: attemptId,
+      paymentAttemptAt: serverTimestamp(),
+      amountDueCents: tier.amountCents,
+      currency: pricing.currency,
+    })
+    const url = buildStripeCheckoutUrl({
+      paymentLinkUrl: tier.stripePaymentLinkUrl,
+      membershipId: membership.id,
+      email: membership.memberEmail,
+      attemptId,
+    })
+    if (!url) {
+      alert('Invalid Stripe Payment Link URL.')
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const remove = async (id) => {
@@ -83,15 +140,19 @@ export default function Memberships() {
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Memberships</h1>
           <p className="mt-1 text-sm text-hae-slate">
-            Tiers, renewal dates, and payment status
+            Tiers, renewal dates, dues, and Stripe payment status
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-          Add membership
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/pricing" className="hae-btn-secondary">
+            Pricing & Stripe
+          </Link>
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            Add membership
+          </button>
+        </div>
       </header>
 
-      
       <Modal
         open={open}
         onClose={() => !saving && setOpen(false)}
@@ -99,17 +160,26 @@ export default function Memberships() {
         busy={saving}
         footer={
           <>
-            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+            <button
+              type="button"
+              className="hae-btn-secondary"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
               Cancel
             </button>
-            <button type="submit" form="add-membership-form" className="hae-btn" disabled={saving}>
+            <button
+              type="submit"
+              form="add-membership-form"
+              className="hae-btn"
+              disabled={saving}
+            >
               {saving ? 'Saving…' : 'Add membership'}
             </button>
           </>
         }
       >
         <form id="add-membership-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
-
           <select
             required
             value={form.memberId}
@@ -131,6 +201,9 @@ export default function Memberships() {
             {MEMBERSHIP_TIERS.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
+                {pricing
+                  ? ` · ${formatMoney(tierPricing(pricing, t.value).amountCents, pricing.currency)}`
+                  : ''}
               </option>
             ))}
           </select>
@@ -153,53 +226,85 @@ export default function Memberships() {
       </Modal>
 
       <div className="hae-table-scroll border border-hae-line bg-white">
-        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
+        <table className="w-full min-w-[640px] lg:min-w-[860px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Member</th>
               <th className="px-3 py-2 font-semibold">Tier</th>
+              <th className="px-3 py-2 font-semibold">Dues</th>
               <th className="px-3 py-2 font-semibold">Renewal</th>
               <th className="px-3 py-2 font-semibold">Payment</th>
-              <th className="px-3 py-2 font-semibold w-20" />
+              <th className="px-3 py-2 font-semibold w-28" />
             </tr>
           </thead>
           <tbody>
             {memberships.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-hae-slate">
                   No memberships yet
                 </td>
               </tr>
             ) : (
-              memberships.map((m) => (
-                <tr key={m.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm font-medium">{m.memberName}</td>
-                  <td className="px-3 py-2 text-sm capitalize text-hae-slate">{m.tier}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
-                    {m.renewalDate || '—'}
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      value={m.paymentStatus}
-                      onChange={(e) => updatePayment(m.id, e.target.value)}
-                      className="border border-hae-line px-2 py-1 text-sm"
-                    >
-                      {PAYMENT_STATUSES.map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => remove(m.id)}
-                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
+              memberships.map((m) => {
+                const tier = pricing ? tierPricing(pricing, m.tier) : null
+                const amountCents = m.amountDueCents ?? tier?.amountCents
+                const currency = m.currency || pricing?.currency || 'usd'
+                return (
+                  <tr key={m.id} className="group border-b border-hae-line/70">
+                    <td className="px-3 py-2 text-sm font-medium">
+                      {m.memberName}
+                      {m.memberEmail ? (
+                        <div className="text-xs font-normal text-hae-slate">
+                          {m.memberEmail}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 text-sm capitalize text-hae-slate">
+                      {m.tier}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-hae-slate">
+                      {formatMoney(amountCents, currency)}
+                      {m.paymentMethod === 'stripe' ? (
+                        <div className="text-[10px] text-hae-crimson">Stripe</div>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-hae-slate">
+                      {m.renewalDate || '—'}
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        value={m.paymentStatus}
+                        onChange={(e) => updatePayment(m.id, e.target.value)}
+                        className="border border-hae-line px-2 py-1 text-sm"
+                      >
+                        {PAYMENT_STATUSES.map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                        {needsPayment(m) ? (
+                          <button
+                            type="button"
+                            onClick={() => openStripeFor(m)}
+                            className="text-xs font-semibold text-hae-crimson"
+                          >
+                            Stripe link
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => remove(m.id)}
+                          className="text-xs text-hae-slate hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

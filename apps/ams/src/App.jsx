@@ -14,6 +14,9 @@ import Memberships from './pages/Memberships.jsx'
 import Events from './pages/Events.jsx'
 import Committees from './pages/Committees.jsx'
 import MemberHome from './pages/MemberHome.jsx'
+import Pricing from './pages/Pricing.jsx'
+import PaymentSuccess from './pages/PaymentSuccess.jsx'
+import PaymentCancel from './pages/PaymentCancel.jsx'
 import Help from './pages/Help.jsx'
 
 function amsNav({ hasPermission }) {
@@ -22,6 +25,7 @@ function amsNav({ hasPermission }) {
       { to: '/', label: 'Dashboard', end: true, group: 'Membership', icon: 'home' },
       { to: '/members', label: 'Members', group: 'Membership', icon: 'users' },
       { to: '/memberships', label: 'Memberships', group: 'Membership', icon: 'building' },
+      { to: '/pricing', label: 'Pricing & Stripe', group: 'Membership', icon: 'chart' },
       { to: '/events', label: 'Events', group: 'Membership', icon: 'calendar' },
       { to: '/committees', label: 'Committees', group: 'Membership', icon: 'folder' },
       { to: '/help', label: 'Help', group: 'Membership', icon: 'help' },
@@ -65,10 +69,13 @@ export default function App() {
                 <Route path="/" element={<HomeRoute />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/cancel" element={<PaymentCancel />} />
 
                 <Route element={<ProtectedRoute permission={PERMISSIONS.AMS_MANAGE} />}>
                   <Route path="/members" element={<Members />} />
                   <Route path="/memberships" element={<Memberships />} />
+                  <Route path="/pricing" element={<Pricing />} />
                   <Route path="/committees" element={<Committees />} />
                 </Route>
               </Route>
