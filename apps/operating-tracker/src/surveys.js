@@ -43,7 +43,7 @@ export function surveyPublicPath(surveyId) {
 
 export function surveyPublicUrl(surveyId) {
   if (typeof window === 'undefined') {
-    return `https://hae-operating-tracker.web.app/s/${surveyId}`
+    return `https://tracker-hae.web.app/s/${surveyId}`
   }
   return `${window.location.origin}/s/${surveyId}`
 }

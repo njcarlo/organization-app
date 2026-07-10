@@ -5,7 +5,7 @@ export const MODULES = [
     name: 'Operating Tracker',
     short: 'Tracker',
     milestone: 1,
-    path: 'https://hae-operating-tracker.web.app',
+    path: 'https://tracker-hae.web.app',
     localPort: 5173,
     description: 'Programs, projects, and tasks',
   },
@@ -14,7 +14,7 @@ export const MODULES = [
     name: 'Learning',
     short: 'LMS',
     milestone: 2,
-    path: 'https://hae-lms.web.app',
+    path: 'https://lms-hae.web.app',
     localPort: 5174,
     description: 'Courses, enrollments, sessions',
   },
@@ -23,7 +23,7 @@ export const MODULES = [
     name: 'Experts',
     short: 'EiR',
     milestone: 2,
-    path: 'https://hae-eir.web.app',
+    path: 'https://eir-hae.web.app',
     localPort: 5177,
     description: 'Expert Office Hours directory',
   },
@@ -32,7 +32,7 @@ export const MODULES = [
     name: 'Relationships',
     short: 'CRM',
     milestone: 3,
-    path: 'https://hae-crm.web.app',
+    path: 'https://crm-hae.web.app',
     localPort: 5175,
     description: 'Contacts, pipeline, interactions',
   },
@@ -41,7 +41,7 @@ export const MODULES = [
     name: 'Membership',
     short: 'AMS',
     milestone: 4,
-    path: 'https://hae-ams.web.app',
+    path: 'https://ams-hae.web.app',
     localPort: 5176,
     description: 'Members, memberships, events',
   },
@@ -55,4 +55,13 @@ export function moduleHref(module) {
     return `http://localhost:${module.localPort}`
   }
   return module.path
+}
+
+/** Absolute URL for a module path (e.g. '/tracking'). */
+export function moduleUrl(moduleId, path = '/') {
+  const mod = MODULES.find((m) => m.id === moduleId)
+  if (!mod) return path
+  const base = moduleHref(mod).replace(/\/$/, '')
+  const suffix = path.startsWith('/') ? path : `/${path}`
+  return `${base}${suffix === '/' ? '' : suffix}`
 }

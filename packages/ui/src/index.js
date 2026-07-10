@@ -5,7 +5,7 @@ export { default as ModuleShell } from './ModuleShell.jsx'
 export { default as Can } from './Can.jsx'
 export { default as HelpGuide } from './HelpGuide.jsx'
 export { HELP_SECTIONS, sectionsForRole } from './helpContent.js'
-export { MODULES, moduleHref } from './modules.js'
+export { MODULES, moduleHref, moduleUrl } from './modules.js'
 export {
   consumeSsoTokenIfPresent,
   createSsoToken,

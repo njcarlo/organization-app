@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs, query, where } from 'firebase/firestore'
+import { moduleUrl } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { formatDate, sortByPriorityThenDue } from '../utils'
@@ -232,8 +233,10 @@ export default function Notifications() {
                 : c.label || c.type || 'Check-in'
             }
             meta={`Due ${c.dueDate} · ${c.courseName || '—'}`}
-            href="https://hae-lms.web.app/tracking"
-            external={isStaff}
+            href={
+              isStaff ? moduleUrl('lms', '/tracking') : moduleUrl('lms')
+            }
+            external
             tone="danger"
           />
         ))}
@@ -253,7 +256,9 @@ export default function Notifications() {
                 : c.label || c.type || 'Check-in'
             }
             meta={`Due ${c.dueDate} · ${c.courseName || '—'}`}
-            href={isStaff ? 'https://hae-lms.web.app/tracking' : 'https://hae-lms.web.app/'}
+            href={
+              isStaff ? moduleUrl('lms', '/tracking') : moduleUrl('lms')
+            }
             external
           />
         ))}

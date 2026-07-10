@@ -2,7 +2,8 @@
 
 One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
-**Live (Operating Tracker):** https://hae-operating-tracker.web.app  
+**Live hub:** https://hae.web.app  
+**Tracker:** https://tracker-hae.web.app  
 **Public brand site:** https://www.harvardae.org/
 
 ---
@@ -78,11 +79,18 @@ Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebas
 
 ## Live URLs
 
-- Tracker: https://hae-operating-tracker.web.app
-- LMS: https://hae-lms.web.app
-- EiR: https://hae-eir.web.app
-- CRM: https://hae-crm.web.app
-- AMS: https://hae-ams.web.app
+Primary pattern: **`[app]-hae.web.app`** (Firebase Hosting site IDs cannot use dots, so nested `app.hae.web.app` is not available on `web.app`).
+
+| App | Primary | Legacy (still deployed) |
+|-----|---------|-------------------------|
+| Hub | https://hae.web.app | — |
+| Tracker | https://tracker-hae.web.app | https://hae-operating-tracker.web.app |
+| LMS | https://lms-hae.web.app | https://hae-lms.web.app |
+| EiR | https://eir-hae.web.app | https://hae-eir.web.app |
+| CRM | https://crm-hae.web.app | https://hae-crm.web.app |
+| AMS | https://ams-hae.web.app | https://hae-ams.web.app |
+
+Add each primary host under Firebase Console → Authentication → Settings → Authorized domains if sign-in fails on a new URL.
 
 ---
 
