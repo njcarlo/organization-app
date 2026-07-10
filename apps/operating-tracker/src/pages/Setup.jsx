@@ -131,7 +131,7 @@ export default function Setup() {
 
         <form
           onSubmit={handleSetup}
-          className="border border-hae-line bg-white/95 p-4 shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-6"
+          className="border border-hae-line bg-white/95 p-4 shadow-[0_8px_28px_rgba(26,26,26,0.04)] sm:p-6"
         >
           <label className="block text-sm font-medium">
             Your name
