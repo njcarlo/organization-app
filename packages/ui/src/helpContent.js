@@ -70,6 +70,23 @@ export const HELP_SECTIONS = [
           'Staff can switch to All Tasks to see everyone’s work.',
           'Filter by Active, status, then Edit a row — the form opens in a full panel so fields are readable.',
           'Set Status, Due, Priority (or leave Priority on Auto), Waiting On, Leadership, and Next Action.',
+          'Export calendar (.ics) downloads dated tasks for Google Calendar / Outlook / Apple Calendar.',
+        ],
+      },
+      {
+        heading: 'Notifications',
+        steps: [
+          'Shows an in-app digest: overdue tasks, tasks due in 7 days, waiting-on items, and LMS check-ins.',
+          'Use Email me this digest to open a mailto draft you can send to yourself or a teammate.',
+          'This is not automated push email — it stays in your inbox reputation (Spark-safe).',
+        ],
+      },
+      {
+        heading: 'Surveys',
+        steps: [
+          'Create surveys with short/long text, single/multi choice, or 1–5 rating questions.',
+          'Set status to Open, copy the public link (/s/…), or Compose invite email (BCC via your inbox).',
+          'Analytics shows choice/rating breakdowns; Export CSV downloads all responses.',
         ],
       },
       {
@@ -116,6 +133,7 @@ export const HELP_SECTIONS = [
           'Enrollments — add learners with name + login email + course.',
           'Tracking — see at-risk learners, overdue check-ins, course completion, and send email nudges.',
           'Office Hours / Check-ins / Issue certificates — schedule sessions and track milestones.',
+          'Office Hours — Export calendar (.ics) to add sessions to your calendar app.',
           'Tip: put the learner’s login email on check-ins too so students can see them.',
         ],
         roles: ['admin', 'staff'],
@@ -178,7 +196,7 @@ export const HELP_SECTIONS = [
         steps: [
           'Members — directory of people (include email = login email for member view).',
           'Memberships — tier, renewal, payment status (stores memberEmail automatically).',
-          'Events — create events with date, location, capacity.',
+          'Events — create events with date, location, capacity; Export calendar (.ics) for the list.',
           'Committees — assign members to committee roles.',
         ],
         roles: ['admin', 'staff'],

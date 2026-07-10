@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { downloadIcs } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Sessions() {
@@ -68,15 +69,48 @@ export default function Sessions() {
     load()
   }
 
+  const exportIcs = () => {
+    const dated = sessions.filter((s) => s.date)
+    if (!dated.length) return
+    downloadIcs(
+      'hae-office-hours.ics',
+      dated.map((s) => ({
+        uid: `session-${s.id}@hae-lms`,
+        title: s.title || 'Office Hours',
+        date: s.date,
+        time: s.time || '',
+        location: s.location || '',
+        url: s.zoomLink || '',
+        description: [
+          s.courseName ? `Course: ${s.courseName}` : '',
+          s.zoomLink ? `Zoom: ${s.zoomLink}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      })),
+      { calName: 'HAE Office Hours' }
+    )
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading sessions…</p>
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Office Hours</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Live working sessions — schedule, location, and Zoom links
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Office Hours</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Live working sessions — schedule, location, and Zoom links
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={exportIcs}
+          disabled={!sessions.some((s) => s.date)}
+          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+        >
+          Export calendar (.ics)
+        </button>
       </header>
 
       <form

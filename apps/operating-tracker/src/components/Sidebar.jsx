@@ -75,11 +75,14 @@ export default function Sidebar({ open = false, onClose }) {
           <NavLink to="/my-tasks" className={linkClass} onClick={handleNav}>
             My Tasks
           </NavLink>
-          <NavLink to="/help" className={linkClass} onClick={handleNav}>
-            Help
+          <NavLink to="/notifications" className={linkClass} onClick={handleNav}>
+            Notifications
           </NavLink>
           <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
             Surveys
+          </NavLink>
+          <NavLink to="/help" className={linkClass} onClick={handleNav}>
+            Help
           </NavLink>
           {isAdmin && (
             <NavLink to="/admin" className={linkClass} onClick={handleNav}>

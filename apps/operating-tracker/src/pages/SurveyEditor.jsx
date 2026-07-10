@@ -11,15 +11,18 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
+import { downloadCsv } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import {
   QUESTION_TYPES,
   SURVEY_STATUSES,
+  analyzeSurveyResponses,
   defaultInviteBody,
   emptyQuestion,
   parseEmails,
   surveyPublicUrl,
+  surveyResponsesToCsvRows,
 } from '../surveys'
 
 const fieldClass =
@@ -47,6 +50,11 @@ export default function SurveyEditor() {
   const publicUrl = useMemo(
     () => (isNew ? '' : surveyPublicUrl(surveyId)),
     [isNew, surveyId]
+  )
+
+  const analytics = useMemo(
+    () => analyzeSurveyResponses(questions, responses),
+    [questions, responses]
   )
 
   const load = useCallback(async () => {
@@ -181,6 +189,23 @@ export default function SurveyEditor() {
     } catch {
       window.prompt('Copy this survey link:', publicUrl)
     }
+  }
+
+  const exportCsv = () => {
+    if (!responses.length) {
+      setError('No responses to export yet.')
+      return
+    }
+    const slug = (title || 'survey')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40)
+    downloadCsv(
+      `hae-survey-${slug || surveyId}-responses.csv`,
+      surveyResponsesToCsvRows(questions, responses)
+    )
+    setMessage(`Exported ${responses.length} response${responses.length === 1 ? '' : 's'}.`)
   }
 
   const openMailto = async () => {
@@ -450,9 +475,79 @@ export default function SurveyEditor() {
             </button>
           </section>
 
+          <section className="space-y-4 rounded-xl border border-hae-line bg-white p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-hae-ink">
+                Analytics ({analytics.total} response
+                {analytics.total === 1 ? '' : 's'})
+              </h2>
+              <button
+                type="button"
+                onClick={exportCsv}
+                disabled={!responses.length}
+                className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+              >
+                Export CSV
+              </button>
+            </div>
+            {analytics.total === 0 ? (
+              <p className="text-sm text-hae-slate">
+                No responses yet — analytics appear after the first submission.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {analytics.byQuestion.map((q) => (
+                  <div key={q.id} className="border-b border-hae-line/70 pb-4 last:border-0">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h3 className="text-sm font-medium text-hae-ink">{q.prompt}</h3>
+                      <span className="text-xs text-hae-slate">
+                        {q.answered} answered
+                        {q.avgRating != null ? ` · avg ${q.avgRating}/5` : ''}
+                      </span>
+                    </div>
+                    {q.breakdown.length > 0 ? (
+                      <ul className="mt-3 space-y-2">
+                        {q.breakdown.map((b) => (
+                          <li key={b.option}>
+                            <div className="mb-0.5 flex justify-between gap-2 text-xs text-hae-slate">
+                              <span className="text-hae-ink">{b.option}</span>
+                              <span>
+                                {b.count} ({b.pct}%)
+                              </span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded bg-hae-mist">
+                              <div
+                                className="h-full bg-hae-crimson/80"
+                                style={{ width: `${b.pct}%` }}
+                              />
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {q.textCount > 0 ? (
+                      <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm text-hae-slate">
+                        {q.textSamples.map((t, i) => (
+                          <li key={`${q.id}-t-${i}`} className="border-l-2 border-hae-line pl-2">
+                            {t}
+                          </li>
+                        ))}
+                        {q.textCount > q.textSamples.length ? (
+                          <li className="text-xs">
+                            +{q.textCount - q.textSamples.length} more in CSV export
+                          </li>
+                        ) : null}
+                      </ul>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
           <section className="space-y-3 rounded-xl border border-hae-line bg-white p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-hae-ink">
-              Responses ({responses.length})
+              Individual responses ({responses.length})
             </h2>
             {responses.length === 0 ? (
               <p className="text-sm text-hae-slate">No responses yet.</p>

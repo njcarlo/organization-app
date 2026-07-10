@@ -7,6 +7,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
 import MyTasks from './pages/MyTasks'
+import Notifications from './pages/Notifications'
 import Admin from './pages/Admin'
 import Help from './pages/Help'
 import Surveys from './pages/Surveys'
@@ -28,6 +29,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/my-tasks" element={<MyTasks />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/help" element={<Help />} />
               <Route path="/programs/:programId" element={<ProgramPage />} />
               <Route
