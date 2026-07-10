@@ -2,9 +2,11 @@
 
 One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
-**Live hub:** https://hae.web.app  
+**Live hub (landing):** https://hae.web.app  
 **Tracker:** https://tracker-hae.web.app  
 **Public brand site:** https://www.harvardae.org/
+
+Each app shares a **top platform header** (switch Hub / Tracker / LMS / EiR / CRM / AMS). The **left sidenav is scoped to the selected app** only.
 
 ---
 

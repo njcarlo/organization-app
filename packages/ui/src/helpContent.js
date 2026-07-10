@@ -29,9 +29,10 @@ export const HELP_SECTIONS = [
       {
         heading: 'Switching between apps',
         steps: [
-          'Use the Platform list in the left sidebar (Tracker, LMS, EiR, CRM, AMS).',
-          'If you are already signed in, clicking another app should keep you signed in.',
-          'Each app has its own URL — bookmark the ones you use most.',
+          'Use the top header chips (Hub, Tracker, LMS, EiR, CRM, AMS) to move between apps.',
+          'The left sidenav only shows pages for the app you are in right now.',
+          'Start from the Hub (hae.web.app) for a landing overview of every workspace.',
+          'If you are already signed in, switching apps should keep you signed in.',
         ],
       },
     ],

@@ -1,3 +1,7 @@
+/** Platform hub (landing) — Firebase Hosting site `hae` */
+export const HUB_URL = 'https://hae.web.app'
+export const HUB_LOCAL_PORT = 5180
+
 /** Platform modules — one app per milestone / Firebase Hosting site */
 export const MODULES = [
   {
@@ -8,6 +12,7 @@ export const MODULES = [
     path: 'https://tracker-hae.web.app',
     localPort: 5173,
     description: 'Programs, projects, and tasks',
+    tagline: 'Keep programs moving',
   },
   {
     id: 'lms',
@@ -17,6 +22,7 @@ export const MODULES = [
     path: 'https://lms-hae.web.app',
     localPort: 5174,
     description: 'Courses, enrollments, sessions',
+    tagline: 'Academy & Flagship paths',
   },
   {
     id: 'eir',
@@ -26,6 +32,7 @@ export const MODULES = [
     path: 'https://eir-hae.web.app',
     localPort: 5177,
     description: 'Expert Office Hours directory',
+    tagline: 'Book office hours',
   },
   {
     id: 'crm',
@@ -35,6 +42,7 @@ export const MODULES = [
     path: 'https://crm-hae.web.app',
     localPort: 5175,
     description: 'Contacts, pipeline, interactions',
+    tagline: 'Grow relationships',
   },
   {
     id: 'ams',
@@ -44,8 +52,23 @@ export const MODULES = [
     path: 'https://ams-hae.web.app',
     localPort: 5176,
     description: 'Members, memberships, events',
+    tagline: 'Membership & events',
   },
 ]
+
+export function getModule(moduleId) {
+  return MODULES.find((m) => m.id === moduleId) || null
+}
+
+/** Resolve hub href for local vs deployed hosting. */
+export function hubHref() {
+  if (typeof window === 'undefined') return HUB_URL
+  const host = window.location.hostname
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `http://localhost:${HUB_LOCAL_PORT}`
+  }
+  return HUB_URL
+}
 
 /** Resolve cross-app href for local vs deployed hosting. */
 export function moduleHref(module) {

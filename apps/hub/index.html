@@ -3,136 +3,512 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HAE Platform</title>
+    <title>HAE Platform — Harvard Alumni Entrepreneurs</title>
+    <meta
+      name="description"
+      content="The HAE operating platform: Tracker, Academy LMS, Expert Office Hours, CRM, and Membership."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Source+Sans+3:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Libre+Franklin:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
         --ink: #1a1a1a;
-        --slate: #5c6570;
-        --crimson: #a51c30;
-        --line: #e2e5e9;
-        --mist: #f6f7f9;
+        --charcoal: #272727;
+        --slate: #3e3e3e;
+        --crimson: #b80028;
+        --crimson-dark: #960021;
+        --coral: #f0523d;
+        --line: #dddddd;
+        --mist: #f6f6f6;
+        --paper: #ffffff;
+        --font-sans: 'Libre Franklin', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --font-display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
       }
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: 'Source Sans 3', system-ui, sans-serif;
+        font-family: var(--font-sans);
         color: var(--ink);
-        background:
-          radial-gradient(ellipse 80% 50% at 10% 0%, rgba(165, 28, 48, 0.08), transparent),
-          linear-gradient(180deg, #fff 0%, var(--mist) 100%);
+        background: var(--mist);
       }
-      main {
-        max-width: 720px;
+      a { color: inherit; }
+      .font-display {
+        font-family: var(--font-display);
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+      }
+
+      /* —— Site header —— */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+      }
+      .site-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 3rem 1.25rem 4rem;
+        padding: 0.7rem 1.25rem;
       }
-      h1 {
-        font-family: 'Libre Baskerville', Georgia, serif;
-        font-size: clamp(2rem, 5vw, 2.75rem);
-        margin: 0.5rem 0 0.35rem;
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        min-width: 0;
       }
-      .eyebrow {
-        font-size: 0.7rem;
-        font-weight: 600;
+      .brand img {
+        height: 2.25rem;
+        width: auto;
+        max-width: 150px;
+        object-fit: contain;
+      }
+      .brand-text { min-width: 0; }
+      .brand-kicker {
+        font-size: 0.65rem;
+        font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--crimson);
       }
-      .lede {
-        color: var(--slate);
-        margin: 0 0 2rem;
-        max-width: 36rem;
+      .brand-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      ul {
+      .header-spacer { flex: 1; }
+      .header-link {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--slate);
+        padding: 0.4rem 0.65rem;
+        border-radius: 0.35rem;
+        transition: color 0.15s ease, background 0.15s ease;
+      }
+      .header-link:hover {
+        color: var(--crimson);
+        background: rgba(184, 0, 40, 0.06);
+      }
+      .header-cta {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: #fff;
+        background: var(--crimson);
+        padding: 0.55rem 0.9rem;
+        border-radius: 0.35rem;
+        transition: background 0.15s ease, transform 0.15s ease;
+      }
+      .header-cta:hover {
+        background: var(--crimson-dark);
+        transform: translateY(-1px);
+      }
+      .platform-bar {
+        border-top: 1px solid rgba(221, 221, 221, 0.85);
+        background: rgba(246, 246, 246, 0.7);
+      }
+      .platform-bar-inner {
+        display: flex;
+        gap: 0.25rem;
+        overflow-x: auto;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0.4rem 1.25rem;
+        scrollbar-width: thin;
+      }
+      .platform-chip {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: rgba(26, 26, 26, 0.8);
+        padding: 0.4rem 0.7rem;
+        border-radius: 0.35rem;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .platform-chip:hover {
+        background: #fff;
+        color: var(--crimson);
+      }
+      .platform-chip.is-current {
+        background: var(--crimson);
+        color: #fff;
+      }
+
+      /* —— Hero —— */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(115deg, rgba(26, 26, 26, 0.88) 0%, rgba(150, 0, 33, 0.72) 48%, rgba(240, 82, 61, 0.55) 100%),
+          radial-gradient(ellipse 90% 70% at 80% 20%, rgba(240, 82, 61, 0.35), transparent 55%),
+          linear-gradient(180deg, #2a0a12 0%, #1a1a1a 100%);
+        color: #fff;
+        min-height: min(78vh, 640px);
+        display: flex;
+        align-items: flex-end;
+      }
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(180deg, #000 20%, transparent 90%);
+        pointer-events: none;
+        animation: gridDrift 28s linear infinite;
+      }
+      @keyframes gridDrift {
+        from { background-position: 0 0; }
+        to { background-position: 48px 48px; }
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 4.5rem 1.25rem 3.25rem;
+      }
+      .hero-brand {
+        font-family: var(--font-display);
+        font-size: clamp(2.6rem, 8vw, 4.75rem);
+        line-height: 0.95;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        animation: riseIn 0.7s ease-out both;
+      }
+      .hero-headline {
+        margin: 1rem 0 0;
+        max-width: 22rem;
+        font-size: clamp(1.05rem, 2.4vw, 1.25rem);
+        font-weight: 600;
+        line-height: 1.35;
+        color: rgba(255, 255, 255, 0.92);
+        animation: riseIn 0.7s ease-out 0.08s both;
+      }
+      .hero-lede {
+        margin: 0.85rem 0 0;
+        max-width: 28rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.72);
+        animation: riseIn 0.7s ease-out 0.16s both;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 1.75rem;
+        animation: riseIn 0.7s ease-out 0.24s both;
+      }
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.7rem 1.15rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--crimson);
+        background: #fff;
+        border-radius: 0.35rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+      }
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.7rem 1.15rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 0.35rem;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.6);
+      }
+      @keyframes riseIn {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* —— Apps —— */
+      .section {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3.25rem 1.25rem 4rem;
+      }
+      .section-head {
+        max-width: 36rem;
+        margin-bottom: 1.75rem;
+      }
+      .section-kicker {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--crimson);
+      }
+      .section-title {
+        margin: 0.4rem 0 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.6rem, 3.5vw, 2.1rem);
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+      .section-copy {
+        margin: 0.65rem 0 0;
+        color: var(--slate);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .app-grid {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: 1fr;
         list-style: none;
         padding: 0;
         margin: 0;
-        display: grid;
-        gap: 0.75rem;
       }
-      a.app {
-        display: block;
-        padding: 1rem 1.1rem;
-        border: 1px solid var(--line);
-        background: #fff;
+      @media (min-width: 640px) {
+        .app-grid { grid-template-columns: 1fr 1fr; }
+      }
+      @media (min-width: 960px) {
+        .app-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      .app-tile {
+        display: flex;
+        flex-direction: column;
+        min-height: 11.5rem;
+        padding: 1.15rem 1.2rem 1.2rem;
         text-decoration: none;
         color: inherit;
-        transition: border-color 0.15s ease, transform 0.15s ease;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 0.15rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        animation: riseIn 0.55s ease-out both;
       }
-      a.app:hover {
-        border-color: var(--crimson);
-        transform: translateY(-1px);
+      .app-tile:nth-child(1) { animation-delay: 0.05s; }
+      .app-tile:nth-child(2) { animation-delay: 0.1s; }
+      .app-tile:nth-child(3) { animation-delay: 0.15s; }
+      .app-tile:nth-child(4) { animation-delay: 0.2s; }
+      .app-tile:nth-child(5) { animation-delay: 0.25s; }
+      .app-tile::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--crimson);
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.25s ease;
       }
-      a.app strong {
-        display: block;
+      .app-tile:hover {
+        border-color: rgba(184, 0, 40, 0.45);
+        transform: translateY(-3px);
+        box-shadow: 0 14px 32px rgba(26, 26, 26, 0.08);
+      }
+      .app-tile:hover::before { transform: scaleY(1); }
+      .app-short {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         color: var(--crimson);
-        font-size: 0.95rem;
       }
-      a.app span {
-        display: block;
-        margin-top: 0.2rem;
-        font-size: 0.85rem;
+      .app-name {
+        margin: 0.45rem 0 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .app-tag {
+        margin: 0.45rem 0 0;
+        font-size: 0.9rem;
         color: var(--slate);
+        line-height: 1.4;
+        flex: 1;
       }
-      footer {
-        margin-top: 2.5rem;
+      .app-go {
+        margin-top: 1rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--crimson);
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--line);
+        background: #fff;
+      }
+      .site-footer-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        justify-content: space-between;
+        align-items: center;
         font-size: 0.8rem;
         color: var(--slate);
+      }
+      .site-footer a {
+        color: var(--crimson);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .site-footer a:hover { text-decoration: underline; }
+
+      @media (max-width: 640px) {
+        .header-link { display: none; }
       }
     </style>
   </head>
   <body>
-    <main>
-      <p class="eyebrow">Harvard Alumni Entrepreneurs</p>
-      <h1>HAE Platform</h1>
-      <p class="lede">
-        Choose an app. Primary URLs use the <code>[app]-hae.web.app</code> pattern.
-      </p>
-      <ul>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href="/">
+          <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" />
+          <div class="brand-text">
+            <div class="brand-kicker">Harvard Alumni Entrepreneurs</div>
+            <div class="brand-name">HAE Platform</div>
+          </div>
+        </a>
+        <div class="header-spacer"></div>
+        <a class="header-link" href="https://www.harvardae.org/">harvardae.org</a>
+        <a class="header-cta" href="#apps">Open apps</a>
+      </div>
+      <div class="platform-bar">
+        <nav class="platform-bar-inner" aria-label="Platform apps">
+          <span class="platform-chip is-current" aria-current="page">Hub</span>
+          <a class="platform-chip" href="https://tracker-hae.web.app">Tracker</a>
+          <a class="platform-chip" href="https://lms-hae.web.app">LMS</a>
+          <a class="platform-chip" href="https://eir-hae.web.app">EiR</a>
+          <a class="platform-chip" href="https://crm-hae.web.app">CRM</a>
+          <a class="platform-chip" href="https://ams-hae.web.app">AMS</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero" aria-label="Welcome">
+      <div class="hero-inner">
+        <h1 class="hero-brand">HAE</h1>
+        <p class="hero-headline">One platform for programs, learning, experts, relationships, and membership.</p>
+        <p class="hero-lede">
+          Sign in to the app you need. Your role controls what you see — and the header keeps every module one click away.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#apps">Choose an app</a>
+          <a class="btn-ghost" href="https://tracker-hae.web.app">Go to Tracker</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="apps">
+      <div class="section-head">
+        <p class="section-kicker">Platform</p>
+        <h2 class="section-title">Select your workspace</h2>
+        <p class="section-copy">
+          Each app has its own navigation for day-to-day work. Switch platforms anytime from the top header.
+        </p>
+      </div>
+      <ul class="app-grid">
         <li>
-          <a class="app" href="https://tracker-hae.web.app">
-            <strong>Tracker</strong>
-            <span>Programs, projects, and tasks · tracker-hae.web.app</span>
+          <a class="app-tile" href="https://tracker-hae.web.app">
+            <span class="app-short">Tracker</span>
+            <h3 class="app-name">Operating Tracker</h3>
+            <p class="app-tag">Keep programs moving — projects, tasks, surveys, and weekly priorities.</p>
+            <span class="app-go">Enter Tracker →</span>
           </a>
         </li>
         <li>
-          <a class="app" href="https://lms-hae.web.app">
-            <strong>LMS</strong>
-            <span>Academy courses and enrollments · lms-hae.web.app</span>
+          <a class="app-tile" href="https://lms-hae.web.app">
+            <span class="app-short">LMS</span>
+            <h3 class="app-name">Academy Learning</h3>
+            <p class="app-tag">Academy &amp; Flagship paths, enrollments, office hours, and certificates.</p>
+            <span class="app-go">Enter LMS →</span>
           </a>
         </li>
         <li>
-          <a class="app" href="https://eir-hae.web.app">
-            <strong>EiR</strong>
-            <span>Expert Office Hours directory · eir-hae.web.app</span>
+          <a class="app-tile" href="https://eir-hae.web.app">
+            <span class="app-short">EiR</span>
+            <h3 class="app-name">Expert Office Hours</h3>
+            <p class="app-tag">Browse the SME directory and book office hours with HAE experts.</p>
+            <span class="app-go">Enter EiR →</span>
           </a>
         </li>
         <li>
-          <a class="app" href="https://crm-hae.web.app">
-            <strong>CRM</strong>
-            <span>Contacts, pipeline, interactions · crm-hae.web.app</span>
+          <a class="app-tile" href="https://crm-hae.web.app">
+            <span class="app-short">CRM</span>
+            <h3 class="app-name">Relationships</h3>
+            <p class="app-tag">Contacts, pipeline stages, interactions, and linked AMS/LMS records.</p>
+            <span class="app-go">Enter CRM →</span>
           </a>
         </li>
         <li>
-          <a class="app" href="https://ams-hae.web.app">
-            <strong>AMS</strong>
-            <span>Members, memberships, events · ams-hae.web.app</span>
+          <a class="app-tile" href="https://ams-hae.web.app">
+            <span class="app-short">AMS</span>
+            <h3 class="app-name">Membership</h3>
+            <p class="app-tag">Members, renewals, committees, and events for the HAE community.</p>
+            <span class="app-go">Enter AMS →</span>
           </a>
         </li>
       </ul>
-      <footer>
-        Brand site:
-        <a href="https://www.harvardae.org/">harvardae.org</a>
-      </footer>
-    </main>
+    </section>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <span>© Harvard Alumni Entrepreneurs</span>
+        <span>
+          Public site:
+          <a href="https://www.harvardae.org/">harvardae.org</a>
+        </span>
+      </div>
+    </footer>
   </body>
 </html>
