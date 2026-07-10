@@ -3,9 +3,9 @@ import { navigateToModule } from './sso.js'
 import { useFeatures } from './FeaturesContext.jsx'
 
 /**
- * Top site header — brand + platform switcher.
+ * Top site header — brand + platform switcher in a single row.
  * Markup/classes match packages/branding/src/platform-header.css and the hub landing.
- * Full-width; logo flush left. Sidenav stays scoped to the selected platform.
+ * Left: logo + “Now in”; right: app chips. Sidenav stays scoped to the selected platform.
  */
 export default function PlatformHeader({
   moduleId = null,
@@ -72,19 +72,8 @@ export default function PlatformHeader({
           <div className="hae-platform-header__title">{displayTitle}</div>
         </div>
 
-        {(userName || roleLabel) && (
-          <div className="hae-platform-header__user">
-            <div className="hae-platform-header__user-name">
-              {userName || 'Signed in'}
-            </div>
-            {roleLabel ? (
-              <div className="hae-platform-header__user-role">{roleLabel}</div>
-            ) : null}
-          </div>
-        )}
-      </div>
+        <div className="hae-platform-header__spacer" aria-hidden />
 
-      <div className="hae-platform-header__bar">
         <nav className="hae-platform-header__nav" aria-label="Platform apps">
           {isHub ? (
             <span
@@ -123,6 +112,17 @@ export default function PlatformHeader({
             )
           })}
         </nav>
+
+        {(userName || roleLabel) && (
+          <div className="hae-platform-header__user">
+            <div className="hae-platform-header__user-name">
+              {userName || 'Signed in'}
+            </div>
+            {roleLabel ? (
+              <div className="hae-platform-header__user-role">{roleLabel}</div>
+            ) : null}
+          </div>
+        )}
       </div>
     </header>
   )
