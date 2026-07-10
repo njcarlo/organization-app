@@ -8,8 +8,17 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
+
+const emptyProject = {
+  name: '',
+  lead: '',
+  promise: '',
+  health: 'on-track',
+  targetDate: '',
+}
 
 export default function ProgramPage() {
   const { programId } = useParams()
@@ -17,14 +26,10 @@ export default function ProgramPage() {
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [addingProject, setAddingProject] = useState(false)
-  const [newProject, setNewProject] = useState({
-    name: '',
-    lead: '',
-    promise: '',
-    health: 'on-track',
-    targetDate: '',
-  })
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [dense, setDense] = useState(false)
+  const [newProject, setNewProject] = useState(emptyProject)
 
   const load = useCallback(async () => {
     const [programSnap, projectSnap, taskSnap] = await Promise.all([
@@ -72,58 +77,84 @@ export default function ProgramPage() {
     return map
   }, [tasks])
 
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    setNewProject(emptyProject)
+  }
+
   const createProject = async (e) => {
     e.preventDefault()
-    if (!newProject.name.trim()) return
-    await addDoc(collection(db, 'projects'), {
-      name: newProject.name.trim(),
-      lead: newProject.lead.trim(),
-      promise: newProject.promise.trim(),
-      health: newProject.health,
-      targetDate: newProject.targetDate || '',
-      programId,
-      createdAt: serverTimestamp(),
-    })
-    setNewProject({
-      name: '',
-      lead: '',
-      promise: '',
-      health: 'on-track',
-      targetDate: '',
-    })
-    setAddingProject(false)
-    load()
+    if (!newProject.name.trim() || saving) return
+    setSaving(true)
+    try {
+      await addDoc(collection(db, 'projects'), {
+        name: newProject.name.trim(),
+        lead: newProject.lead.trim(),
+        promise: newProject.promise.trim(),
+        health: newProject.health,
+        targetDate: newProject.targetDate || '',
+        programId,
+        createdAt: serverTimestamp(),
+      })
+      setNewProject(emptyProject)
+      setOpen(false)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading program…</p>
   if (!program) return <p className="text-sm text-hae-red">Program not found.</p>
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-wider text-hae-crimson uppercase">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
             Program
           </p>
-          <h1 className="mt-1 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">{program.name}</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hae-ink sm:text-3xl">
+            {program.name}
+          </h1>
           <p className="mt-1 text-sm text-hae-slate">
             Overall lead: {program.lead || '—'}
+            {projects.length ? ` · ${projects.length} projects` : ''}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddingProject((v) => !v)}
-          className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white hover:bg-hae-crimson-dark"
-        >
-          {addingProject ? 'Cancel' : '+ Add Project'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDense((v) => !v)}
+            className="hae-btn-secondary"
+            title={dense ? 'Switch to compact list' : 'Show full table'}
+          >
+            {dense ? 'Compact list' : 'Dense table'}
+          </button>
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            + Add Project
+          </button>
+        </div>
       </header>
 
-      {addingProject && (
-        <form
-          onSubmit={createProject}
-          className="grid gap-3 rounded-xl border border-hae-line bg-white p-4 sm:grid-cols-2"
-        >
+      <Modal
+        open={open}
+        onClose={close}
+        title="Create project"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="create-project-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Create project'}
+            </button>
+          </>
+        }
+      >
+        <form id="create-project-form" onSubmit={createProject} className="grid gap-3 sm:grid-cols-2">
           <input
             required
             placeholder="Project name"
@@ -158,18 +189,14 @@ export default function ProgramPage() {
             onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
             className="rounded-md border border-hae-line px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
-            className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white sm:col-span-2"
-          >
-            Create project
-          </button>
         </form>
-      )}
+      </Modal>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {projects.length === 0 ? (
-          <p className="text-sm text-hae-slate">No projects yet. Add one to get started.</p>
+          <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
+            No projects yet. Add one to get started.
+          </div>
         ) : (
           projects.map((project) => (
             <ProjectCard
@@ -178,6 +205,7 @@ export default function ProgramPage() {
               program={program}
               tasks={tasksByProject[project.id] || []}
               onChanged={load}
+              dense={dense}
             />
           ))
         )}

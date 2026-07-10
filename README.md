@@ -2,9 +2,11 @@
 
 One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
-**Live hub:** https://hae.web.app  
+**Live hub (landing):** https://hae.web.app  
 **Tracker:** https://tracker-hae.web.app  
 **Public brand site:** https://www.harvardae.org/
+
+Each app shares a **top platform header** (switch Hub / Tracker / LMS / EiR / CRM / AMS). The **left sidenav is scoped to the selected app** only.
 
 ---
 
@@ -18,10 +20,11 @@ hae-platform/
 │   ├── eir/                 ✅ Expert Office Hours (EiR directory)
 │   ├── crm/                 ✅ Milestone 3 — CRM
 │   └── ams/                 ✅ Milestone 4 — AMS
+│   └── hub/                 Landing page (hae.web.app)
 ├── packages/
 │   ├── firebase/            Shared Auth + Firestore clients
-│   ├── branding/            HAE fonts, colors, theme CSS
-│   └── ui/                  Shared auth shell + module nav
+│   ├── branding/            HAE fonts, colors, theme + hub CSS
+│   └── ui/                  Shared auth shell + module nav + header
 ├── firebase.json
 ├── firestore.rules
 └── package.json
@@ -34,19 +37,25 @@ hae-platform/
 | Experts (EiR) | `@hae/eir` | 2 | Built (dynamic directory) |
 | CRM | `@hae/crm` | 3 | Built |
 | AMS | `@hae/ams` | 4 | Built |
-| Platform insights | cross-app | **5** | In progress |
+| Platform insights | cross-app | **5** | Complete |
 
 ### Milestone 5 — Platform insights & ops polish
 
-Cross-app improvements for feedback, awareness, and calendar handoff (Spark-safe; no Cloud Functions).
+Cross-app improvements for feedback, awareness, calendar handoff, person linking, and account recovery (Spark-safe; no Cloud Functions).
 
 | Feature | Where | Notes |
-|---------|-------|--------|
+|---------|--------|--------|
 | Survey analytics + CSV export | Tracker → Surveys → editor | Choice/rating breakdowns, text samples, CSV download |
 | Notifications digest | Tracker → Notifications | Overdue / due-soon tasks + LMS check-ins; optional mailto digest |
 | ICS calendar export | Tracker My Tasks, LMS Office Hours, AMS Events | Download `.ics` for Google/Apple/Outlook |
+| CRM ↔ AMS/LMS person linking | CRM → Contacts → Edit | Match by email; show members, memberships, enrollments, certificates |
+| URL attachments | CRM contacts & interactions | Paste Drive/Dropbox/SharePoint links (no Storage required) |
+| Password reset | All login pages + Admin → Users | Firebase `sendPasswordResetEmail`; admin can trigger per user |
 
-Later candidates (not in this slice): CRM↔AMS/LMS person linking, file attachments, password-reset UX, Blaze Functions for push email.
+**Superadmins** (always full access + Feature toggles): `njcarlo@gmail.com`, `inahmarchadesch@gmail.com`  
+Tracker → Admin → **Features** — turn apps/features on or off for everyone else.
+
+Deferred (needs Blaze / custom domain): automated push email via Cloud Functions, nested `app.hae.web.app` DNS.
 
 ---
 
@@ -83,7 +92,7 @@ Primary pattern: **`[app]-hae.web.app`** (Firebase Hosting site IDs cannot use d
 
 | App | Primary | Legacy (still deployed) |
 |-----|---------|-------------------------|
-| Hub | https://hae.web.app | — |
+| Hub | https://hae.web.app | Landing with people photography |
 | Tracker | https://tracker-hae.web.app | https://hae-operating-tracker.web.app |
 | LMS | https://lms-hae.web.app | https://hae-lms.web.app |
 | EiR | https://eir-hae.web.app | https://hae-eir.web.app |

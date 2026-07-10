@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { formatDate, programNameOf, projectNameOf } from '../utils'
+import TaskDetailPopup, { taskDetailRows } from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
 
 export default function WaitingOnSection({ tasks, programsById, projectsById }) {
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState(null)
 
   const items = useMemo(() => {
     return tasks
@@ -24,27 +26,57 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
         <h2 className="text-sm font-semibold text-hae-ink">Waiting On</h2>
         <p className="text-xs text-hae-slate">Tasks blocked on someone or something else</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] text-left">
+      <div className="hae-mobile-only">
+        <div className="hae-mobile-cards p-3">
+          {slice.length === 0 ? (
+            <div className="hae-mobile-card text-center text-sm text-hae-slate">
+              Nothing waiting
+            </div>
+          ) : (
+            slice.map((task) => (
+              <button
+                key={task.id}
+                type="button"
+                className="hae-mobile-card"
+                onClick={() => setSelected(task)}
+              >
+                <div className="hae-mobile-card__title">{task.name}</div>
+                <div className="hae-mobile-card__meta">
+                  <span>Waiting on {task.waitingOn}</span>
+                  <span>Needed by {formatDate(task.dueDate)}</span>
+                  <span className="line-clamp-1">
+                    {programNameOf(task, programsById)}
+                    {projectNameOf(task, projectsById)
+                      ? ` · ${projectNameOf(task, projectsById)}`
+                      : ''}
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+      <div className="hae-desktop-only hae-table-scroll">
+        <table className="w-full min-w-[520px] text-left lg:min-w-[700px]">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Task</th>
               <th className="px-3 py-2 font-semibold">Waiting On</th>
-              <th className="px-3 py-2 font-semibold">Program</th>
-              <th className="px-3 py-2 font-semibold">Project</th>
+              <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
+              <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
               <th className="px-3 py-2 font-semibold">Needed By</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((task, i) =>
               task ? (
-                <tr key={task.id} className="border-b border-hae-line/70 h-11">
+                <tr key={task.id} className="h-11 border-b border-hae-line/70">
                   <td className="px-3 py-2 text-sm font-medium">{task.name}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{task.waitingOn}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
+                  <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {programNameOf(task, programsById)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
+                  <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {projectNameOf(task, projectsById)}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
@@ -52,8 +84,10 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
                   </td>
                 </tr>
               ) : (
-                <tr key={`pad-${i}`} className="border-b border-hae-line/40 h-11">
-                  <td colSpan={5} className="px-3 py-2">&nbsp;</td>
+                <tr key={`pad-${i}`} className="h-11 border-b border-hae-line/40">
+                  <td colSpan={5} className="px-3 py-2">
+                    &nbsp;
+                  </td>
                 </tr>
               )
             )}
@@ -86,6 +120,22 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
           </button>
         </div>
       </div>
+
+      <TaskDetailPopup
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title={selected?.name || 'Task'}
+        rows={taskDetailRows(selected, { programsById, projectsById })}
+        footer={
+          <button
+            type="button"
+            className="hae-btn-secondary"
+            onClick={() => setSelected(null)}
+          >
+            Close
+          </button>
+        }
+      />
     </section>
   )
 }

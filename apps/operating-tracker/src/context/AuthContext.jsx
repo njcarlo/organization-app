@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
 } from 'firebase/auth'
@@ -16,6 +17,8 @@ import {
   permissionsForRole,
   roleLabel,
 } from '../../../../packages/ui/src/rbac.js'
+import { isSuperAdminEmail } from '../../../../packages/ui/src/superadmin.js'
+import { ensureSuperAdminProfile } from '../../../../packages/ui/src/ensureSuperAdmin.js'
 import { consumeSsoTokenIfPresent } from '../../../../packages/ui/src/sso.js'
 
 const AuthContext = createContext(null)
@@ -41,8 +44,15 @@ export function AuthProvider({ children }) {
         setUser(firebaseUser)
         if (firebaseUser) {
           try {
-            const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-            setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+            let profile = null
+            if (isSuperAdminEmail(firebaseUser.email)) {
+              profile = await ensureSuperAdminProfile(db, firebaseUser)
+            }
+            if (!profile) {
+              const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+              profile = snap.exists() ? { id: snap.id, ...snap.data() } : null
+            }
+            setUserProfile(profile)
           } catch {
             setUserProfile(null)
           }
@@ -62,6 +72,9 @@ export function AuthProvider({ children }) {
   const login = (email, password) =>
     signInWithEmailAndPassword(auth, email, password)
 
+  const requestPasswordReset = (email) =>
+    sendPasswordResetEmail(auth, String(email || '').trim())
+
   const logout = () => firebaseSignOut(auth)
 
   const refreshProfile = async () => {
@@ -72,8 +85,9 @@ export function AuthProvider({ children }) {
 
   const role = normalizeRole(userProfile?.role)
   const permissions = useMemo(() => permissionsForRole(role), [role])
-  const isAdmin = isAdminRole(role)
-  const isStaff = isStaffRole(role)
+  const isSuperAdmin = isSuperAdminEmail(user?.email || userProfile?.email)
+  const isAdmin = isAdminRole(role) || isSuperAdmin
+  const isStaff = isStaffRole(role) || isSuperAdmin
 
   const value = useMemo(
     () => ({
@@ -81,18 +95,22 @@ export function AuthProvider({ children }) {
       userProfile,
       loading,
       login,
+      requestPasswordReset,
       logout,
       refreshProfile,
       role,
-      roleLabel: roleLabel(role),
+      roleLabel: isSuperAdmin ? 'Superadmin' : roleLabel(role),
       permissions,
       isAdmin,
       isStaff,
-      hasPermission: (perm) => hasPermission(permissions, perm),
-      hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
-      canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
+      isSuperAdmin,
+      hasPermission: (perm) => isSuperAdmin || hasPermission(permissions, perm),
+      hasAnyPermission: (perms) =>
+        isSuperAdmin || hasAnyPermission(permissions, perms),
+      canAccessModule: (moduleId) =>
+        isSuperAdmin || canAccessModule(permissions, moduleId),
     }),
-    [user, userProfile, loading, role, permissions, isAdmin, isStaff]
+    [user, userProfile, loading, role, permissions, isAdmin, isStaff, isSuperAdmin]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

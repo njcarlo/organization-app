@@ -15,7 +15,8 @@ export const HELP_SECTIONS = [
         steps: [
           'Open the app URL you were given (Tracker, LMS, EiR, CRM, or AMS).',
           'Sign in with your HAE email and password.',
-          'If you cannot sign in, ask an admin to create your account under Tracker → Admin → Users.',
+          'Forgot password? Use Forgot password on the sign-in screen — Firebase emails a reset link.',
+          'If you have no account yet, ask an admin to create one under Tracker → Admin → Users.',
         ],
       },
       {
@@ -28,9 +29,10 @@ export const HELP_SECTIONS = [
       {
         heading: 'Switching between apps',
         steps: [
-          'Use the Platform list in the left sidebar (Tracker, LMS, EiR, CRM, AMS).',
-          'If you are already signed in, clicking another app should keep you signed in.',
-          'Each app has its own URL — bookmark the ones you use most.',
+          'Use the top header chips (Hub, Tracker, LMS, EiR, CRM, AMS) to move between apps.',
+          'The left sidenav only shows pages for the app you are in right now.',
+          'Start from the Hub (hae.web.app) for a landing overview of every workspace.',
+          'If you are already signed in, switching apps should keep you signed in.',
         ],
       },
     ],
@@ -43,7 +45,8 @@ export const HELP_SECTIONS = [
       {
         heading: 'What each role can do',
         steps: [
-          'Admin — full access: users, import/export, and every app.',
+          'Superadmin — njcarlo@gmail.com and inahmarchadesch@gmail.com: always full access; Feature toggles in Tracker → Admin.',
+          'Admin — full access: users, import/export, and every app (subject to feature toggles).',
           'Staff — day-to-day HAE team work across Tracker, LMS manage, EiR manage, CRM, and AMS.',
           'Member — alumni: EiR directory/booking, AMS events and own membership.',
           'Student — Academy: LMS My learning, catalog, certificates; can browse EiR.',
@@ -102,6 +105,8 @@ export const HELP_SECTIONS = [
         heading: 'Admin (admins only)',
         steps: [
           'Users — create login accounts and set roles (admin / staff / member / student).',
+          'Users — Reset pw sends a Firebase password-reset email to that person.',
+          'Features (superadmins only) — toggle which apps and features everyone else can see.',
           'Programs — add or rename programs.',
           'Add items — create records for LMS, EiR, CRM, and AMS from one place.',
           'Import / Export — download or upload JSON backups of collections.',
@@ -172,7 +177,9 @@ export const HELP_SECTIONS = [
         heading: 'Contacts & pipeline',
         steps: [
           'Contacts — add alumni, donors, partners, or prospects with region, tags, and stage.',
-          'Interactions — log emails, calls, meetings, and notes linked to a contact.',
+          'Edit a contact to see Linked across platform — AMS members/memberships and LMS enrollments/certificates matched by the same email.',
+          'Attachments — paste Drive/Dropbox/SharePoint URLs (one per line; optional “Label | URL”).',
+          'Interactions — log emails, calls, meetings, and notes linked to a contact (attachments supported).',
           'Pipeline — move contacts between Prospect → Engaged → Committed → Closed.',
         ],
       },
@@ -213,6 +220,7 @@ export const HELP_SECTIONS = [
         steps: [
           'I do not see my LMS data — ask staff to set learner email to your exact login email.',
           'I do not see my AMS membership — memberships need memberEmail matching your login.',
+          'Forgot password — use Forgot password on any app’s sign-in page, or ask an admin to click Reset pw.',
           'Wrong app access — ask an admin to change your role under Tracker → Admin → Users.',
           'Page looks unstyled or huge logo — hard-refresh (Ctrl/Cmd+Shift+R); you may be on a cached build.',
           'Signed out after switching apps — sign in once on that app; later switches should stay signed in.',

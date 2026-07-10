@@ -10,9 +10,16 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS } from '@hae/ui'
+import { Modal, useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 import { MODULE_TYPES } from '../constants'
+
+const emptyForm = {
+  title: '',
+  type: 'Lesson',
+  order: '',
+  resourceUrl: '',
+}
 
 export default function CourseDetail() {
   const { courseId } = useParams()
@@ -21,12 +28,9 @@ export default function CourseDetail() {
   const [course, setCourse] = useState(null)
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({
-    title: '',
-    type: 'Lesson',
-    order: '',
-    resourceUrl: '',
-  })
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState(emptyForm)
 
   const load = useCallback(async () => {
     const [courseSnap, moduleSnap] = await Promise.all([
@@ -53,24 +57,36 @@ export default function CourseDetail() {
     load()
   }, [load])
 
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    setForm(emptyForm)
+  }
+
   const addModule = async (e) => {
     e.preventDefault()
-    if (!form.title.trim()) return
+    if (!form.title.trim() || saving) return
+    setSaving(true)
     const nextOrder =
       form.order !== ''
         ? Number(form.order)
         : modules.reduce((m, x) => Math.max(m, x.order ?? 0), 0) + 1
-    await addDoc(collection(db, 'modules'), {
-      courseId,
-      courseName: course.name,
-      title: form.title.trim(),
-      type: form.type,
-      order: nextOrder,
-      resourceUrl: form.resourceUrl.trim(),
-      createdAt: serverTimestamp(),
-    })
-    setForm({ title: '', type: 'Lesson', order: '', resourceUrl: '' })
-    load()
+    try {
+      await addDoc(collection(db, 'modules'), {
+        courseId,
+        courseName: course.name,
+        title: form.title.trim(),
+        type: form.type,
+        order: nextOrder,
+        resourceUrl: form.resourceUrl.trim(),
+        createdAt: serverTimestamp(),
+      })
+      setForm(emptyForm)
+      setOpen(false)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const removeModule = async (id) => {
@@ -134,53 +150,69 @@ export default function CourseDetail() {
       ) : null}
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
-          Modules & sessions
-        </h2>
-        {canManage ? (
-          <form
-            onSubmit={addModule}
-            className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            <input
-              required
-              placeholder="Module title"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="border border-hae-line px-3 py-2 text-sm"
-            >
-              {MODULE_TYPES.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-            <input
-              type="number"
-              placeholder="Order"
-              value={form.order}
-              onChange={(e) => setForm({ ...form, order: e.target.value })}
-              className="border border-hae-line px-3 py-2 text-sm"
-            />
-            <input
-              placeholder="Resource / Zoom / PDF URL"
-              value={form.resourceUrl}
-              onChange={(e) => setForm({ ...form, resourceUrl: e.target.value })}
-              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-            <button
-              type="submit"
-              className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
-            >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+            Modules & sessions
+          </h2>
+          {canManage ? (
+            <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
               Add module
             </button>
-          </form>
+          ) : null}
+        </div>
+
+        {canManage ? (
+          <Modal
+            open={open}
+            onClose={close}
+            title="Add module"
+            busy={saving}
+            footer={
+              <>
+                <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
+                  Cancel
+                </button>
+                <button type="submit" form="add-module-form" className="hae-btn" disabled={saving}>
+                  {saving ? 'Saving…' : 'Add module'}
+                </button>
+              </>
+            }
+          >
+            <form id="add-module-form" onSubmit={addModule} className="grid gap-3 sm:grid-cols-2">
+              <input
+                required
+                placeholder="Module title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+              />
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className="border border-hae-line px-3 py-2 text-sm"
+              >
+                {MODULE_TYPES.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="Order"
+                value={form.order}
+                onChange={(e) => setForm({ ...form, order: e.target.value })}
+                className="border border-hae-line px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Resource / Zoom / PDF URL"
+                value={form.resourceUrl}
+                onChange={(e) => setForm({ ...form, resourceUrl: e.target.value })}
+                className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+              />
+            </form>
+          </Modal>
         ) : null}
 
-        <div className="overflow-x-auto border border-hae-line bg-white">
+        <div className="hae-table-scroll border border-hae-line bg-white">
           <table className="w-full min-w-[560px] text-left">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>

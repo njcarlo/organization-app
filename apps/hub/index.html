@@ -3,136 +3,170 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HAE Platform</title>
+    <title>HAE Platform — Harvard Alumni Entrepreneurs</title>
+    <meta
+      name="description"
+      content="The HAE operating platform for programs, Academy learning, Expert Office Hours, relationships, and membership."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Source+Sans+3:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <style>
-      :root {
-        --ink: #1a1a1a;
-        --slate: #5c6570;
-        --crimson: #a51c30;
-        --line: #e2e5e9;
-        --mist: #f6f7f9;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: 'Source Sans 3', system-ui, sans-serif;
-        color: var(--ink);
-        background:
-          radial-gradient(ellipse 80% 50% at 10% 0%, rgba(165, 28, 48, 0.08), transparent),
-          linear-gradient(180deg, #fff 0%, var(--mist) 100%);
-      }
-      main {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 3rem 1.25rem 4rem;
-      }
-      h1 {
-        font-family: 'Libre Baskerville', Georgia, serif;
-        font-size: clamp(2rem, 5vw, 2.75rem);
-        margin: 0.5rem 0 0.35rem;
-      }
-      .eyebrow {
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--crimson);
-      }
-      .lede {
-        color: var(--slate);
-        margin: 0 0 2rem;
-        max-width: 36rem;
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: grid;
-        gap: 0.75rem;
-      }
-      a.app {
-        display: block;
-        padding: 1rem 1.1rem;
-        border: 1px solid var(--line);
-        background: #fff;
-        text-decoration: none;
-        color: inherit;
-        transition: border-color 0.15s ease, transform 0.15s ease;
-      }
-      a.app:hover {
-        border-color: var(--crimson);
-        transform: translateY(-1px);
-      }
-      a.app strong {
-        display: block;
-        color: var(--crimson);
-        font-size: 0.95rem;
-      }
-      a.app span {
-        display: block;
-        margin-top: 0.2rem;
-        font-size: 0.85rem;
-        color: var(--slate);
-      }
-      footer {
-        margin-top: 2.5rem;
-        font-size: 0.8rem;
-        color: var(--slate);
-      }
-    </style>
+    <link rel="stylesheet" href="/platform-header.css" />
+    <link rel="stylesheet" href="/hub.css" />
   </head>
   <body>
-    <main>
-      <p class="eyebrow">Harvard Alumni Entrepreneurs</p>
-      <h1>HAE Platform</h1>
-      <p class="lede">
-        Choose an app. Primary URLs use the <code>[app]-hae.web.app</code> pattern.
-      </p>
-      <ul>
+    <header class="hae-platform-header">
+      <div class="hae-platform-header__row">
+        <a class="hae-platform-header__brand" href="/" title="HAE Platform hub">
+          <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" />
+        </a>
+        <div class="hae-platform-header__divider" aria-hidden="true"></div>
+        <div class="hae-platform-header__title-block">
+          <div class="hae-platform-header__kicker">Now in</div>
+          <div class="hae-platform-header__title">Platform Hub</div>
+        </div>
+        <div class="hae-platform-header__spacer" aria-hidden="true"></div>
+        <nav class="hae-platform-header__nav" aria-label="Platform apps">
+          <span class="hae-platform-header__chip is-current" aria-current="page">Hub</span>
+          <a class="hae-platform-header__chip" href="https://tracker-hae.web.app">Tracker</a>
+          <a class="hae-platform-header__chip" href="https://lms-hae.web.app">LMS</a>
+          <a class="hae-platform-header__chip" href="https://eir-hae.web.app">EiR</a>
+          <a class="hae-platform-header__chip" href="https://crm-hae.web.app">CRM</a>
+          <a class="hae-platform-header__chip" href="https://ams-hae.web.app">AMS</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero" aria-label="Welcome">
+      <div class="hero-media" aria-hidden="true">
+        <img
+          src="/images/hero-people.jpg"
+          alt=""
+          width="2000"
+          height="1334"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <h1 class="hero-brand">HAE</h1>
+        <p class="hero-headline">
+          Built for the people who build — programs, learning, experts, and community in one place.
+        </p>
+        <p class="hero-lede">
+          Sign in to the workspace you need. The header keeps every app one click away; each sidenav stays focused on the work in front of you.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#apps">Choose an app</a>
+          <a class="btn-ghost" href="https://tracker-hae.web.app">Go to Tracker</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="people-strip" aria-label="Our community">
+      <figure>
+        <img src="/images/app-lms.jpg" alt="Learners collaborating around a table" width="1200" height="800" loading="lazy" />
+        <figcaption>Learn together</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/app-eir.jpg" alt="Expert mentor in conversation" width="1200" height="1800" loading="lazy" />
+        <figcaption>Meet experts</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/app-ams.jpg" alt="Friends and alumni gathering outdoors" width="1200" height="675" loading="lazy" />
+        <figcaption>Belong here</figcaption>
+      </figure>
+    </section>
+
+    <section class="section" id="apps">
+      <div class="section-head">
+        <p class="section-kicker">Platform</p>
+        <h2 class="section-title">Select your workspace</h2>
+        <p class="section-copy">
+          Each app has its own navigation for day-to-day work. Switch platforms anytime from the top header — same look, same brand, every module.
+        </p>
+      </div>
+      <ul class="app-grid">
         <li>
-          <a class="app" href="https://tracker-hae.web.app">
-            <strong>Tracker</strong>
-            <span>Programs, projects, and tasks · tracker-hae.web.app</span>
+          <a class="app-tile" href="https://tracker-hae.web.app">
+            <div class="app-tile-media">
+              <img src="/images/app-tracker.jpg" alt="Team collaborating on a project plan" width="1200" height="800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">Tracker</span>
+              <h3 class="app-name">Operating Tracker</h3>
+              <p class="app-tag">Keep programs moving — projects, tasks, surveys, and weekly priorities.</p>
+              <span class="app-go">Enter Tracker →</span>
+            </div>
           </a>
         </li>
         <li>
-          <a class="app" href="https://lms-hae.web.app">
-            <strong>LMS</strong>
-            <span>Academy courses and enrollments · lms-hae.web.app</span>
+          <a class="app-tile" href="https://lms-hae.web.app">
+            <div class="app-tile-media">
+              <img src="/images/app-lms.jpg" alt="Students learning together" width="1200" height="800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">LMS</span>
+              <h3 class="app-name">Academy Learning</h3>
+              <p class="app-tag">Academy &amp; Flagship paths, enrollments, office hours, and certificates.</p>
+              <span class="app-go">Enter LMS →</span>
+            </div>
           </a>
         </li>
         <li>
-          <a class="app" href="https://eir-hae.web.app">
-            <strong>EiR</strong>
-            <span>Expert Office Hours directory · eir-hae.web.app</span>
+          <a class="app-tile" href="https://eir-hae.web.app">
+            <div class="app-tile-media">
+              <img src="/images/app-eir.jpg" alt="Expert offering guidance" width="1200" height="1800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">EiR</span>
+              <h3 class="app-name">Expert Office Hours</h3>
+              <p class="app-tag">Browse the SME directory and book office hours with HAE experts.</p>
+              <span class="app-go">Enter EiR →</span>
+            </div>
           </a>
         </li>
         <li>
-          <a class="app" href="https://crm-hae.web.app">
-            <strong>CRM</strong>
-            <span>Contacts, pipeline, interactions · crm-hae.web.app</span>
+          <a class="app-tile" href="https://crm-hae.web.app">
+            <div class="app-tile-media">
+              <img src="/images/app-crm.jpg" alt="Handshake sealing a partnership" width="1200" height="801" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">CRM</span>
+              <h3 class="app-name">Relationships</h3>
+              <p class="app-tag">Contacts, pipeline stages, interactions, and linked AMS/LMS records.</p>
+              <span class="app-go">Enter CRM →</span>
+            </div>
           </a>
         </li>
         <li>
-          <a class="app" href="https://ams-hae.web.app">
-            <strong>AMS</strong>
-            <span>Members, memberships, events · ams-hae.web.app</span>
+          <a class="app-tile" href="https://ams-hae.web.app">
+            <div class="app-tile-media">
+              <img src="/images/app-ams.jpg" alt="Alumni community gathering" width="1200" height="675" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">AMS</span>
+              <h3 class="app-name">Membership</h3>
+              <p class="app-tag">Members, renewals, committees, and events for the HAE community.</p>
+              <span class="app-go">Enter AMS →</span>
+            </div>
           </a>
         </li>
       </ul>
-      <footer>
-        Brand site:
-        <a href="https://www.harvardae.org/">harvardae.org</a>
-      </footer>
-    </main>
+    </section>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <span>© Harvard Alumni Entrepreneurs</span>
+        <span>
+          Public site:
+          <a href="https://www.harvardae.org/">harvardae.org</a>
+        </span>
+      </div>
+    </footer>
   </body>
 </html>

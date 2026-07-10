@@ -6,11 +6,14 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import { useAuth, downloadIcs } from '@hae/ui'
+import { useAuth, downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function StudentHome() {
   const { userProfile } = useAuth()
+  const { isEnabled } = useFeatures()
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
+  const showGamification = isEnabled(FEATURES.LMS_GAMIFICATION)
   const [enrollments, setEnrollments] = useState([])
   const [sessions, setSessions] = useState([])
   const [checkIns, setCheckIns] = useState([])
@@ -105,40 +108,44 @@ export default function StudentHome() {
         >
           Browse catalog
         </Link>
-        <Link
-          to="/progress"
-          className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
-        >
-          Points & badges
-        </Link>
+        {showGamification ? (
+          <Link
+            to="/progress"
+            className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
+          >
+            Points & badges
+          </Link>
+        ) : null}
         <Link
           to="/my-certificates"
           className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
         >
           My certificates
         </Link>
-        <button
-          type="button"
-          disabled={!mine.upcomingSessions.length}
-          onClick={() => {
-            downloadIcs(
-              'hae-my-office-hours.ics',
-              mine.upcomingSessions.map((s) => ({
-                uid: `session-${s.id}@hae-lms`,
-                title: s.title || 'Office Hours',
-                date: s.date,
-                time: s.time || '',
-                location: s.location || '',
-                url: s.zoomLink || '',
-                description: s.courseName ? `Course: ${s.courseName}` : '',
-              })),
-              { calName: 'HAE My Office Hours' }
-            )
-          }}
-          className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase disabled:opacity-50"
-        >
-          Export office hours (.ics)
-        </button>
+        {canExportCalendar ? (
+          <button
+            type="button"
+            disabled={!mine.upcomingSessions.length}
+            onClick={() => {
+              downloadIcs(
+                'hae-my-office-hours.ics',
+                mine.upcomingSessions.map((s) => ({
+                  uid: `session-${s.id}@hae-lms`,
+                  title: s.title || 'Office Hours',
+                  date: s.date,
+                  time: s.time || '',
+                  location: s.location || '',
+                  url: s.zoomLink || '',
+                  description: s.courseName ? `Course: ${s.courseName}` : '',
+                })),
+                { calName: 'HAE My Office Hours' }
+              )
+            }}
+            className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase disabled:opacity-50"
+          >
+            Export office hours (.ics)
+          </button>
+        ) : null}
       </div>
 
       <section className="border border-hae-line bg-white">

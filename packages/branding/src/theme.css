@@ -1,4 +1,6 @@
-/* HAE brand theme — sourced from harvardae.org */
+/* HAE brand theme — sourced from harvardae.org
+ * Imported by every app via @hae/branding/theme.css
+ */
 @theme {
   --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -14,6 +16,7 @@
   --color-hae-green: #1f7a4c;
   --color-hae-yellow: #b8860b;
   --color-hae-red: #c00;
+  --color-hae-paper: #ffffff;
 
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
@@ -25,4 +28,24 @@
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+/* Shared page chrome — used by all React apps */
+.hae-page-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184, 0, 40, 0.08), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, var(--color-hae-mist) 100%);
+}
+
+.hae-surface {
+  background: var(--color-hae-paper);
+  border: 1px solid var(--color-hae-line);
+}
+
+.hae-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-hae-crimson);
 }

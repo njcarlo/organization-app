@@ -7,12 +7,15 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Certificates() {
   const [items, setItems] = useState([])
   const [enrollments, setEnrollments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [enrollmentId, setEnrollmentId] = useState('')
 
   const load = useCallback(async () => {
@@ -55,6 +58,7 @@ export default function Certificates() {
       createdAt: serverTimestamp(),
     })
     setEnrollmentId('')
+    setOpen(false)
     load()
   }
 
@@ -75,11 +79,32 @@ export default function Certificates() {
         </p>
       </header>
 
-      <form
-        onSubmit={issue}
-        className="grid gap-3 border border-hae-line bg-white p-4 md:grid-cols-3"
+      
+      
+      <div className="hae-form-actions">
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Issue certificate
+        </button>
+      </div>
+<Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Issue certificate"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="cert-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Issue certificate'}
+            </button>
+          </>
+        }
       >
-        <select
+        <form id="cert-form" onSubmit={issue} className="grid gap-3 sm:grid-cols-2">
+
+<select
           required
           value={enrollmentId}
           onChange={(e) => setEnrollmentId(e.target.value)}
@@ -92,16 +117,12 @@ export default function Certificates() {
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase"
-        >
-          Issue certificate
-        </button>
-      </form>
+        </form>
+      </Modal>
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Issued</th>

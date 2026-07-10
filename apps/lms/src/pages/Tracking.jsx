@@ -234,8 +234,8 @@ export default function Tracking() {
             No learners match this filter. Nice work.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left">
+          <div className="hae-table-scroll">
+            <table className="w-full min-w-[560px] lg:min-w-[720px] text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
                   <th className="px-3 py-2 font-semibold">Learner</th>
