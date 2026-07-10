@@ -88,7 +88,7 @@ export default function Sidebar({ open = false, onClose }) {
     <SideNav
       open={open}
       onClose={onClose}
-      title="Operating Tracker"
+      title="Operations"
       subtitle="In this app"
       sections={sections}
       userName={userProfile?.name}

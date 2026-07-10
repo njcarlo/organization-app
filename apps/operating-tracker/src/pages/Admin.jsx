@@ -40,7 +40,7 @@ const CREATE_GUIDE = [
     ],
   },
   {
-    app: 'Operating Tracker',
+    app: 'Operations',
     items: [
       { what: 'Users', where: 'Admin → Users (this page)' },
       { what: 'Programs', where: 'Admin → Programs (this page)' },

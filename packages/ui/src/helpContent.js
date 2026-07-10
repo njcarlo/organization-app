@@ -56,7 +56,7 @@ export const HELP_SECTIONS = [
   },
   {
     id: 'tracker',
-    title: 'Operating Tracker',
+    title: 'Operations',
     roles: ['admin', 'staff'],
     body: [
       {
