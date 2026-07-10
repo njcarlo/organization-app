@@ -77,6 +77,14 @@ export const HELP_SECTIONS = [
         ],
       },
       {
+        heading: 'Calendar',
+        steps: [
+          'Month view of task due dates — Mine by default; staff can switch to All.',
+          'Click a day to list tasks due that date; click a task for details.',
+          'Export .ics downloads the visible month’s dated tasks (when Calendar export is enabled).',
+        ],
+      },
+      {
         heading: 'Notifications',
         steps: [
           'Shows an in-app digest: overdue tasks, tasks due in 7 days, waiting-on items, and LMS check-ins.',
