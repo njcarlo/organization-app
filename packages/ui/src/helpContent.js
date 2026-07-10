@@ -169,6 +169,7 @@ export const HELP_SECTIONS = [
         heading: 'Members (alumni view)',
         steps: [
           'My membership shows your membership records (matched by your login email).',
+          'If dues are Pending or Overdue, tap Pay with Stripe to complete checkout.',
           'Events lists upcoming HAE events you can attend.',
         ],
         roles: ['member', 'admin', 'staff'],
@@ -177,9 +178,20 @@ export const HELP_SECTIONS = [
         heading: 'Staff — manage membership',
         steps: [
           'Members — directory of people (include email = login email for member view).',
-          'Memberships — tier, renewal, payment status (stores memberEmail automatically).',
+          'Memberships — tier, renewal, dues, and payment status (stores memberEmail automatically).',
+          'Pricing & Stripe — set dues amounts and paste Stripe Payment Link URLs per tier.',
           'Events — create events with date, location, capacity.',
           'Committees — assign members to committee roles.',
+        ],
+        roles: ['admin', 'staff'],
+      },
+      {
+        heading: 'Stripe payments',
+        steps: [
+          'Create a Payment Link per tier in the Stripe Dashboard (amount should match AMS Pricing).',
+          'Set success URL to https://ams-hae.web.app/payment/success and cancel to /payment/cancel.',
+          'Paste each buy.stripe.com link under AMS → Pricing & Stripe, then Save.',
+          'Members pay from My membership; staff can also open a Stripe link from the Memberships table.',
         ],
         roles: ['admin', 'staff'],
       },
