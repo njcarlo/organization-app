@@ -5,7 +5,7 @@ import { createOauthClient } from './googleOauthClient.js';
 import { googleOauthClientId, googleOauthClientSecret } from './secrets.js';
 import { REGION, oauthCallbackUrl } from './config.js';
 
-const APP_URL = 'https://hae-operating-tracker.web.app';
+const APP_URL = 'https://tracker-hae.web.app';
 
 export const oauthCallback = onRequest(
   { region: REGION, secrets: [googleOauthClientId, googleOauthClientSecret] },

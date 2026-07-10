@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
   AuthProvider,
+  AuthActionPage,
   LoginPage,
   ProtectedRoute,
   ModuleShell,
@@ -42,6 +43,10 @@ export default function App() {
             <Route
               path="/login"
               element={<LoginPage appName="Expert Office Hours" />}
+            />
+            <Route
+              path="/auth/action"
+              element={<AuthActionPage appName="Expert Office Hours" />}
             />
             <Route
               element={

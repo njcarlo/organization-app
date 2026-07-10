@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
   AuthProvider,
+  AuthActionPage,
   LoginPage,
   ProtectedRoute,
   ModuleShell,
@@ -28,6 +29,10 @@ export default function App() {
         <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
           <Routes>
             <Route path="/login" element={<LoginPage appName="HAE Relationships" />} />
+            <Route
+              path="/auth/action"
+              element={<AuthActionPage appName="HAE Relationships" />}
+            />
             <Route
               element={
                 <ProtectedRoute

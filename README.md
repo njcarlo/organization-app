@@ -77,7 +77,7 @@ npm run import:real   # upsert production programs/projects/tasks/users
 
 ### Auto-deploy (GitHub Actions)
 
-Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting + Firestore rules.
+Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting, Firestore rules, and Cloud Functions.
 
 1. Generate a CI token locally: `npx firebase login:ci`
 2. Add it as a repo secret named `FIREBASE_TOKEN`  
@@ -137,7 +137,41 @@ Collections: `courses`, `modules`, `enrollments`, `sessions`, `checkIns`, `certi
 - Auth: email/password
 - Rules: authenticated read/write (`firestore.rules`)
 
-### Operating Tracker modules
+### Password reset / email action links
+
+Firebase sometimes sends password-reset links with an empty `apiKey=`, which makes the default hosted page (`/__/auth/action`) show **“The selected page mode is invalid.”**
+
+This repo serves a custom handler at **`/auth/action`** on every app (uses the configured Firebase API key via the client SDK). Point Auth email templates at it:
+
+1. Firebase Console → **Authentication** → **Templates**
+2. Edit **Password reset** (and optionally **Email address verification** / **Email address change**)
+3. Customize action URL to:
+
+```
+https://tracker-hae.web.app/auth/action?mode=%MODE%&oobCode=%OOB_CODE%&apiKey=%API_KEY%&lang=%LANG%
+```
+
+4. Save, then send a fresh reset email (old links keep the broken hosted URL)
+
+**Immediate workaround for an already-open broken link (after this handler is deployed):** in the address bar, change `/__/auth/action` → `/auth/action` (keep the same query string) and reload. The custom page ignores an empty `apiKey`. Alternately, paste the web API key after `apiKey=` (Project settings → Your apps).
+
+**Project-level fix (often restores default `/__/auth/action` links):** Authentication → Sign-in method → delete **Email/Password** → re-enable it (does not delete existing users).
+
+### Executive Inbox (PR #39)
+
+Allowlisted users: `rmarchadesch@harvardae.org`, `rryan@harvardae.org`.
+
+Before Connect / Sync work in production:
+
+1. Blaze plan + deploy functions (`npm run deploy` / CI now includes `functions`)
+2. Enable Gmail API + Google Calendar API on the GCP project
+3. Create an OAuth 2.0 Web client; authorized redirect URI must be exactly:
+   `https://us-east1-hae-operating-tracker.cloudfunctions.net/oauthCallback`
+4. Set secrets:
+   `firebase functions:secrets:set GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET ANTHROPIC_API_KEY`
+5. An allowlisted user opens Operations → Executive Inbox → **Connect Google Account**, then **Sync now**
+
+### Operations modules
 
 - **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins
 - **Programs** (`/programs/:programId`) — projects + inline tasks

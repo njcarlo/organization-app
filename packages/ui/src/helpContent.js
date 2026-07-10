@@ -93,6 +93,14 @@ export const HELP_SECTIONS = [
         ],
       },
       {
+        heading: 'Executive Inbox (allowlisted only)',
+        steps: [
+          'Visible only to the President / EA allowlist under Operations → Executive Inbox.',
+          'Connect Google Account once (Gmail + Calendar read-only), then Sync now or wait for the 15-minute schedule.',
+          'Needs Reply / Urgent / Action Items exclude newsletters; Meetings shows the next 7 days.',
+        ],
+      },
+      {
         heading: 'Programs → Projects → Tasks',
         steps: [
           'Open a program from the sidebar.',
@@ -106,6 +114,7 @@ export const HELP_SECTIONS = [
         steps: [
           'Users — create login accounts and set roles (admin / staff / member / student).',
           'Users — Reset pw sends a Firebase password-reset email to that person.',
+          'If a reset link shows “page mode is invalid”, open Tracker → /auth/action with the same mode & oobCode (or ask an admin to re-send after templates point at /auth/action).',
           'Features (superadmins only) — toggle which apps and features everyone else can see.',
           'Programs — add or rename programs.',
           'Add items — create records for LMS, EiR, CRM, and AMS from one place.',
@@ -233,6 +242,7 @@ export const HELP_SECTIONS = [
           'I do not see my LMS data — ask staff to set learner email to your exact login email.',
           'I do not see my AMS membership — memberships need memberEmail matching your login.',
           'Forgot password — use Forgot password on any app’s sign-in page, or ask an admin to click Reset pw.',
+          'Reset link says “page mode is invalid” — the email link is missing Firebase’s API key; use a fresh link after templates point to /auth/action, or paste the project web API key into the empty apiKey= in the URL.',
           'Wrong app access — ask an admin to change your role under Tracker → Admin → Users.',
           'Page looks unstyled or huge logo — hard-refresh (Ctrl/Cmd+Shift+R); you may be on a cached build.',
           'Signed out after switching apps — sign in once on that app; later switches should stay signed in.',
