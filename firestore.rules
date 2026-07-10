@@ -138,11 +138,14 @@ service cloud.firestore {
     }
 
     // —— EiR ——
+    // Active experts are publicly readable (public directory site).
+    // Staff can read/write all statuses. Email is stored on the doc but
+    // omitted from the public UI; prefer bookingUrl for contact.
     match /experts/{id} {
-      allow get: if signedIn()
-        && (isStaff()
-            || ((isMember() || isStudent()) && resource.data.status == 'Active'));
-      allow list: if signedIn() && (isStaff() || isMember() || isStudent());
+      allow get: if resource.data.status == 'Active'
+        || (signedIn() && isStaff());
+      allow list: if resource.data.status == 'Active'
+        || (signedIn() && isStaff());
       allow write: if isStaff();
     }
 

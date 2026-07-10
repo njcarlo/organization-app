@@ -168,11 +168,19 @@ export const HELP_SECTIONS = [
     roles: ['admin', 'staff', 'member', 'student'],
     body: [
       {
-        heading: 'Browse and book',
+        heading: 'Public directory',
         steps: [
-          'Directory lists Active experts with expertise tags.',
-          'Open an expert for bio, LinkedIn, and booking link (if provided).',
-          'How it works explains the Expert Office Hours model.',
+          'Anyone can open the public site (eir-hae.web.app) — home, Directory, profiles, How it works — without signing in.',
+          'Directory lists Active experts; search by name/expertise/organization; Bookable badge when a booking link exists.',
+          'Profiles show bio and Book 30 minutes via the expert’s external booking link (in-app scheduling comes later).',
+          'Email addresses are hidden on the public site; members/staff still see them in the workspace.',
+        ],
+      },
+      {
+        heading: 'Member workspace',
+        steps: [
+          'Sign in → /app for the platform shell (Home, Directory, How it works, Help).',
+          'Staff use Manage experts to add/edit profiles and set Active/Inactive.',
         ],
       },
       {

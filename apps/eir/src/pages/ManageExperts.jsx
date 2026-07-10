@@ -145,8 +145,8 @@ export default function ManageExperts() {
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage experts</h1>
           <p className="mt-1 text-sm text-hae-slate">
-            Add and update SME profiles dynamically. Structure follows the public
-            Expert Office Hours directory as a reference — not a copy of live data.
+            Add and update SME profiles. Active profiles appear on the public site
+            (eir-hae.web.app). Booking uses each expert’s external link for now.
           </p>
         </div>
         <button type="button" className="hae-btn" onClick={openAdd}>
@@ -282,6 +282,16 @@ export default function ManageExperts() {
                       {e.title || '—'}
                       {e.organization ? ` · ${e.organization}` : ''}
                     </div>
+                    {e.status === 'Active' ? (
+                      <a
+                        href={`/experts/${e.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-block text-[11px] font-semibold text-hae-crimson hover:underline"
+                      >
+                        Public profile ↗
+                      </a>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2 text-xs text-hae-slate">
                     {(e.expertise || []).join(', ') || '—'}
