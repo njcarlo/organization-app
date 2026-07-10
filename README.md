@@ -77,7 +77,7 @@ npm run import:real   # upsert production programs/projects/tasks/users
 
 ### Auto-deploy (GitHub Actions)
 
-Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting, Firestore rules, and Cloud Functions.
+Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting + Firestore rules. Cloud Functions deploy is attempted separately and is allowed to fail on Spark (Blaze required for functions).
 
 1. Generate a CI token locally: `npx firebase login:ci`
 2. Add it as a repo secret named `FIREBASE_TOKEN`  
