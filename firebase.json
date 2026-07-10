@@ -27,6 +27,21 @@
       ]
     },
     {
+      "target": "tracker-legacy",
+      "public": "apps/operating-tracker/dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
       "target": "lms",
       "public": "apps/lms/dist",
       "ignore": [
@@ -49,6 +64,21 @@
               "value": "public,max-age=31536000,immutable"
             }
           ]
+        }
+      ]
+    },
+    {
+      "target": "lms-legacy",
+      "public": "apps/lms/dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
       ]
     },
@@ -79,6 +109,21 @@
       ]
     },
     {
+      "target": "eir-legacy",
+      "public": "apps/eir/dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
       "target": "crm",
       "public": "apps/crm/dist",
       "ignore": [
@@ -101,6 +146,21 @@
               "value": "public,max-age=31536000,immutable"
             }
           ]
+        }
+      ]
+    },
+    {
+      "target": "crm-legacy",
+      "public": "apps/crm/dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
       ]
     },
@@ -128,6 +188,30 @@
             }
           ]
         }
+      ]
+    },
+    {
+      "target": "ams-legacy",
+      "public": "apps/ams/dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "hub",
+      "public": "apps/hub",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
       ]
     }
   ],

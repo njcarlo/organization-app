@@ -5,11 +5,39 @@
   "targets": {
     "hae-operating-tracker": {
       "hosting": {
-        "tracker": ["hae-operating-tracker"],
-        "lms": ["hae-lms"],
-        "eir": ["hae-eir"],
-        "crm": ["hae-crm"],
-        "ams": ["hae-ams"]
+        "tracker": [
+          "tracker-hae"
+        ],
+        "tracker-legacy": [
+          "hae-operating-tracker"
+        ],
+        "lms": [
+          "lms-hae"
+        ],
+        "lms-legacy": [
+          "hae-lms"
+        ],
+        "eir": [
+          "eir-hae"
+        ],
+        "eir-legacy": [
+          "hae-eir"
+        ],
+        "crm": [
+          "crm-hae"
+        ],
+        "crm-legacy": [
+          "hae-crm"
+        ],
+        "ams": [
+          "ams-hae"
+        ],
+        "ams-legacy": [
+          "hae-ams"
+        ],
+        "hub": [
+          "hae"
+        ]
       }
     }
   },

@@ -6,7 +6,7 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import { useAuth } from '@hae/ui'
+import { useAuth, downloadIcs } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function StudentHome() {
@@ -117,6 +117,28 @@ export default function StudentHome() {
         >
           My certificates
         </Link>
+        <button
+          type="button"
+          disabled={!mine.upcomingSessions.length}
+          onClick={() => {
+            downloadIcs(
+              'hae-my-office-hours.ics',
+              mine.upcomingSessions.map((s) => ({
+                uid: `session-${s.id}@hae-lms`,
+                title: s.title || 'Office Hours',
+                date: s.date,
+                time: s.time || '',
+                location: s.location || '',
+                url: s.zoomLink || '',
+                description: s.courseName ? `Course: ${s.courseName}` : '',
+              })),
+              { calName: 'HAE My Office Hours' }
+            )
+          }}
+          className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase disabled:opacity-50"
+        >
+          Export office hours (.ics)
+        </button>
       </div>
 
       <section className="border border-hae-line bg-white">

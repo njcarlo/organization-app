@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS } from '@hae/ui'
+import { useAuth, PERMISSIONS, downloadIcs } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
@@ -62,15 +62,46 @@ export default function Events() {
     load()
   }
 
+  const exportIcs = () => {
+    const dated = events.filter((e) => e.date)
+    if (!dated.length) return
+    downloadIcs(
+      'hae-events.ics',
+      dated.map((e) => ({
+        uid: `event-${e.id}@hae-ams`,
+        title: e.name || 'HAE Event',
+        date: e.date,
+        location: e.location || '',
+        description: [
+          e.description || '',
+          e.capacity != null ? `Capacity: ${e.capacity}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      })),
+      { calName: 'HAE Events' }
+    )
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading events…</p>
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Events</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Event listings linked to membership engagement
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Events</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Event listings linked to membership engagement
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={exportIcs}
+          disabled={!events.some((e) => e.date)}
+          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+        >
+          Export calendar (.ics)
+        </button>
       </header>
 
       {canManage ? (

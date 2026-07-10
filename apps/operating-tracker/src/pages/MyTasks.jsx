@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore'
+import { downloadIcs } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
@@ -162,6 +163,30 @@ export default function MyTasks() {
     if (e.key === 'Escape') cancelEdit()
   }
 
+  const exportIcs = () => {
+    const dated = filtered.filter((t) => t.dueDate)
+    if (!dated.length) return
+    downloadIcs(
+      isStaff && viewAll ? 'hae-all-tasks.ics' : 'hae-my-tasks.ics',
+      dated.map((t) => ({
+        uid: `task-${t.id}@hae-operating-tracker`,
+        title: t.title || 'Task',
+        date: t.dueDate,
+        description: [
+          t.status ? `Status: ${t.status}` : '',
+          t.owner ? `Owner: ${t.owner}` : '',
+          t.nextAction ? `Next: ${t.nextAction}` : '',
+          programNameOf(t, programsById)
+            ? `Program: ${programNameOf(t, programsById)}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      })),
+      { calName: isStaff && viewAll ? 'HAE All Tasks' : 'HAE My Tasks' }
+    )
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading tasks…</p>
 
   return (
@@ -175,24 +200,34 @@ export default function MyTasks() {
             {filtered.length} task{filtered.length === 1 ? '' : 's'}
           </p>
         </div>
-        {isStaff && (
-          <div className="flex rounded-md border border-hae-line bg-white p-0.5 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setViewAll(false)}
-              className={`rounded px-3 py-1.5 ${!viewAll ? 'bg-hae-crimson text-white' : 'text-hae-slate'}`}
-            >
-              My Tasks
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewAll(true)}
-              className={`rounded px-3 py-1.5 ${viewAll ? 'bg-hae-crimson text-white' : 'text-hae-slate'}`}
-            >
-              All Tasks
-            </button>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={exportIcs}
+            disabled={!filtered.some((t) => t.dueDate)}
+            className="rounded-md border border-hae-line px-3 py-2 text-xs font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+          {isStaff && (
+            <div className="flex rounded-md border border-hae-line bg-white p-0.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setViewAll(false)}
+                className={`rounded px-3 py-1.5 ${!viewAll ? 'bg-hae-crimson text-white' : 'text-hae-slate'}`}
+              >
+                My Tasks
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewAll(true)}
+                className={`rounded px-3 py-1.5 ${viewAll ? 'bg-hae-crimson text-white' : 'text-hae-slate'}`}
+              >
+                All Tasks
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-2">
