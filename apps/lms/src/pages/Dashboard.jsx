@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
+import { courseEarningsCents, formatMoney } from '../money'
 
 export default function Dashboard() {
   const [courses, setCourses] = useState([])
@@ -42,6 +43,9 @@ export default function Dashboard() {
       enrollments.length === 0
         ? 0
         : Math.round((completed / enrollments.length) * 100)
+    const coursesById = {}
+    for (const c of courses) coursesById[c.id] = c
+    const earnings = courseEarningsCents(enrollments, coursesById)
     const upcomingSessions = sessions
       .filter((s) => s.date && s.date >= today)
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
@@ -50,7 +54,26 @@ export default function Dashboard() {
       .filter((c) => c.dueDate && c.dueDate >= today && c.status !== 'Completed')
       .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
       .slice(0, 5)
-    return { academy, flagship, enrollmentCount: enrollments.length, rate, upcomingSessions, upcomingCheckIns }
+    return {
+      academy,
+      flagship,
+      enrollmentCount: enrollments.length,
+      rate,
+      paidEarnings: earnings.paidCents,
+      pendingEarnings: earnings.pendingCents,
+      upcomingSessions,
+      upcomingCheckIns,
+      courseEarnings: courses
+        .map((c) => {
+          const mine = enrollments.filter((e) => e.courseId === c.id)
+          const { paidCents, pendingCents } = courseEarningsCents(mine, {
+            [c.id]: c,
+          })
+          return { ...c, paidCents, pendingCents, enrollmentCount: mine.length }
+        })
+        .filter((c) => c.priceCents || c.paidCents || c.pendingCents)
+        .sort((a, b) => (b.paidCents || 0) - (a.paidCents || 0)),
+    }
   }, [courses, enrollments, sessions, checkIns])
 
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
@@ -78,12 +101,13 @@ export default function Dashboard() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           { label: 'Academy courses', value: stats.academy },
           { label: 'Flagship courses', value: stats.flagship },
           { label: 'Enrollments', value: stats.enrollmentCount },
           { label: 'Completion rate', value: `${stats.rate}%` },
+          { label: 'Paid earnings', value: formatMoney(stats.paidEarnings) },
         ].map((s) => (
           <div key={s.label} className="border border-hae-line bg-white p-4">
             <div className="text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
@@ -93,6 +117,53 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {stats.courseEarnings.length > 0 ? (
+        <section className="border border-hae-line bg-white">
+          <div className="border-b border-hae-line px-4 py-3">
+            <h2 className="text-sm font-semibold">Course earnings</h2>
+            <p className="mt-0.5 text-xs text-hae-slate">
+              From course price × paid enrollments
+              {stats.pendingEarnings
+                ? ` · ${formatMoney(stats.pendingEarnings)} pending`
+                : ''}
+            </p>
+          </div>
+          <ul className="divide-y divide-hae-line">
+            {stats.courseEarnings.map((c) => (
+              <li
+                key={c.id}
+                className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
+              >
+                <div>
+                  <Link
+                    to={`/courses/${c.id}`}
+                    className="text-sm font-semibold text-hae-crimson hover:underline"
+                  >
+                    {c.name}
+                  </Link>
+                  <div className="text-xs text-hae-slate">
+                    {c.enrollmentCount} enrolled
+                    {c.priceCents != null
+                      ? ` · tuition ${formatMoney(c.priceCents, c.currency)}`
+                      : ''}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-display text-xl text-hae-ink">
+                    {formatMoney(c.paidCents)}
+                  </div>
+                  {c.pendingCents ? (
+                    <div className="text-[11px] text-hae-slate">
+                      {formatMoney(c.pendingCents)} pending
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="border border-hae-line bg-white">

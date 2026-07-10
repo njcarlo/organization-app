@@ -113,7 +113,9 @@ export const HELP_SECTIONS = [
         steps: [
           'Open a program from the sidebar.',
           'Add a Project (name, lead, health, target date).',
-          'Expand a project and Add Task for the detailed work items.',
+          'Optional metrics: Donation drive, Budget, or Course earnings — set goal + raised/spent on the project.',
+          'Expand a project for the whole-project view (metrics tiles + tasks).',
+          'Dashboard shows Fundraising & project metrics cards for any project with metrics.',
           'Keep Owner names consistent with user directory names so My Tasks works.',
         ],
       },
