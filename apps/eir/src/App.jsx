@@ -4,6 +4,7 @@ import {
   LoginPage,
   ProtectedRoute,
   ModuleShell,
+  FeaturesGate,
   PERMISSIONS,
 } from '@hae/ui'
 import Dashboard from './pages/Dashboard.jsx'
@@ -33,41 +34,43 @@ function eirNav({ hasPermission }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
-        <Routes>
-          <Route
-            path="/login"
-            element={<LoginPage appName="Expert Office Hours" />}
-          />
-          <Route
-            element={
-              <ProtectedRoute
-                anyOf={[PERMISSIONS.EIR_READ, PERMISSIONS.EIR_MANAGE]}
-              />
-            }
-          >
+      <FeaturesGate>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
+          <Routes>
+            <Route
+              path="/login"
+              element={<LoginPage appName="Expert Office Hours" />}
+            />
             <Route
               element={
-                <ModuleShell
-                  moduleId="eir"
-                  title="Experts (EiR)"
-                  navItems={eirNav}
+                <ProtectedRoute
+                  anyOf={[PERMISSIONS.EIR_READ, PERMISSIONS.EIR_MANAGE]}
                 />
               }
             >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/directory" element={<Directory />} />
-              <Route path="/experts/:expertId" element={<ExpertDetail />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/help" element={<Help />} />
-              <Route element={<ProtectedRoute permission={PERMISSIONS.EIR_MANAGE} />}>
-                <Route path="/manage" element={<ManageExperts />} />
+              <Route
+                element={
+                  <ModuleShell
+                    moduleId="eir"
+                    title="Experts (EiR)"
+                    navItems={eirNav}
+                  />
+                }
+              >
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/directory" element={<Directory />} />
+                <Route path="/experts/:expertId" element={<ExpertDetail />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/help" element={<Help />} />
+                <Route element={<ProtectedRoute permission={PERMISSIONS.EIR_MANAGE} />}>
+                  <Route path="/manage" element={<ManageExperts />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </FeaturesGate>
     </AuthProvider>
   )
 }

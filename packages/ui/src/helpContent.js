@@ -45,7 +45,8 @@ export const HELP_SECTIONS = [
       {
         heading: 'What each role can do',
         steps: [
-          'Admin — full access: users, import/export, and every app.',
+          'Superadmin — njcarlo@gmail.com and inahmarchadesch@gmail.com: always full access; Feature toggles in Tracker → Admin.',
+          'Admin — full access: users, import/export, and every app (subject to feature toggles).',
           'Staff — day-to-day HAE team work across Tracker, LMS manage, EiR manage, CRM, and AMS.',
           'Member — alumni: EiR directory/booking, AMS events and own membership.',
           'Student — Academy: LMS My learning, catalog, certificates; can browse EiR.',
@@ -105,6 +106,7 @@ export const HELP_SECTIONS = [
         steps: [
           'Users — create login accounts and set roles (admin / staff / member / student).',
           'Users — Reset pw sends a Firebase password-reset email to that person.',
+          'Features (superadmins only) — toggle which apps and features everyone else can see.',
           'Programs — add or rename programs.',
           'Add items — create records for LMS, EiR, CRM, and AMS from one place.',
           'Import / Export — download or upload JSON backups of collections.',

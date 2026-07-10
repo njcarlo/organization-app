@@ -35,6 +35,22 @@ export {
   permissionsForRole,
 } from './rbac.js'
 export {
+  SUPERADMIN_EMAILS,
+  normalizeEmail,
+  isSuperAdminEmail,
+} from './superadmin.js'
+export {
+  FEATURES,
+  FEATURE_CATALOG,
+  DEFAULT_FEATURES,
+  MODULE_FEATURE,
+  FEATURES_DOC_PATH,
+  mergeFeatures,
+  isFeatureOn,
+} from './features.js'
+export { FeaturesProvider, useFeatures } from './FeaturesContext.jsx'
+export { default as FeaturesGate } from './FeaturesGate.jsx'
+export {
   downloadBlob,
   downloadText,
   downloadCsv,

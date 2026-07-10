@@ -21,6 +21,7 @@ import {
   attachmentsToFormLines,
   formLinesToAttachments,
 } from '../components/Attachments'
+import { FEATURES, useFeatures } from '@hae/ui'
 
 const emptyForm = {
   name: '',
@@ -35,6 +36,7 @@ const emptyForm = {
 }
 
 export default function Contacts() {
+  const { isEnabled } = useFeatures()
   const [contacts, setContacts] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -223,7 +225,7 @@ export default function Contacts() {
           value={form.attachmentLines}
           onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
         />
-        {editingId ? (
+        {editingId && isEnabled(FEATURES.CRM_LINKING) ? (
           <div className="sm:col-span-2 lg:col-span-3">
             <PersonLinks email={linkEmail || form.email} />
           </div>

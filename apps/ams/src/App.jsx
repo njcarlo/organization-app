@@ -4,6 +4,7 @@ import {
   LoginPage,
   ProtectedRoute,
   ModuleShell,
+  FeaturesGate,
   useAuth,
   PERMISSIONS,
 } from '@hae/ui'
@@ -41,39 +42,41 @@ function HomeRoute() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
-        <Routes>
-          <Route path="/login" element={<LoginPage appName="HAE Membership" />} />
-          <Route
-            element={
-              <ProtectedRoute
-                anyOf={[PERMISSIONS.AMS_READ, PERMISSIONS.AMS_MANAGE]}
-              />
-            }
-          >
+      <FeaturesGate>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
+          <Routes>
+            <Route path="/login" element={<LoginPage appName="HAE Membership" />} />
             <Route
               element={
-                <ModuleShell
-                  moduleId="ams"
-                  title="Membership (AMS)"
-                  navItems={amsNav}
+                <ProtectedRoute
+                  anyOf={[PERMISSIONS.AMS_READ, PERMISSIONS.AMS_MANAGE]}
                 />
               }
             >
-              <Route path="/" element={<HomeRoute />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/help" element={<Help />} />
+              <Route
+                element={
+                  <ModuleShell
+                    moduleId="ams"
+                    title="Membership (AMS)"
+                    navItems={amsNav}
+                  />
+                }
+              >
+                <Route path="/" element={<HomeRoute />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/help" element={<Help />} />
 
-              <Route element={<ProtectedRoute permission={PERMISSIONS.AMS_MANAGE} />}>
-                <Route path="/members" element={<Members />} />
-                <Route path="/memberships" element={<Memberships />} />
-                <Route path="/committees" element={<Committees />} />
+                <Route element={<ProtectedRoute permission={PERMISSIONS.AMS_MANAGE} />}>
+                  <Route path="/members" element={<Members />} />
+                  <Route path="/memberships" element={<Memberships />} />
+                  <Route path="/committees" element={<Committees />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </FeaturesGate>
     </AuthProvider>
   )
 }

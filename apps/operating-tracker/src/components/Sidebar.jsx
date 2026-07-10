@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import { getModule } from '@hae/ui'
+import { getModule, FEATURES, useFeatures } from '@hae/ui'
 
 /** Tracker sidenav — only this app’s pages (platform switch lives in the header). */
 export default function Sidebar({ open = false, onClose }) {
   const { userProfile, isAdmin, logout, roleLabel } = useAuth()
+  const { isEnabled } = useFeatures()
   const [programs, setPrograms] = useState([])
   const current = getModule('tracker')
 
@@ -76,12 +77,16 @@ export default function Sidebar({ open = false, onClose }) {
           <NavLink to="/my-tasks" className={linkClass} onClick={handleNav}>
             My Tasks
           </NavLink>
-          <NavLink to="/notifications" className={linkClass} onClick={handleNav}>
-            Notifications
-          </NavLink>
-          <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
-            Surveys
-          </NavLink>
+          {isEnabled(FEATURES.NOTIFICATIONS) ? (
+            <NavLink to="/notifications" className={linkClass} onClick={handleNav}>
+              Notifications
+            </NavLink>
+          ) : null}
+          {isEnabled(FEATURES.SURVEYS) ? (
+            <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
+              Surveys
+            </NavLink>
+          ) : null}
           <NavLink to="/help" className={linkClass} onClick={handleNav}>
             Help
           </NavLink>

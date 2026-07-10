@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
+import { useFeatures } from './FeaturesContext.jsx'
 import { getModule } from './modules.js'
 import { hasAnyPermission, hasPermission } from './rbac.js'
 import PlatformHeader from './PlatformHeader.jsx'
@@ -19,13 +20,23 @@ export default function ModuleShell({
   const auth = useAuth()
   const { userProfile, logout, isAdmin, isStaff, role, roleLabel, permissions, canAccessModule } =
     auth
+  const { isEnabled, isModuleEnabled } = useFeatures()
   const [navOpen, setNavOpen] = useState(false)
   const current = getModule(moduleId)
   const displayTitle = title || current?.name || 'HAE'
 
   const resolvedNav =
     typeof navItems === 'function'
-      ? navItems({ isAdmin, isStaff, role, userProfile, permissions, hasPermission: auth.hasPermission })
+      ? navItems({
+          isAdmin,
+          isStaff,
+          role,
+          userProfile,
+          permissions,
+          hasPermission: auth.hasPermission,
+          isEnabled,
+          isModuleEnabled,
+        })
       : navItems
 
   const visibleNav = resolvedNav.filter((item) => {
@@ -33,6 +44,7 @@ export default function ModuleShell({
     if (item.staffOnly && !isStaff) return false
     if (item.permission && !hasPermission(permissions, item.permission)) return false
     if (item.anyOf?.length && !hasAnyPermission(permissions, item.anyOf)) return false
+    if (item.feature && !isEnabled(item.feature)) return false
     return true
   })
 

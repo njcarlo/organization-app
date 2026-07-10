@@ -52,6 +52,9 @@ Cross-app improvements for feedback, awareness, calendar handoff, person linking
 | URL attachments | CRM contacts & interactions | Paste Drive/Dropbox/SharePoint links (no Storage required) |
 | Password reset | All login pages + Admin → Users | Firebase `sendPasswordResetEmail`; admin can trigger per user |
 
+**Superadmins** (always full access + Feature toggles): `njcarlo@gmail.com`, `inahmarchadesch@gmail.com`  
+Tracker → Admin → **Features** — turn apps/features on or off for everyone else.
+
 Deferred (needs Blaze / custom domain): automated push email via Cloud Functions, nested `app.hae.web.app` DNS.
 
 ---

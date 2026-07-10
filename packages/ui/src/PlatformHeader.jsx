@@ -1,9 +1,11 @@
 import { hubHref, MODULES, moduleHref, getModule } from './modules.js'
 import { navigateToModule } from './sso.js'
+import { useFeatures } from './FeaturesContext.jsx'
 
 /**
  * Top site header — brand + platform switcher.
  * Full-width; logo flush left. Sidenav stays scoped to the selected platform.
+ * Module chips respect feature toggles (superadmins always see all).
  */
 export default function PlatformHeader({
   moduleId,
@@ -16,10 +18,12 @@ export default function PlatformHeader({
 }) {
   const current = getModule(moduleId)
   const displayTitle = title || current?.name || 'HAE Platform'
+  const { isModuleEnabled } = useFeatures()
 
-  const platforms = MODULES.filter(
-    (m) => m.id === moduleId || (canAccessModule ? canAccessModule(m.id) : true)
-  )
+  const platforms = MODULES.filter((m) => {
+    if (!isModuleEnabled(m.id)) return false
+    return m.id === moduleId || (canAccessModule ? canAccessModule(m.id) : true)
+  })
 
   const goModule = (e, m) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return

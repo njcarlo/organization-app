@@ -20,26 +20,35 @@ service cloud.firestore {
         : '';
     }
 
-    function isAdmin() {
-      return signedIn() && role() == 'admin';
-    }
-
-    function isStaff() {
-      return signedIn() && (role() == 'admin' || role() == 'staff');
-    }
-
-    function isMember() {
-      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'member');
-    }
-
-    function isStudent() {
-      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'student');
-    }
-
     function emailLower() {
       return signedIn() && request.auth.token.email != null
         ? request.auth.token.email.lower()
         : '';
+    }
+
+    function isSuperAdmin() {
+      return signedIn()
+        && request.auth.token.email != null
+        && (
+          request.auth.token.email.lower() == 'njcarlo@gmail.com'
+          || request.auth.token.email.lower() == 'inahmarchadesch@gmail.com'
+        );
+    }
+
+    function isAdmin() {
+      return signedIn() && (role() == 'admin' || isSuperAdmin());
+    }
+
+    function isStaff() {
+      return signedIn() && (role() == 'admin' || role() == 'staff' || isSuperAdmin());
+    }
+
+    function isMember() {
+      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'member' || isSuperAdmin());
+    }
+
+    function isStudent() {
+      return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'student' || isSuperAdmin());
     }
 
     // —— Users ——
@@ -160,6 +169,12 @@ service cloud.firestore {
     }
     match /committees/{id} {
       allow read, write: if isStaff();
+    }
+
+    // —— Platform settings (feature toggles) ——
+    match /platformSettings/{id} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
     }
 
     match /{document=**} {

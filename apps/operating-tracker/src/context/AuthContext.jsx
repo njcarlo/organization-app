@@ -17,6 +17,7 @@ import {
   permissionsForRole,
   roleLabel,
 } from '../../../../packages/ui/src/rbac.js'
+import { isSuperAdminEmail } from '../../../../packages/ui/src/superadmin.js'
 import { consumeSsoTokenIfPresent } from '../../../../packages/ui/src/sso.js'
 
 const AuthContext = createContext(null)
@@ -76,8 +77,9 @@ export function AuthProvider({ children }) {
 
   const role = normalizeRole(userProfile?.role)
   const permissions = useMemo(() => permissionsForRole(role), [role])
-  const isAdmin = isAdminRole(role)
-  const isStaff = isStaffRole(role)
+  const isSuperAdmin = isSuperAdminEmail(user?.email || userProfile?.email)
+  const isAdmin = isAdminRole(role) || isSuperAdmin
+  const isStaff = isStaffRole(role) || isSuperAdmin
 
   const value = useMemo(
     () => ({
@@ -89,15 +91,18 @@ export function AuthProvider({ children }) {
       logout,
       refreshProfile,
       role,
-      roleLabel: roleLabel(role),
+      roleLabel: isSuperAdmin ? 'Superadmin' : roleLabel(role),
       permissions,
       isAdmin,
       isStaff,
-      hasPermission: (perm) => hasPermission(permissions, perm),
-      hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
-      canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
+      isSuperAdmin,
+      hasPermission: (perm) => isSuperAdmin || hasPermission(permissions, perm),
+      hasAnyPermission: (perms) =>
+        isSuperAdmin || hasAnyPermission(permissions, perms),
+      canAccessModule: (moduleId) =>
+        isSuperAdmin || canAccessModule(permissions, moduleId),
     }),
-    [user, userProfile, loading, role, permissions, isAdmin, isStaff]
+    [user, userProfile, loading, role, permissions, isAdmin, isStaff, isSuperAdmin]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

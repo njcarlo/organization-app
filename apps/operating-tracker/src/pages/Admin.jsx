@@ -24,6 +24,9 @@ import {
 } from '../utils/dataTransfer'
 import AdminAddItems from '../components/AdminAddItems'
 import ModuleImportPanel from '../components/ModuleImportPanel'
+import AdminFeatureToggles from '../components/AdminFeatureToggles'
+import { useAuth } from '../context/AuthContext'
+import { FEATURES, useFeatures } from '@hae/ui'
 
 const CREATE_GUIDE = [
   {
@@ -74,15 +77,55 @@ const CREATE_GUIDE = [
 
 const TABS = [
   { id: 'add', label: 'Add items' },
-  { id: 'bulk', label: 'Bulk import' },
+  { id: 'bulk', label: 'Bulk import', feature: 'bulk_import' },
   { id: 'users', label: 'Users' },
   { id: 'programs', label: 'Programs' },
+  { id: 'features', label: 'Features', superadminOnly: true },
   { id: 'data', label: 'Import / Export' },
   { id: 'guide', label: 'Where to create' },
 ]
 
+function BulkImportGate() {
+  const { isEnabled } = useFeatures()
+  if (!isEnabled(FEATURES.BULK_IMPORT)) {
+    return (
+      <p className="text-sm text-hae-slate">
+        Bulk import is turned off in Feature toggles.
+      </p>
+    )
+  }
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-hae-slate">
+        Import CSV or JSON lists into Surveys, LMS, EiR, CRM, AMS, or Tracker
+        tasks. Expand <strong>How to format your list</strong> for column
+        names, examples, and how to paste data for Cursor / AI.
+      </p>
+      <ModuleImportPanel
+        moduleIds={[
+          'surveys',
+          'contacts',
+          'members',
+          'experts',
+          'courses',
+          'enrollments',
+          'tasks',
+        ]}
+        defaultModuleId="contacts"
+      />
+    </div>
+  )
+}
+
 export default function Admin() {
+  const { isSuperAdmin } = useAuth()
+  const { isEnabled } = useFeatures()
   const [tab, setTab] = useState('add')
+  const visibleTabs = TABS.filter((t) => {
+    if (t.superadminOnly && !isSuperAdmin) return false
+    if (t.feature && !isEnabled(t.feature)) return false
+    return true
+  })
   const [users, setUsers] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -311,7 +354,7 @@ export default function Admin() {
       </header>
 
       <div className="flex flex-wrap gap-2 border-b border-hae-line">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -332,27 +375,7 @@ export default function Admin() {
 
       {tab === 'add' && <AdminAddItems />}
 
-      {tab === 'bulk' && (
-        <div className="space-y-4">
-          <p className="text-sm text-hae-slate">
-            Import CSV or JSON lists into Surveys, LMS, EiR, CRM, AMS, or Tracker
-            tasks. Expand <strong>How to format your list</strong> for column
-            names, examples, and how to paste data for Cursor / AI.
-          </p>
-          <ModuleImportPanel
-            moduleIds={[
-              'surveys',
-              'contacts',
-              'members',
-              'experts',
-              'courses',
-              'enrollments',
-              'tasks',
-            ]}
-            defaultModuleId="contacts"
-          />
-        </div>
-      )}
+      {tab === 'bulk' && <BulkImportGate />}
 
       {tab === 'users' && (
         <div className="space-y-4">
@@ -509,6 +532,8 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {tab === 'features' && isSuperAdmin && <AdminFeatureToggles />}
 
       {tab === 'programs' && (
         <div className="space-y-4">
