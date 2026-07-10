@@ -28,48 +28,112 @@ import Authoring from './pages/Authoring.jsx'
 function lmsNav({ hasPermission, isEnabled }) {
   const items = []
   if (hasPermission(PERMISSIONS.LMS_LEARN)) {
-    items.push({ to: '/', label: 'My learning', end: true })
+    items.push({
+      to: '/',
+      label: 'My learning',
+      end: true,
+      group: 'Learning',
+      icon: 'home',
+    })
   } else if (hasPermission(PERMISSIONS.LMS_MANAGE)) {
-    items.push({ to: '/', label: 'Dashboard', end: true })
+    items.push({
+      to: '/',
+      label: 'Dashboard',
+      end: true,
+      group: 'Learning',
+      icon: 'home',
+    })
   } else {
-    items.push({ to: '/catalog', label: 'Catalog', end: true })
+    items.push({
+      to: '/catalog',
+      label: 'Catalog',
+      end: true,
+      group: 'Learning',
+      icon: 'book',
+    })
   }
 
   if (hasPermission(PERMISSIONS.LMS_CATALOG)) {
-    items.push({ to: '/catalog', label: 'Catalog' })
+    items.push({
+      to: '/catalog',
+      label: 'Catalog',
+      group: 'Learning',
+      icon: 'book',
+    })
   }
   if (hasPermission(PERMISSIONS.LMS_LEARN)) {
-    items.push({ to: '/my-certificates', label: 'My certificates' })
+    items.push({
+      to: '/my-certificates',
+      label: 'My certificates',
+      group: 'Learning',
+      icon: 'certificate',
+    })
     if (isEnabled(FEATURES.LMS_GAMIFICATION)) {
       items.push({
         to: '/progress',
         label: 'Points & badges',
+        group: 'Learning',
+        icon: 'star',
         feature: FEATURES.LMS_GAMIFICATION,
       })
     }
   }
   if (hasPermission(PERMISSIONS.LMS_MANAGE)) {
     items.push(
-      { to: '/courses', label: 'Manage courses', permission: PERMISSIONS.LMS_MANAGE },
+      {
+        to: '/courses',
+        label: 'Manage courses',
+        group: 'Manage',
+        icon: 'book',
+        permission: PERMISSIONS.LMS_MANAGE,
+      },
       {
         to: '/authoring',
         label: 'Authoring',
+        group: 'Manage',
+        icon: 'grid',
         permission: PERMISSIONS.LMS_MANAGE,
         feature: FEATURES.LMS_AUTHORING,
       },
-      { to: '/enrollments', label: 'Enrollments', permission: PERMISSIONS.LMS_MANAGE },
+      {
+        to: '/enrollments',
+        label: 'Enrollments',
+        group: 'Manage',
+        icon: 'users',
+        permission: PERMISSIONS.LMS_MANAGE,
+      },
       {
         to: '/tracking',
         label: 'Tracking',
+        group: 'Manage',
+        icon: 'chart',
         permission: PERMISSIONS.LMS_MANAGE,
         feature: FEATURES.LMS_TRACKING,
       },
-      { to: '/sessions', label: 'Office Hours', permission: PERMISSIONS.LMS_MANAGE },
-      { to: '/check-ins', label: 'Check-ins', permission: PERMISSIONS.LMS_MANAGE },
-      { to: '/certificates', label: 'Issue certificates', permission: PERMISSIONS.LMS_MANAGE }
+      {
+        to: '/sessions',
+        label: 'Office Hours',
+        group: 'Manage',
+        icon: 'calendar',
+        permission: PERMISSIONS.LMS_MANAGE,
+      },
+      {
+        to: '/check-ins',
+        label: 'Check-ins',
+        group: 'Manage',
+        icon: 'checklist',
+        permission: PERMISSIONS.LMS_MANAGE,
+      },
+      {
+        to: '/certificates',
+        label: 'Issue certificates',
+        group: 'Manage',
+        icon: 'certificate',
+        permission: PERMISSIONS.LMS_MANAGE,
+      }
     )
   }
-  items.push({ to: '/help', label: 'Help' })
+  items.push({ to: '/help', label: 'Help', group: 'Learning', icon: 'help' })
   return items
 }
 

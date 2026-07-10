@@ -19,18 +19,18 @@ import Help from './pages/Help.jsx'
 function amsNav({ hasPermission }) {
   if (hasPermission(PERMISSIONS.AMS_MANAGE)) {
     return [
-      { to: '/', label: 'Dashboard', end: true },
-      { to: '/members', label: 'Members' },
-      { to: '/memberships', label: 'Memberships' },
-      { to: '/events', label: 'Events' },
-      { to: '/committees', label: 'Committees' },
-      { to: '/help', label: 'Help' },
+      { to: '/', label: 'Dashboard', end: true, group: 'Membership', icon: 'home' },
+      { to: '/members', label: 'Members', group: 'Membership', icon: 'users' },
+      { to: '/memberships', label: 'Memberships', group: 'Membership', icon: 'building' },
+      { to: '/events', label: 'Events', group: 'Membership', icon: 'calendar' },
+      { to: '/committees', label: 'Committees', group: 'Membership', icon: 'folder' },
+      { to: '/help', label: 'Help', group: 'Membership', icon: 'help' },
     ]
   }
   return [
-    { to: '/', label: 'My membership', end: true },
-    { to: '/events', label: 'Events' },
-    { to: '/help', label: 'Help' },
+    { to: '/', label: 'My membership', end: true, group: 'Membership', icon: 'home' },
+    { to: '/events', label: 'Events', group: 'Membership', icon: 'calendar' },
+    { to: '/help', label: 'Help', group: 'Membership', icon: 'help' },
   ]
 }
 

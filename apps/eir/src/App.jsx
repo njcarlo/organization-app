@@ -16,18 +16,20 @@ import Help from './pages/Help.jsx'
 
 function eirNav({ hasPermission }) {
   const items = [
-    { to: '/', label: 'Home', end: true },
-    { to: '/directory', label: 'Directory' },
-    { to: '/how-it-works', label: 'How it works' },
+    { to: '/', label: 'Home', end: true, group: 'Experts', icon: 'home' },
+    { to: '/directory', label: 'Directory', group: 'Experts', icon: 'users' },
+    { to: '/how-it-works', label: 'How it works', group: 'Experts', icon: 'help' },
   ]
   if (hasPermission(PERMISSIONS.EIR_MANAGE)) {
     items.push({
       to: '/manage',
       label: 'Manage experts',
+      group: 'Experts',
+      icon: 'admin',
       permission: PERMISSIONS.EIR_MANAGE,
     })
   }
-  items.push({ to: '/help', label: 'Help' })
+  items.push({ to: '/help', label: 'Help', group: 'Experts', icon: 'help' })
   return items
 }
 
