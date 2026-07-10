@@ -24,16 +24,25 @@ export default function Notifications() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      const email = (user?.email || '').toLowerCase()
+      const checkQuery = isStaff
+        ? collection(db, 'checkIns')
+        : email
+          ? query(
+              collection(db, 'checkIns'),
+              where('learnerEmail', '==', email)
+            )
+          : null
       const [taskSnap, checkSnap] = await Promise.all([
         getDocs(collection(db, 'tasks')),
-        getDocs(collection(db, 'checkIns')),
+        checkQuery ? getDocs(checkQuery) : Promise.resolve({ docs: [] }),
       ])
       setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setCheckIns(checkSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isStaff, user?.email])
 
   useEffect(() => {
     load()
