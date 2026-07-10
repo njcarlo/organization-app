@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import PrioritiesSection from '../components/PrioritiesSection'
 import WaitingOnSection from '../components/WaitingOnSection'
 import AttentionSection from '../components/AttentionSection'
 import WinsSection from '../components/WinsSection'
+import {
+  formatMoney,
+  metricTypeLabel,
+  pctTowardGoal,
+} from '../utils/projectMetrics'
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([])
@@ -43,6 +49,14 @@ export default function Dashboard() {
     return map
   }, [projects])
 
+  const metricProjects = useMemo(
+    () =>
+      projects
+        .filter((p) => p.metricType)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [projects]
+  )
+
   if (loading) {
     return <p className="text-sm text-hae-slate">Loading dashboard…</p>
   }
@@ -60,6 +74,59 @@ export default function Dashboard() {
           Live view of priorities, blockers, attention items, and wins across all programs.
         </p>
       </header>
+
+      {metricProjects.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+            Fundraising & project metrics
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {metricProjects.map((p) => {
+              const pct = pctTowardGoal(p.raisedCents, p.goalCents)
+              const program = programsById[p.programId]
+              const href = p.programId ? `/programs/${p.programId}` : '/'
+              return (
+                <Link
+                  key={p.id}
+                  to={href}
+                  className="border border-hae-line bg-white p-4 transition-colors hover:border-hae-crimson"
+                >
+                  <div className="text-[10px] font-semibold tracking-wider text-hae-crimson uppercase">
+                    {metricTypeLabel(p.metricType)}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-hae-ink">{p.name}</div>
+                  <div className="mt-1 text-xs text-hae-slate">
+                    {program?.name || 'Program'}
+                    {p.lead ? ` · ${p.lead}` : ''}
+                  </div>
+                  <div className="mt-3 font-display text-2xl text-hae-ink">
+                    {formatMoney(p.raisedCents, p.currency)}
+                    {p.goalCents ? (
+                      <span className="text-base text-hae-slate">
+                        {' '}
+                        / {formatMoney(p.goalCents, p.currency)}
+                      </span>
+                    ) : null}
+                  </div>
+                  {pct != null ? (
+                    <div className="mt-2">
+                      <div className="h-1.5 overflow-hidden rounded bg-hae-mist">
+                        <div
+                          className="h-full bg-hae-crimson"
+                          style={{ width: `${Math.min(100, pct)}%` }}
+                        />
+                      </div>
+                      <div className="mt-1 text-[11px] font-semibold text-hae-slate">
+                        {pct}% of goal
+                      </div>
+                    </div>
+                  ) : null}
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <PrioritiesSection
         tasks={tasks}
