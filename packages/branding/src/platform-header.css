@@ -177,6 +177,38 @@
   min-width: 0.5rem;
 }
 
+.hae-platform-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hae-platform-header__bell {
+  position: relative;
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--hae-ink, #1a1a1a);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hae-platform-header__bell:hover {
+  background: var(--hae-mist, #f6f6f6);
+}
+
+.hae-platform-header__bell.is-current {
+  color: var(--hae-crimson, #b80028);
+  background: rgba(184, 0, 40, 0.08);
+}
+
 .hae-platform-header__nav {
   display: flex;
   flex-shrink: 1;

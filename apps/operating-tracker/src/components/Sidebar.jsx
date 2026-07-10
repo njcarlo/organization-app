@@ -38,17 +38,9 @@ export default function Sidebar({ open = false, onClose }) {
         icon: 'message',
       })
     }
-    if (isEnabled(FEATURES.NOTIFICATIONS)) {
-      workspaceItems.push({
-        to: '/notifications',
-        label: 'Notifications',
-        icon: 'bell',
-      })
-    }
     if (isEnabled(FEATURES.SURVEYS)) {
       workspaceItems.push({ to: '/surveys', label: 'Surveys', icon: 'survey' })
     }
-    workspaceItems.push({ to: '/help', label: 'Help', icon: 'help' })
     if (isAdmin) {
       workspaceItems.push({ to: '/admin', label: 'Admin', icon: 'admin' })
     }

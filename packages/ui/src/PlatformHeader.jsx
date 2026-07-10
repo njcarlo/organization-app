@@ -19,6 +19,8 @@ export default function PlatformHeader({
   menuOpen = false,
   /** When true (hub), Hub chip is current and all modules are listed. */
   isHub = false,
+  /** Optional extra controls (e.g. a notifications bell) rendered before the user block. */
+  actions = null,
 }) {
   const current = getModule(moduleId)
   const displayTitle =
@@ -176,6 +178,8 @@ export default function PlatformHeader({
             ))}
           </nav>
         ) : null}
+
+        {actions ? <div className="hae-platform-header__actions">{actions}</div> : null}
 
         {(userName || roleLabel) && (
           <div className="hae-platform-header__user">
