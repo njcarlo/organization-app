@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   addDoc,
   collection,
@@ -9,6 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { EXPERT_STATUSES, EXPERTISE_SUGGESTIONS } from '../constants'
 
@@ -35,6 +35,7 @@ function parseExpertise(text) {
 export default function ManageExperts() {
   const [experts, setExperts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -51,6 +52,22 @@ export default function ManageExperts() {
     load()
   }, [load])
 
+  const resetForm = () => {
+    setEditingId(null)
+    setForm(emptyForm)
+  }
+
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    resetForm()
+  }
+
+  const openAdd = () => {
+    resetForm()
+    setOpen(true)
+  }
+
   const startEdit = (expert) => {
     setEditingId(expert.id)
     setForm({
@@ -65,11 +82,7 @@ export default function ManageExperts() {
       photoUrl: expert.photoUrl || '',
       status: expert.status || 'Active',
     })
-  }
-
-  const cancelEdit = () => {
-    setEditingId(null)
-    setForm(emptyForm)
+    setOpen(true)
   }
 
   const save = async (e) => {
@@ -97,7 +110,8 @@ export default function ManageExperts() {
           createdAt: serverTimestamp(),
         })
       }
-      cancelEdit()
+      setOpen(false)
+      resetForm()
       await load()
     } finally {
       setSaving(false)
@@ -107,7 +121,10 @@ export default function ManageExperts() {
   const remove = async (id) => {
     if (!confirm('Delete this expert profile?')) return
     await deleteDoc(doc(db, 'experts', id))
-    if (editingId === id) cancelEdit()
+    if (editingId === id) {
+      setOpen(false)
+      resetForm()
+    }
     load()
   }
 
@@ -122,117 +139,121 @@ export default function ManageExperts() {
 
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
 
-
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage experts</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Add and update SME profiles dynamically. Structure follows the public
-          Expert Office Hours directory as a reference — not a copy of live data.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage experts</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Add and update SME profiles dynamically. Structure follows the public
+            Expert Office Hours directory as a reference — not a copy of live data.
+          </p>
+        </div>
+        <button type="button" className="hae-btn" onClick={openAdd}>
+          Add expert
+        </button>
       </header>
 
-      <form
-        onSubmit={save}
-        className="border border-hae-line bg-white p-4"
-      >
-        <div className="hae-form-actions">
-          <button type="submit" disabled={saving} className="hae-btn">
-            {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add expert'}
-          </button>
-          {editingId ? (
-            <button type="button" onClick={cancelEdit} className="hae-btn-secondary">
+      <Modal
+        open={open}
+        onClose={close}
+        title={editingId ? 'Edit expert' : 'Add expert'}
+        busy={saving}
+        size="lg"
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
               Cancel
             </button>
-          ) : null}
-        </div>
-        <div className="mb-3 text-xs font-semibold tracking-wider text-hae-slate uppercase">
-          {editingId ? 'Edit expert' : 'Add expert'}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-        <input
-          required
-          placeholder="Full name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          placeholder="Title / role"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          placeholder="Organization"
-          value={form.organization}
-          onChange={(e) => setForm({ ...form, organization: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          placeholder="LinkedIn URL"
-          value={form.linkedinUrl}
-          onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          placeholder="Booking URL (Calendly / Google Appointment)"
-          value={form.bookingUrl}
-          onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
-        <input
-          placeholder="Photo URL"
-          value={form.photoUrl}
-          onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
-        />
-        <textarea
-          placeholder="Bio"
-          rows={4}
-          value={form.bio}
-          onChange={(e) => setForm({ ...form, bio: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
-        />
-        <div className="sm:col-span-2">
+            <button type="submit" form="expert-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add expert'}
+            </button>
+          </>
+        }
+      >
+        <form id="expert-form" onSubmit={save} className="grid gap-3 sm:grid-cols-2">
           <input
-            placeholder="Expertise tags (comma-separated)"
-            value={form.expertiseText}
-            onChange={(e) => setForm({ ...form, expertiseText: e.target.value })}
-            className="w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            required
+            placeholder="Full name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
           />
-          <div className="mt-2 flex flex-wrap gap-1">
-            {EXPERTISE_SUGGESTIONS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => addSuggestion(tag)}
-                className="border border-hae-line px-2 py-0.5 text-[10px] text-hae-slate hover:border-hae-crimson hover:text-hae-crimson"
-              >
-                + {tag}
-              </button>
-            ))}
+          <input
+            placeholder="Title / role"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="Organization"
+            value={form.organization}
+            onChange={(e) => setForm({ ...form, organization: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="LinkedIn URL"
+            value={form.linkedinUrl}
+            onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="Booking URL (Calendly / Google Appointment)"
+            value={form.bookingUrl}
+            onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="Photo URL"
+            value={form.photoUrl}
+            onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+          />
+          <textarea
+            placeholder="Bio"
+            rows={4}
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+          />
+          <div className="sm:col-span-2">
+            <input
+              placeholder="Expertise tags (comma-separated)"
+              value={form.expertiseText}
+              onChange={(e) => setForm({ ...form, expertiseText: e.target.value })}
+              className="w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <div className="mt-2 flex flex-wrap gap-1">
+              {EXPERTISE_SUGGESTIONS.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => addSuggestion(tag)}
+                  className="border border-hae-line px-2 py-0.5 text-[10px] text-hae-slate hover:border-hae-crimson hover:text-hae-crimson"
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        <select
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          {EXPERT_STATUSES.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        </div>
-      </form>
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            {EXPERT_STATUSES.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </form>
+      </Modal>
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[800px] text-left">

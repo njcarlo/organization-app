@@ -8,8 +8,17 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
+
+const emptyProject = {
+  name: '',
+  lead: '',
+  promise: '',
+  health: 'on-track',
+  targetDate: '',
+}
 
 export default function ProgramPage() {
   const { programId } = useParams()
@@ -17,14 +26,9 @@ export default function ProgramPage() {
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [addingProject, setAddingProject] = useState(false)
-  const [newProject, setNewProject] = useState({
-    name: '',
-    lead: '',
-    promise: '',
-    health: 'on-track',
-    targetDate: '',
-  })
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [newProject, setNewProject] = useState(emptyProject)
 
   const load = useCallback(async () => {
     const [programSnap, projectSnap, taskSnap] = await Promise.all([
@@ -72,27 +76,32 @@ export default function ProgramPage() {
     return map
   }, [tasks])
 
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    setNewProject(emptyProject)
+  }
+
   const createProject = async (e) => {
     e.preventDefault()
-    if (!newProject.name.trim()) return
-    await addDoc(collection(db, 'projects'), {
-      name: newProject.name.trim(),
-      lead: newProject.lead.trim(),
-      promise: newProject.promise.trim(),
-      health: newProject.health,
-      targetDate: newProject.targetDate || '',
-      programId,
-      createdAt: serverTimestamp(),
-    })
-    setNewProject({
-      name: '',
-      lead: '',
-      promise: '',
-      health: 'on-track',
-      targetDate: '',
-    })
-    setAddingProject(false)
-    load()
+    if (!newProject.name.trim() || saving) return
+    setSaving(true)
+    try {
+      await addDoc(collection(db, 'projects'), {
+        name: newProject.name.trim(),
+        lead: newProject.lead.trim(),
+        promise: newProject.promise.trim(),
+        health: newProject.health,
+        targetDate: newProject.targetDate || '',
+        programId,
+        createdAt: serverTimestamp(),
+      })
+      setNewProject(emptyProject)
+      setOpen(false)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading program…</p>
@@ -110,63 +119,64 @@ export default function ProgramPage() {
             Overall lead: {program.lead || '—'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddingProject((v) => !v)}
-          className="hae-btn"
-        >
-          {addingProject ? 'Cancel' : '+ Add Project'}
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          + Add Project
         </button>
       </header>
 
-      {addingProject && (
-        <form
-          onSubmit={createProject}
-          className="rounded-xl border border-hae-line bg-white p-4"
-        >
-          <div className="hae-form-actions">
-            <button type="submit" className="hae-btn">
-              Create project
+      <Modal
+        open={open}
+        onClose={close}
+        title="Create project"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
+              Cancel
             </button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              required
-              placeholder="Project name"
-              value={newProject.name}
-              onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-            <input
-              placeholder="Lead"
-              value={newProject.lead}
-              onChange={(e) => setNewProject({ ...newProject, lead: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-            <input
-              placeholder="Promise / outcome"
-              value={newProject.promise}
-              onChange={(e) => setNewProject({ ...newProject, promise: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
-            />
-            <select
-              value={newProject.health}
-              onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
-            >
-              <option value="on-track">On Track</option>
-              <option value="needs-attention">Needs Attention</option>
-              <option value="at-risk">At Risk</option>
-            </select>
-            <input
-              type="date"
-              value={newProject.targetDate}
-              onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
-            />
-          </div>
+            <button type="submit" form="create-project-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Create project'}
+            </button>
+          </>
+        }
+      >
+        <form id="create-project-form" onSubmit={createProject} className="grid gap-3 sm:grid-cols-2">
+          <input
+            required
+            placeholder="Project name"
+            value={newProject.name}
+            onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="Lead"
+            value={newProject.lead}
+            onChange={(e) => setNewProject({ ...newProject, lead: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+          <input
+            placeholder="Promise / outcome"
+            value={newProject.promise}
+            onChange={(e) => setNewProject({ ...newProject, promise: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+          />
+          <select
+            value={newProject.health}
+            onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm"
+          >
+            <option value="on-track">On Track</option>
+            <option value="needs-attention">Needs Attention</option>
+            <option value="at-risk">At Risk</option>
+          </select>
+          <input
+            type="date"
+            value={newProject.targetDate}
+            onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm"
+          />
         </form>
-      )}
+      </Modal>
 
       <div className="space-y-4">
         {projects.length === 0 ? (
