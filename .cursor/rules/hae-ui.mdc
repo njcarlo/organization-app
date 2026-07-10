@@ -1,0 +1,13 @@
+---
+description: HAE frontend UI conventions
+globs: apps/**/*.{jsx,tsx,css},packages/ui/**/*.{jsx,tsx,css}
+alwaysApply: false
+---
+
+# UI
+
+- Tokens: `hae-crimson`, `hae-ink`, `hae-slate`, `hae-mist`, `hae-line`, `font-display`.
+- Shells: Tracker `Layout`; other apps `ModuleShell`; public EiR `PublicShell`.
+- Forms/popups: `@hae/ui` `Modal`.
+- Nav icons: `packages/ui/src/navIcons.jsx`.
+- Help: `packages/ui/src/helpContent.js`.

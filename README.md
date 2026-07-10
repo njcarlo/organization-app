@@ -8,6 +8,16 @@ One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
 Each app shares a **top platform header** (switch Hub / Tracker / LMS / EiR / CRM / AMS). The **left sidenav is scoped to the selected app** only.
 
+### Agents (Claude Code / Cursor)
+
+Shared workflow + coding standards for anyone (or any agent) working in this repo:
+
+- [`AGENTS.md`](./AGENTS.md) — how to work here
+- [`CLAUDE.md`](./CLAUDE.md) — project facts loaded by Claude Code
+- [`.claude/rules/`](./.claude/rules/) — coding, UI, Firebase, git
+- [`.claude/skills/`](./.claude/skills/) — `/ship-pr`, `/add-app-page`, `/firebase-change`
+- [`.cursor/rules/`](./.cursor/rules/) — Cursor always-on rules
+
 ---
 
 ## Layout
