@@ -6,7 +6,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore'
-import { downloadIcs } from '@hae/ui'
+import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
@@ -46,6 +46,8 @@ function Field({ label, children, className = '' }) {
 
 export default function MyTasks() {
   const { userProfile, isStaff } = useAuth()
+  const { isEnabled } = useFeatures()
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [tasks, setTasks] = useState([])
   const [programs, setPrograms] = useState([])
   const [projects, setProjects] = useState([])
@@ -201,14 +203,16 @@ export default function MyTasks() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={exportIcs}
-            disabled={!filtered.some((t) => t.dueDate)}
-            className="rounded-md border border-hae-line px-3 py-2 text-xs font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
-          >
-            Export calendar (.ics)
-          </button>
+          {canExportCalendar ? (
+            <button
+              type="button"
+              onClick={exportIcs}
+              disabled={!filtered.some((t) => t.dueDate)}
+              className="rounded-md border border-hae-line px-3 py-2 text-xs font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+            >
+              Export calendar (.ics)
+            </button>
+          ) : null}
           {isStaff && (
             <div className="flex rounded-md border border-hae-line bg-white p-0.5 text-xs font-semibold">
               <button

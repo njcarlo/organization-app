@@ -7,10 +7,12 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { downloadIcs } from '@hae/ui'
+import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Sessions() {
+  const { isEnabled } = useFeatures()
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [sessions, setSessions] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -103,14 +105,16 @@ export default function Sessions() {
             Live working sessions — schedule, location, and Zoom links
           </p>
         </div>
-        <button
-          type="button"
-          onClick={exportIcs}
-          disabled={!sessions.some((s) => s.date)}
-          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
-        >
-          Export calendar (.ics)
-        </button>
+        {canExportCalendar ? (
+          <button
+            type="button"
+            onClick={exportIcs}
+            disabled={!sessions.some((s) => s.date)}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+        ) : null}
       </header>
 
       <form

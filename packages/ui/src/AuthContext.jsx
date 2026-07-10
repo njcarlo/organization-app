@@ -18,6 +18,7 @@ import {
   roleLabel,
 } from './rbac.js'
 import { isSuperAdminEmail } from './superadmin.js'
+import { ensureSuperAdminProfile } from './ensureSuperAdmin.js'
 import { consumeSsoTokenIfPresent } from './sso.js'
 
 const AuthContext = createContext(null)
@@ -47,8 +48,15 @@ export function AuthProvider({ children }) {
           return
         }
         try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-          setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+          let profile = null
+          if (isSuperAdminEmail(firebaseUser.email)) {
+            profile = await ensureSuperAdminProfile(db, firebaseUser)
+          }
+          if (!profile) {
+            const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+            profile = snap.exists() ? { id: snap.id, ...snap.data() } : null
+          }
+          setUserProfile(profile)
         } catch {
           setUserProfile(null)
         } finally {

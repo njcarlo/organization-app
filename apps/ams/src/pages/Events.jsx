@@ -7,12 +7,14 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS, downloadIcs } from '@hae/ui'
+import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
   const { hasPermission } = useAuth()
+  const { isEnabled } = useFeatures()
   const canManage = hasPermission(PERMISSIONS.AMS_MANAGE)
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({
@@ -94,14 +96,16 @@ export default function Events() {
             Event listings linked to membership engagement
           </p>
         </div>
-        <button
-          type="button"
-          onClick={exportIcs}
-          disabled={!events.some((e) => e.date)}
-          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
-        >
-          Export calendar (.ics)
-        </button>
+        {canExportCalendar ? (
+          <button
+            type="button"
+            onClick={exportIcs}
+            disabled={!events.some((e) => e.date)}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+        ) : null}
       </header>
 
       {canManage ? (

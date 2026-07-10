@@ -39,6 +39,7 @@ export {
   normalizeEmail,
   isSuperAdminEmail,
 } from './superadmin.js'
+export { ensureSuperAdminProfile } from './ensureSuperAdmin.js'
 export {
   FEATURES,
   FEATURE_CATALOG,
