@@ -19,7 +19,7 @@ export default function ProjectCard({
   onChanged,
   dense = false,
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
   const tableRef = useRef(null)
