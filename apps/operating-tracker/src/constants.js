@@ -34,4 +34,5 @@ export const HEALTH_OPTIONS = [
   { value: 'on-track', label: 'On Track', className: 'bg-emerald-100 text-hae-green' },
   { value: 'needs-attention', label: 'Needs Attention', className: 'bg-amber-100 text-hae-yellow' },
   { value: 'at-risk', label: 'At Risk', className: 'bg-red-100 text-hae-red' },
+  { value: 'completed', label: 'Completed', className: 'bg-blue-100 text-blue-700' },
 ]

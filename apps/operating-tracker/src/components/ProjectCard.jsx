@@ -96,17 +96,20 @@ export default function ProjectCard({
                   value={draft.lead}
                   onChange={(e) => setDraft({ ...draft, lead: e.target.value })}
                 />
-                <select
-                  className={inputClass}
-                  value={draft.health}
-                  onChange={(e) => setDraft({ ...draft, health: e.target.value })}
-                >
-                  {HEALTH_OPTIONS.map((h) => (
-                    <option key={h.value} value={h.value}>
-                      {h.label}
-                    </option>
-                  ))}
-                </select>
+                <label className="flex items-center gap-1">
+                  <span className="text-xs font-medium text-hae-slate">Status</span>
+                  <select
+                    className={inputClass}
+                    value={draft.health}
+                    onChange={(e) => setDraft({ ...draft, health: e.target.value })}
+                  >
+                    {HEALTH_OPTIONS.map((h) => (
+                      <option key={h.value} value={h.value}>
+                        {h.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <input
                   type="date"
                   className={inputClass}

@@ -174,15 +174,19 @@ export default function ProgramPage() {
             onChange={(e) => setNewProject({ ...newProject, promise: e.target.value })}
             className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
           />
-          <select
-            value={newProject.health}
-            onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm"
-          >
-            <option value="on-track">On Track</option>
-            <option value="needs-attention">Needs Attention</option>
-            <option value="at-risk">At Risk</option>
-          </select>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Status</span>
+            <select
+              value={newProject.health}
+              onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            >
+              <option value="on-track">On Track</option>
+              <option value="needs-attention">Needs Attention</option>
+              <option value="at-risk">At Risk</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
           <input
             type="date"
             value={newProject.targetDate}

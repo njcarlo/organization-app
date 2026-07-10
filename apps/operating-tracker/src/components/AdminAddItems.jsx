@@ -573,7 +573,7 @@ export default function AdminAddItems() {
                 onChange={(e) => set('promise', e.target.value)}
               />
             </Field>
-            <Field label="Health">
+            <Field label="Status">
               <select
                 className={`w-full ${fieldClass}`}
                 value={form.health}
