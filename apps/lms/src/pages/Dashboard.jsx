@@ -66,7 +66,15 @@ export default function Dashboard() {
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
           Staff overview of Academy Fast Track and Flagship courses, enrollments,
-          office hours, and check-ins. Students see My learning instead.
+          office hours, and check-ins. For gaps and nudges, open{' '}
+          <Link to="/tracking" className="font-semibold text-hae-crimson">
+            Tracking
+          </Link>
+          . For templates, open{' '}
+          <Link to="/authoring" className="font-semibold text-hae-crimson">
+            Authoring
+          </Link>
+          .
         </p>
       </header>
 
