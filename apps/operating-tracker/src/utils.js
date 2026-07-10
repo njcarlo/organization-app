@@ -65,6 +65,21 @@ export function priorityBadgeClass(priority) {
   return 'bg-slate-100 text-hae-slate'
 }
 
+const HEALTH_RANK = {
+  'at-risk': 0,
+  'needs-attention': 1,
+  'not-started': 2,
+  'on-track': 3,
+  completed: 4,
+}
+
+export function sortByHealth(a, b) {
+  const ra = HEALTH_RANK[a.health] ?? 5
+  const rb = HEALTH_RANK[b.health] ?? 5
+  if (ra !== rb) return ra - rb
+  return (a.name || '').localeCompare(b.name || '')
+}
+
 export function healthBadgeClass(health) {
   if (health === 'not-started') return 'bg-slate-100 text-hae-slate'
   if (health === 'on-track') return 'bg-emerald-100 text-hae-green'

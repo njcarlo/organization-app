@@ -11,6 +11,7 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
+import { sortByHealth } from '../utils'
 
 const emptyProject = {
   name: '',
@@ -52,9 +53,7 @@ export default function ProgramPage() {
 
     setProgram(prog)
     setProjects(
-      allProjects
-        .filter((p) => p.programId === programId)
-        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      allProjects.filter((p) => p.programId === programId).sort(sortByHealth)
     )
     setTasks(allTasks.filter((t) => t.programId === programId))
     setLoading(false)
