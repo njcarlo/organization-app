@@ -1,0 +1,14 @@
+---
+description: HAE platform agent standards — always apply
+alwaysApply: true
+---
+
+# HAE agents
+
+Read root `CLAUDE.md` and `AGENTS.md`. Detailed rules: `.claude/rules/`. Workflows: `.claude/skills/*/SKILL.md`.
+
+- Match existing app patterns; use `@hae/ui`, `@hae/firebase`, `@hae/branding`.
+- HAE crimson/Inter UI — no generic purple/glow redesigns.
+- Keep `firestore.rules` in sync; public EiR stays public.
+- Default deploy is hosting + rules; functions need Blaze and must not block hosting CI.
+- Confirm CI deploy before telling users a site change is live.
