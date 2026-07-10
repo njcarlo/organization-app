@@ -6,408 +6,16 @@
     <title>HAE Platform — Harvard Alumni Entrepreneurs</title>
     <meta
       name="description"
-      content="The HAE operating platform: Tracker, Academy LMS, Expert Office Hours, CRM, and Membership."
+      content="The HAE operating platform for programs, Academy learning, Expert Office Hours, relationships, and membership."
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Libre+Franklin:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <style>
-      :root {
-        --ink: #1a1a1a;
-        --charcoal: #272727;
-        --slate: #3e3e3e;
-        --crimson: #b80028;
-        --crimson-dark: #960021;
-        --coral: #f0523d;
-        --line: #dddddd;
-        --mist: #f6f6f6;
-        --paper: #ffffff;
-        --font-sans: 'Libre Franklin', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        --font-display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
-      }
-      * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: var(--font-sans);
-        color: var(--ink);
-        background: var(--mist);
-      }
-      a { color: inherit; }
-      .font-display {
-        font-family: var(--font-display);
-        letter-spacing: -0.02em;
-        text-transform: uppercase;
-      }
-
-      /* —— Site header —— */
-      .site-header {
-        position: sticky;
-        top: 0;
-        z-index: 40;
-        border-bottom: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(10px);
-      }
-      .site-header-inner {
-        display: flex;
-        align-items: center;
-        gap: 0.85rem;
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0.7rem 1.25rem;
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        min-width: 0;
-      }
-      .brand img {
-        height: 2.25rem;
-        width: auto;
-        max-width: 150px;
-        object-fit: contain;
-      }
-      .brand-text { min-width: 0; }
-      .brand-kicker {
-        font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--crimson);
-      }
-      .brand-name {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .header-spacer { flex: 1; }
-      .header-link {
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-decoration: none;
-        color: var(--slate);
-        padding: 0.4rem 0.65rem;
-        border-radius: 0.35rem;
-        transition: color 0.15s ease, background 0.15s ease;
-      }
-      .header-link:hover {
-        color: var(--crimson);
-        background: rgba(184, 0, 40, 0.06);
-      }
-      .header-cta {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        text-decoration: none;
-        color: #fff;
-        background: var(--crimson);
-        padding: 0.55rem 0.9rem;
-        border-radius: 0.35rem;
-        transition: background 0.15s ease, transform 0.15s ease;
-      }
-      .header-cta:hover {
-        background: var(--crimson-dark);
-        transform: translateY(-1px);
-      }
-      .platform-bar {
-        border-top: 1px solid rgba(221, 221, 221, 0.85);
-        background: rgba(246, 246, 246, 0.7);
-      }
-      .platform-bar-inner {
-        display: flex;
-        gap: 0.25rem;
-        overflow-x: auto;
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0.4rem 1.25rem;
-        scrollbar-width: thin;
-      }
-      .platform-chip {
-        flex-shrink: 0;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-decoration: none;
-        color: rgba(26, 26, 26, 0.8);
-        padding: 0.4rem 0.7rem;
-        border-radius: 0.35rem;
-        transition: background 0.15s ease, color 0.15s ease;
-      }
-      .platform-chip:hover {
-        background: #fff;
-        color: var(--crimson);
-      }
-      .platform-chip.is-current {
-        background: var(--crimson);
-        color: #fff;
-      }
-
-      /* —— Hero —— */
-      .hero {
-        position: relative;
-        overflow: hidden;
-        border-bottom: 1px solid var(--line);
-        background:
-          linear-gradient(115deg, rgba(26, 26, 26, 0.88) 0%, rgba(150, 0, 33, 0.72) 48%, rgba(240, 82, 61, 0.55) 100%),
-          radial-gradient(ellipse 90% 70% at 80% 20%, rgba(240, 82, 61, 0.35), transparent 55%),
-          linear-gradient(180deg, #2a0a12 0%, #1a1a1a 100%);
-        color: #fff;
-        min-height: min(78vh, 640px);
-        display: flex;
-        align-items: flex-end;
-      }
-      .hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-        background-size: 48px 48px;
-        mask-image: linear-gradient(180deg, #000 20%, transparent 90%);
-        pointer-events: none;
-        animation: gridDrift 28s linear infinite;
-      }
-      @keyframes gridDrift {
-        from { background-position: 0 0; }
-        to { background-position: 48px 48px; }
-      }
-      .hero-inner {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 4.5rem 1.25rem 3.25rem;
-      }
-      .hero-brand {
-        font-family: var(--font-display);
-        font-size: clamp(2.6rem, 8vw, 4.75rem);
-        line-height: 0.95;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: -0.02em;
-        animation: riseIn 0.7s ease-out both;
-      }
-      .hero-headline {
-        margin: 1rem 0 0;
-        max-width: 22rem;
-        font-size: clamp(1.05rem, 2.4vw, 1.25rem);
-        font-weight: 600;
-        line-height: 1.35;
-        color: rgba(255, 255, 255, 0.92);
-        animation: riseIn 0.7s ease-out 0.08s both;
-      }
-      .hero-lede {
-        margin: 0.85rem 0 0;
-        max-width: 28rem;
-        font-size: 0.95rem;
-        line-height: 1.55;
-        color: rgba(255, 255, 255, 0.72);
-        animation: riseIn 0.7s ease-out 0.16s both;
-      }
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.65rem;
-        margin-top: 1.75rem;
-        animation: riseIn 0.7s ease-out 0.24s both;
-      }
-      .btn-primary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.7rem 1.15rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        text-decoration: none;
-        color: var(--crimson);
-        background: #fff;
-        border-radius: 0.35rem;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
-      .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-      }
-      .btn-ghost {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.7rem 1.15rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        text-decoration: none;
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        border-radius: 0.35rem;
-        transition: background 0.15s ease, border-color 0.15s ease;
-      }
-      .btn-ghost:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.6);
-      }
-      @keyframes riseIn {
-        from { opacity: 0; transform: translateY(14px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      /* —— Apps —— */
-      .section {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 3.25rem 1.25rem 4rem;
-      }
-      .section-head {
-        max-width: 36rem;
-        margin-bottom: 1.75rem;
-      }
-      .section-kicker {
-        margin: 0;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--crimson);
-      }
-      .section-title {
-        margin: 0.4rem 0 0;
-        font-family: var(--font-display);
-        font-size: clamp(1.6rem, 3.5vw, 2.1rem);
-        line-height: 1.05;
-        text-transform: uppercase;
-      }
-      .section-copy {
-        margin: 0.65rem 0 0;
-        color: var(--slate);
-        font-size: 0.95rem;
-        line-height: 1.5;
-      }
-      .app-grid {
-        display: grid;
-        gap: 0.85rem;
-        grid-template-columns: 1fr;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      @media (min-width: 640px) {
-        .app-grid { grid-template-columns: 1fr 1fr; }
-      }
-      @media (min-width: 960px) {
-        .app-grid { grid-template-columns: repeat(3, 1fr); }
-      }
-      .app-tile {
-        display: flex;
-        flex-direction: column;
-        min-height: 11.5rem;
-        padding: 1.15rem 1.2rem 1.2rem;
-        text-decoration: none;
-        color: inherit;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 0.15rem;
-        position: relative;
-        overflow: hidden;
-        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-        animation: riseIn 0.55s ease-out both;
-      }
-      .app-tile:nth-child(1) { animation-delay: 0.05s; }
-      .app-tile:nth-child(2) { animation-delay: 0.1s; }
-      .app-tile:nth-child(3) { animation-delay: 0.15s; }
-      .app-tile:nth-child(4) { animation-delay: 0.2s; }
-      .app-tile:nth-child(5) { animation-delay: 0.25s; }
-      .app-tile::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--crimson);
-        transform: scaleY(0);
-        transform-origin: top;
-        transition: transform 0.25s ease;
-      }
-      .app-tile:hover {
-        border-color: rgba(184, 0, 40, 0.45);
-        transform: translateY(-3px);
-        box-shadow: 0 14px 32px rgba(26, 26, 26, 0.08);
-      }
-      .app-tile:hover::before { transform: scaleY(1); }
-      .app-short {
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--crimson);
-      }
-      .app-name {
-        margin: 0.45rem 0 0;
-        font-size: 1.15rem;
-        font-weight: 700;
-        line-height: 1.2;
-      }
-      .app-tag {
-        margin: 0.45rem 0 0;
-        font-size: 0.9rem;
-        color: var(--slate);
-        line-height: 1.4;
-        flex: 1;
-      }
-      .app-go {
-        margin-top: 1rem;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--crimson);
-      }
-
-      .site-footer {
-        border-top: 1px solid var(--line);
-        background: #fff;
-      }
-      .site-footer-inner {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 1.5rem 1.25rem 2rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.8rem;
-        color: var(--slate);
-      }
-      .site-footer a {
-        color: var(--crimson);
-        font-weight: 600;
-        text-decoration: none;
-      }
-      .site-footer a:hover { text-decoration: underline; }
-
-      @media (max-width: 640px) {
-        .header-link { display: none; }
-      }
-    </style>
+    <link rel="stylesheet" href="/hub.css" />
   </head>
   <body>
     <header class="site-header">
@@ -436,11 +44,23 @@
     </header>
 
     <section class="hero" aria-label="Welcome">
+      <div class="hero-media" aria-hidden="true">
+        <img
+          src="/images/hero-people.jpg"
+          alt=""
+          width="2000"
+          height="1334"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="hero-scrim" aria-hidden="true"></div>
       <div class="hero-inner">
         <h1 class="hero-brand">HAE</h1>
-        <p class="hero-headline">One platform for programs, learning, experts, relationships, and membership.</p>
+        <p class="hero-headline">
+          Built for the people who build — programs, learning, experts, and community in one place.
+        </p>
         <p class="hero-lede">
-          Sign in to the app you need. Your role controls what you see — and the header keeps every module one click away.
+          Sign in to the workspace you need. The header keeps every app one click away; each sidenav stays focused on the work in front of you.
         </p>
         <div class="hero-actions">
           <a class="btn-primary" href="#apps">Choose an app</a>
@@ -449,56 +69,101 @@
       </div>
     </section>
 
+    <section class="people-strip" aria-label="Our community">
+      <figure>
+        <img src="/images/app-lms.jpg" alt="Learners collaborating around a table" width="1200" height="800" loading="lazy" />
+        <figcaption>Learn together</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/app-eir.jpg" alt="Expert mentor in conversation" width="1200" height="1800" loading="lazy" />
+        <figcaption>Meet experts</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/app-ams.jpg" alt="Friends and alumni gathering outdoors" width="1200" height="675" loading="lazy" />
+        <figcaption>Belong here</figcaption>
+      </figure>
+    </section>
+
     <section class="section" id="apps">
       <div class="section-head">
         <p class="section-kicker">Platform</p>
         <h2 class="section-title">Select your workspace</h2>
         <p class="section-copy">
-          Each app has its own navigation for day-to-day work. Switch platforms anytime from the top header.
+          Each app has its own navigation for day-to-day work. Switch platforms anytime from the top header — same look, same brand, every module.
         </p>
       </div>
       <ul class="app-grid">
         <li>
           <a class="app-tile" href="https://tracker-hae.web.app">
-            <span class="app-short">Tracker</span>
-            <h3 class="app-name">Operating Tracker</h3>
-            <p class="app-tag">Keep programs moving — projects, tasks, surveys, and weekly priorities.</p>
-            <span class="app-go">Enter Tracker →</span>
+            <div class="app-tile-media">
+              <img src="/images/app-tracker.jpg" alt="Team collaborating on a project plan" width="1200" height="800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">Tracker</span>
+              <h3 class="app-name">Operating Tracker</h3>
+              <p class="app-tag">Keep programs moving — projects, tasks, surveys, and weekly priorities.</p>
+              <span class="app-go">Enter Tracker →</span>
+            </div>
           </a>
         </li>
         <li>
           <a class="app-tile" href="https://lms-hae.web.app">
-            <span class="app-short">LMS</span>
-            <h3 class="app-name">Academy Learning</h3>
-            <p class="app-tag">Academy &amp; Flagship paths, enrollments, office hours, and certificates.</p>
-            <span class="app-go">Enter LMS →</span>
+            <div class="app-tile-media">
+              <img src="/images/app-lms.jpg" alt="Students learning together" width="1200" height="800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">LMS</span>
+              <h3 class="app-name">Academy Learning</h3>
+              <p class="app-tag">Academy &amp; Flagship paths, enrollments, office hours, and certificates.</p>
+              <span class="app-go">Enter LMS →</span>
+            </div>
           </a>
         </li>
         <li>
           <a class="app-tile" href="https://eir-hae.web.app">
-            <span class="app-short">EiR</span>
-            <h3 class="app-name">Expert Office Hours</h3>
-            <p class="app-tag">Browse the SME directory and book office hours with HAE experts.</p>
-            <span class="app-go">Enter EiR →</span>
+            <div class="app-tile-media">
+              <img src="/images/app-eir.jpg" alt="Expert offering guidance" width="1200" height="1800" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">EiR</span>
+              <h3 class="app-name">Expert Office Hours</h3>
+              <p class="app-tag">Browse the SME directory and book office hours with HAE experts.</p>
+              <span class="app-go">Enter EiR →</span>
+            </div>
           </a>
         </li>
         <li>
           <a class="app-tile" href="https://crm-hae.web.app">
-            <span class="app-short">CRM</span>
-            <h3 class="app-name">Relationships</h3>
-            <p class="app-tag">Contacts, pipeline stages, interactions, and linked AMS/LMS records.</p>
-            <span class="app-go">Enter CRM →</span>
+            <div class="app-tile-media">
+              <img src="/images/app-crm.jpg" alt="Handshake sealing a partnership" width="1200" height="801" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">CRM</span>
+              <h3 class="app-name">Relationships</h3>
+              <p class="app-tag">Contacts, pipeline stages, interactions, and linked AMS/LMS records.</p>
+              <span class="app-go">Enter CRM →</span>
+            </div>
           </a>
         </li>
         <li>
           <a class="app-tile" href="https://ams-hae.web.app">
-            <span class="app-short">AMS</span>
-            <h3 class="app-name">Membership</h3>
-            <p class="app-tag">Members, renewals, committees, and events for the HAE community.</p>
-            <span class="app-go">Enter AMS →</span>
+            <div class="app-tile-media">
+              <img src="/images/app-ams.jpg" alt="Alumni community gathering" width="1200" height="675" loading="lazy" />
+            </div>
+            <div class="app-tile-body">
+              <span class="app-short">AMS</span>
+              <h3 class="app-name">Membership</h3>
+              <p class="app-tag">Members, renewals, committees, and events for the HAE community.</p>
+              <span class="app-go">Enter AMS →</span>
+            </div>
           </a>
         </li>
       </ul>
+      <p class="photo-credit">
+        Photos from
+        <a href="https://unsplash.com/" rel="noopener noreferrer" target="_blank">Unsplash</a>
+        (free license) — people of HAE’s world: builders, learners, mentors, and community.
+      </p>
     </section>
 
     <footer class="site-footer">

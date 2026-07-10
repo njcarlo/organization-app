@@ -20,10 +20,11 @@ hae-platform/
 │   ├── eir/                 ✅ Expert Office Hours (EiR directory)
 │   ├── crm/                 ✅ Milestone 3 — CRM
 │   └── ams/                 ✅ Milestone 4 — AMS
+│   └── hub/                 Landing page (hae.web.app)
 ├── packages/
 │   ├── firebase/            Shared Auth + Firestore clients
-│   ├── branding/            HAE fonts, colors, theme CSS
-│   └── ui/                  Shared auth shell + module nav
+│   ├── branding/            HAE fonts, colors, theme + hub CSS
+│   └── ui/                  Shared auth shell + module nav + header
 ├── firebase.json
 ├── firestore.rules
 └── package.json
@@ -88,7 +89,7 @@ Primary pattern: **`[app]-hae.web.app`** (Firebase Hosting site IDs cannot use d
 
 | App | Primary | Legacy (still deployed) |
 |-----|---------|-------------------------|
-| Hub | https://hae.web.app | — |
+| Hub | https://hae.web.app | Landing with people photography (Unsplash, free license) |
 | Tracker | https://tracker-hae.web.app | https://hae-operating-tracker.web.app |
 | LMS | https://lms-hae.web.app | https://hae-lms.web.app |
 | EiR | https://eir-hae.web.app | https://hae-eir.web.app |

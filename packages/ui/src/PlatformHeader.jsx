@@ -3,7 +3,7 @@ import { navigateToModule } from './sso.js'
 
 /**
  * Top site header — brand + platform switcher.
- * Sidenav stays scoped to the selected platform; switching apps happens here.
+ * Matches hub landing chrome; sidenav stays scoped to the selected platform.
  */
 export default function PlatformHeader({
   moduleId,
@@ -29,7 +29,7 @@ export default function PlatformHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-hae-line bg-white/95 backdrop-blur">
-      <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 lg:px-5">
+      <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-3 py-2.5 sm:px-4 lg:px-5">
         {onMenuClick ? (
           <button
             type="button"
@@ -59,19 +59,25 @@ export default function PlatformHeader({
             alt="Harvard Alumni Entrepreneurs"
             className="h-8 w-auto max-w-[140px] object-contain sm:h-9 sm:max-w-[160px]"
           />
+          <div className="hidden min-w-0 sm:block">
+            <div className="truncate text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
+              Harvard Alumni Entrepreneurs
+            </div>
+            <div className="truncate text-sm font-semibold text-hae-ink">HAE Platform</div>
+          </div>
         </a>
 
-        <div className="hidden h-6 w-px bg-hae-line sm:block" aria-hidden />
+        <div className="hidden h-6 w-px bg-hae-line md:block" aria-hidden />
 
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
-            HAE Platform
+          <div className="truncate text-[10px] font-semibold tracking-[0.14em] text-hae-slate uppercase">
+            Now in
           </div>
           <div className="truncate text-sm font-semibold text-hae-ink">{displayTitle}</div>
         </div>
 
         {(userName || roleLabel) && (
-          <div className="hidden min-w-0 text-right md:block">
+          <div className="hidden min-w-0 text-right lg:block">
             <div className="truncate text-xs font-medium text-hae-ink">
               {userName || 'Signed in'}
             </div>
@@ -84,7 +90,7 @@ export default function PlatformHeader({
 
       <div className="border-t border-hae-line/80 bg-hae-mist/50">
         <nav
-          className="flex gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-4 lg:px-5"
+          className="mx-auto flex max-w-[1100px] gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-4 lg:px-5"
           aria-label="Platform apps"
         >
           <a
