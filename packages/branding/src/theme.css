@@ -2,8 +2,8 @@
  * Imported by every app via @hae/branding/theme.css
  */
 @theme {
-  --font-sans: "Libre Franklin", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   --color-hae-crimson: #b80028;
   --color-hae-crimson-dark: #960021;
@@ -12,17 +12,22 @@
   --color-hae-charcoal: #272727;
   --color-hae-slate: #3e3e3e;
   --color-hae-mist: #f6f6f6;
-  --color-hae-line: #dddddd;
+  --color-hae-line: #e7e7e7;
   --color-hae-green: #1f7a4c;
   --color-hae-yellow: #b8860b;
   --color-hae-red: #c00;
   --color-hae-paper: #ffffff;
+
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
 }
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* Shared page chrome — used by all React apps */

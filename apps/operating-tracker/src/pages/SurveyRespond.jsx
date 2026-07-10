@@ -121,7 +121,7 @@ export default function SurveyRespond() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(184,0,40,0.10)_0%,_#ffffff_45%,_#f6f6f6_100%)]"
         />
-        <div className="relative w-full max-w-lg border border-hae-line bg-white/95 p-6 text-center shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-8">
+        <div className="relative w-full max-w-lg border border-hae-line bg-white/95 p-6 text-center shadow-[0_8px_28px_rgba(26,26,26,0.04)] sm:p-8">
           <img
             src="/hae-logo.webp"
             alt="Harvard Alumni Entrepreneurs"
@@ -153,7 +153,7 @@ export default function SurveyRespond() {
           />
         </div>
 
-        <div className="border border-hae-line bg-white/95 p-5 shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-7">
+        <div className="border border-hae-line bg-white/95 p-5 shadow-[0_8px_28px_rgba(26,26,26,0.04)] sm:p-7">
           <h1 className="font-display text-2xl text-hae-ink sm:text-3xl">
             {survey?.title || 'Survey'}
           </h1>
