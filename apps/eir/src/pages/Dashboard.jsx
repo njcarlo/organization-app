@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 
@@ -13,7 +13,12 @@ export default function Dashboard() {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const snap = await getDocs(collection(db, 'experts'))
+      // Staff can list all statuses; members/public rules require Active filter.
+      const snap = canManage
+        ? await getDocs(collection(db, 'experts'))
+        : await getDocs(
+            query(collection(db, 'experts'), where('status', '==', 'Active'))
+          )
       if (cancelled) return
       setExperts(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setLoading(false)
@@ -21,7 +26,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [canManage])
 
   const stats = useMemo(() => {
     const bookable = experts.filter((e) => e.status === 'Active')
@@ -51,8 +56,8 @@ export default function Dashboard() {
           Expert Directory
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-          Connect founders with subject-matter experts for 30-minute Office Hours.
-          Staff manage profiles here; members browse and book.
+          Staff manage profiles here; members browse the public directory and book via each
+          expert’s link. In-app scheduling comes later.
         </p>
       </header>
 
@@ -81,21 +86,27 @@ export default function Dashboard() {
         </ol>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
-            to="/directory"
+            to="/app/directory"
             className="bg-hae-crimson px-3 py-2 text-xs font-semibold tracking-wide text-white uppercase"
           >
             Find an expert
           </Link>
+          <Link
+            to="/"
+            className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
+          >
+            Public site
+          </Link>
           {canManage ? (
             <Link
-              to="/manage"
+              to="/app/manage"
               className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
             >
               Manage experts
             </Link>
           ) : (
             <Link
-              to="/how-it-works"
+              to="/app/how-it-works"
               className="border border-hae-line px-3 py-2 text-xs font-semibold tracking-wide text-hae-ink uppercase"
             >
               How it works
@@ -109,7 +120,7 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Featured experts
           </h2>
-          <Link to="/directory" className="text-xs font-semibold text-hae-crimson">
+          <Link to="/app/directory" className="text-xs font-semibold text-hae-crimson">
             View directory
           </Link>
         </div>
@@ -124,7 +135,7 @@ export default function Dashboard() {
             {stats.recent.map((e) => (
               <Link
                 key={e.id}
-                to={`/experts/${e.id}`}
+                to={`/app/experts/${e.id}`}
                 className="border border-hae-line bg-white p-4 transition-colors hover:border-hae-crimson"
               >
                 <div className="text-sm font-semibold text-hae-ink">{e.name}</div>

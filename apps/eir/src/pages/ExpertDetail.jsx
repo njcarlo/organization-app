@@ -3,18 +3,28 @@ import { Link, useParams } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 
-export default function ExpertDetail() {
+/**
+ * Expert profile — public or member workspace.
+ * @param {{ basePath?: string, publicMode?: boolean }} props
+ */
+export default function ExpertDetail({ basePath = '', publicMode = false }) {
   const { expertId } = useParams()
   const [expert, setExpert] = useState(null)
   const [loading, setLoading] = useState(true)
+  const directoryPath = `${basePath}/directory` || '/directory'
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const snap = await getDoc(doc(db, 'experts', expertId))
-      if (cancelled) return
-      setExpert(snap.exists() ? { id: snap.id, ...snap.data() } : null)
-      setLoading(false)
+      try {
+        const snap = await getDoc(doc(db, 'experts', expertId))
+        if (cancelled) return
+        setExpert(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+      } catch {
+        if (!cancelled) setExpert(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     })()
     return () => {
       cancelled = true
@@ -22,19 +32,24 @@ export default function ExpertDetail() {
   }, [expertId])
 
   if (loading) return <p className="text-sm text-hae-slate">Loading profile…</p>
-  if (!expert) {
+  if (!expert || (publicMode && expert.status !== 'Active')) {
     return (
       <p className="text-sm text-hae-red">
-        Expert not found. <Link to="/directory">Back to directory</Link>
+        Expert not found.{' '}
+        <Link to={directoryPath || '/directory'}>Back to directory</Link>
       </p>
     )
   }
 
   const bookable = expert.status === 'Active' && Boolean(expert.bookingUrl)
+  const showEmail = !publicMode && Boolean(expert.email)
 
   return (
     <div className="space-y-6">
-      <Link to="/directory" className="text-xs font-semibold text-hae-crimson">
+      <Link
+        to={directoryPath || '/directory'}
+        className="text-xs font-semibold text-hae-crimson"
+      >
         ← Directory
       </Link>
 
@@ -56,7 +71,7 @@ export default function ExpertDetail() {
             <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">
               {expert.name}
             </h1>
-            {expert.status && expert.status !== 'Active' ? (
+            {!publicMode && expert.status && expert.status !== 'Active' ? (
               <span className="rounded bg-hae-mist px-2 py-0.5 text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
                 {expert.status}
               </span>
@@ -127,7 +142,7 @@ export default function ExpertDetail() {
           <li>Share a short description of your goals or questions in the booking form.</li>
           <li>Meetings are typically 30 minutes of focused, one-on-one mentorship.</li>
           <li>Office Hours is intended for HAE alumni members.</li>
-          {expert.email ? (
+          {showEmail ? (
             <li>
               Questions for this expert:{' '}
               <a href={`mailto:${expert.email}`} className="text-hae-crimson">
@@ -136,6 +151,12 @@ export default function ExpertDetail() {
             </li>
           ) : null}
         </ul>
+        {publicMode ? (
+          <p className="mt-4 text-xs text-hae-slate">
+            Scheduling is handled on the expert’s booking page for now. In-app scheduling
+            is planned for a later release.
+          </p>
+        ) : null}
       </section>
     </div>
   )

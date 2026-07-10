@@ -27,14 +27,20 @@ const STEPS = [
   },
 ]
 
-export default function HowItWorks() {
+/**
+ * @param {{ directoryPath?: string, publicMode?: boolean }} props
+ */
+export default function HowItWorks({
+  directoryPath = '/directory',
+  publicMode = false,
+}) {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
         <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">How it works</h1>
         <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-          Office Hours connects founders with seasoned experts for personalized guidance.
-          Flow modeled after the public HAE Expert Directory (reference only).
+          Office Hours connects founders with seasoned experts for personalized guidance —
+          the same flow as the public HAE Expert Directory.
         </p>
       </header>
 
@@ -58,25 +64,27 @@ export default function HowItWorks() {
           ))}
         </ol>
         <Link
-          to="/directory"
+          to={directoryPath}
           className="mt-6 inline-block bg-hae-crimson px-4 py-2.5 text-xs font-semibold tracking-wide text-white uppercase"
         >
           Browse directory
         </Link>
       </section>
 
-      <p className="text-xs text-hae-slate">
-        Reference:{' '}
-        <a
-          href="https://sites.google.com/harvardae.org/experts/home"
-          target="_blank"
-          rel="noreferrer"
-          className="text-hae-crimson hover:underline"
-        >
-          sites.google.com/harvardae.org/experts
-        </a>
-        . Profiles in this app are staff-managed and independent of that site’s content.
-      </p>
+      {publicMode ? (
+        <p className="text-xs text-hae-slate">
+          Booking uses each expert’s external calendar link today. A built-in scheduling
+          system is planned next.
+        </p>
+      ) : (
+        <p className="text-xs text-hae-slate">
+          Public site:{' '}
+          <Link to="/" className="text-hae-crimson hover:underline">
+            Expert Office Hours home
+          </Link>
+          . Staff manage profiles under Manage experts.
+        </p>
+      )}
     </div>
   )
 }

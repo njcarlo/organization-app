@@ -31,8 +31,8 @@ export const MODULES = [
     milestone: 2,
     path: 'https://eir-hae.web.app',
     localPort: 5177,
-    description: 'Expert Office Hours directory',
-    tagline: 'Book office hours',
+    description: 'Public Expert Office Hours directory',
+    tagline: 'Find an expert',
   },
   {
     id: 'crm',

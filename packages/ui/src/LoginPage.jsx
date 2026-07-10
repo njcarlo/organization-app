@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 
-export default function LoginPage({ appName = 'HAE Platform' }) {
+export default function LoginPage({
+  appName = 'HAE Platform',
+  redirectTo = '/',
+}) {
   const { user, login, requestPasswordReset, loading } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState('signin')
@@ -12,7 +15,7 @@ export default function LoginPage({ appName = 'HAE Platform' }) {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  if (!loading && user) return <Navigate to="/" replace />
+  if (!loading && user) return <Navigate to={redirectTo} replace />
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,7 +30,7 @@ export default function LoginPage({ appName = 'HAE Platform' }) {
         )
       } else {
         await login(email.trim(), password)
-        navigate('/')
+        navigate(redirectTo)
       }
     } catch (err) {
       setError(err.message || (mode === 'reset' ? 'Reset failed' : 'Sign-in failed'))

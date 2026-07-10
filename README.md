@@ -105,11 +105,17 @@ Add each primary host under Firebase Console → Authentication → Settings →
 
 ## EiR / Expert Office Hours
 
-Dynamic SME directory staff can manage (add/edit experts with bio, expertise, LinkedIn, booking link).
+Public people directory + member workspace for SME Office Hours.
 
-**Reference only (not a data copy):** https://sites.google.com/harvardae.org/experts/home
+| Surface | URL |
+|---------|-----|
+| **Public site** (no login) | https://eir-hae.web.app — home, directory, profiles, how it works |
+| **Member workspace** | https://eir-hae.web.app/app — staff manage + signed-in browse |
+| Legacy Google Sites (reference) | https://sites.google.com/harvardae.org/experts/home |
 
-Firestore collection: `experts`
+- Active experts are publicly readable; booking uses each expert’s external `bookingUrl` for now
+- In-app scheduling is deferred to a later milestone
+- Firestore collection: `experts`
 
 ---
 
