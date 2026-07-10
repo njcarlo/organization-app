@@ -11,6 +11,11 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { ENROLLMENT_STATUSES } from '../constants'
+import {
+  PAYMENT_STATUSES,
+  formatMoney,
+  parseDollarsToCents,
+} from '../money'
 
 export default function Enrollments() {
   const [enrollments, setEnrollments] = useState([])
@@ -24,6 +29,8 @@ export default function Enrollments() {
     courseId: '',
     status: 'Enrolled',
     progress: '0',
+    paymentStatus: 'Pending',
+    amountPaidDollars: '',
   })
 
   const load = useCallback(async () => {
@@ -56,6 +63,13 @@ export default function Enrollments() {
       path: course.path || 'academy',
       status: form.status,
       progress: Number(form.progress) || 0,
+      paymentStatus: form.paymentStatus || 'Pending',
+      amountPaidCents:
+        form.paymentStatus === 'Paid'
+          ? parseDollarsToCents(form.amountPaidDollars) ??
+            course.priceCents ??
+            null
+          : parseDollarsToCents(form.amountPaidDollars),
       createdAt: serverTimestamp(),
     })
     setForm({
@@ -64,6 +78,8 @@ export default function Enrollments() {
       courseId: '',
       status: 'Enrolled',
       progress: '0',
+      paymentStatus: 'Pending',
+      amountPaidDollars: '',
     })
     setOpen(false)
     load()
@@ -71,6 +87,19 @@ export default function Enrollments() {
 
   const updateStatus = async (id, status) => {
     await updateDoc(doc(db, 'enrollments', id), { status })
+    load()
+  }
+
+  const updatePayment = async (id, paymentStatus) => {
+    const patch = { paymentStatus }
+    if (paymentStatus === 'Paid') {
+      const row = enrollments.find((e) => e.id === id)
+      const course = courses.find((c) => c.id === row?.courseId)
+      if (row && (row.amountPaidCents == null || row.amountPaidCents === '') && course?.priceCents) {
+        patch.amountPaidCents = course.priceCents
+      }
+    }
+    await updateDoc(doc(db, 'enrollments', id), patch)
     load()
   }
 
@@ -161,18 +190,36 @@ export default function Enrollments() {
           onChange={(e) => setForm({ ...form, progress: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
+        <select
+          value={form.paymentStatus}
+          onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm"
+        >
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Amount paid ($)"
+          value={form.amountPaidDollars}
+          onChange={(e) => setForm({ ...form, amountPaidDollars: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm"
+        />
         </form>
       </Modal>
 
 
       <div className="hae-table-scroll border border-hae-line bg-white">
-        <table className="w-full min-w-[560px] lg:min-w-[800px] text-left">
+        <table className="w-full min-w-[640px] lg:min-w-[900px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Learner</th>
               <th className="px-3 py-2 font-semibold">Course</th>
-              <th className="px-3 py-2 font-semibold">Path</th>
               <th className="px-3 py-2 font-semibold">Progress</th>
+              <th className="px-3 py-2 font-semibold">Payment</th>
               <th className="px-3 py-2 font-semibold">Status</th>
               <th className="px-3 py-2 font-semibold w-20" />
             </tr>
@@ -185,17 +232,36 @@ export default function Enrollments() {
                 </td>
               </tr>
             ) : (
-              enrollments.map((row) => (
+              enrollments.map((row) => {
+                const course = courses.find((c) => c.id === row.courseId)
+                const paid =
+                  row.amountPaidCents != null
+                    ? row.amountPaidCents
+                    : row.paymentStatus === 'Paid'
+                      ? course?.priceCents
+                      : null
+                return (
                 <tr key={row.id} className="group border-b border-hae-line/70">
                   <td className="px-3 py-2">
                     <div className="text-sm font-medium">{row.learnerName}</div>
                     <div className="text-xs text-hae-slate">{row.learnerEmail || '—'}</div>
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.courseName}</td>
-                  <td className="px-3 py-2 text-sm capitalize text-hae-slate">
-                    {row.path || '—'}
-                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.progress ?? 0}%</td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={row.paymentStatus || 'Pending'}
+                      onChange={(e) => updatePayment(row.id, e.target.value)}
+                      className="border border-hae-line px-2 py-1 text-sm"
+                    >
+                      {PAYMENT_STATUSES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                    <div className="mt-0.5 text-[11px] text-hae-slate">
+                      {paid != null ? formatMoney(paid) : '—'}
+                    </div>
+                  </td>
                   <td className="px-3 py-2">
                     <select
                       value={row.status}
@@ -217,7 +283,8 @@ export default function Enrollments() {
                     </button>
                   </td>
                 </tr>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>

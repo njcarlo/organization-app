@@ -11,6 +11,7 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COURSE_STATUSES, LEARNING_PATHS } from '../constants'
+import { formatMoney, parseDollarsToCents } from '../money'
 
 export default function Courses() {
   const [courses, setCourses] = useState([])
@@ -25,6 +26,7 @@ export default function Courses() {
     description: '',
     durationWeeks: '',
     status: 'Draft',
+    priceDollars: '',
   })
 
   const load = useCallback(async () => {
@@ -49,6 +51,8 @@ export default function Courses() {
       description: form.description.trim(),
       durationWeeks: form.durationWeeks ? Number(form.durationWeeks) : null,
       status: form.status,
+      priceCents: parseDollarsToCents(form.priceDollars),
+      currency: 'usd',
       createdAt: serverTimestamp(),
     })
     setForm({
@@ -58,6 +62,7 @@ export default function Courses() {
       description: '',
       durationWeeks: '',
       status: 'Draft',
+      priceDollars: '',
     })
     setOpen(false)
     load()
@@ -178,17 +183,27 @@ export default function Courses() {
             <option key={s}>{s}</option>
           ))}
         </select>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Tuition / price ($)"
+          value={form.priceDollars}
+          onChange={(e) => setForm({ ...form, priceDollars: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
+        />
         </form>
       </Modal>
 
 
       <div className="hae-table-scroll border border-hae-line bg-white">
-        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
+        <table className="w-full min-w-[520px] lg:min-w-[760px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Course</th>
               <th className="px-3 py-2 font-semibold">Path</th>
               <th className="px-3 py-2 font-semibold">Facilitator</th>
+              <th className="px-3 py-2 font-semibold">Price</th>
               <th className="px-3 py-2 font-semibold">Status</th>
               <th className="px-3 py-2 font-semibold w-24" />
             </tr>
@@ -196,7 +211,7 @@ export default function Courses() {
           <tbody>
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-hae-slate">
                   No courses yet
                 </td>
               </tr>
@@ -219,6 +234,11 @@ export default function Courses() {
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {c.facilitator || '—'}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    {c.priceCents != null
+                      ? formatMoney(c.priceCents, c.currency)
+                      : '—'}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{c.status}</td>
                   <td className="px-3 py-2 text-right">

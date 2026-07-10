@@ -25,3 +25,8 @@ firebase-debug.log
 *.njsproj
 *.sln
 *.sw?
+
+# Agent local overrides (keep shared rules/skills committed)
+.claude/settings.local.json
+.claude/memory/
+**/.claude/settings.local.json

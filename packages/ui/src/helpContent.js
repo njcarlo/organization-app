@@ -63,6 +63,7 @@ export const HELP_SECTIONS = [
         heading: 'Dashboard',
         steps: [
           'Shows program health, priorities, and items needing leadership attention.',
+          'Switch Programs / Academy / Custom Programs tabs to filter priorities, waiting-on, attention, wins, and fundraising analytics.',
           'Use it for a quick weekly scan of what is at risk.',
         ],
       },
@@ -113,7 +114,9 @@ export const HELP_SECTIONS = [
         steps: [
           'Open a program from the sidebar.',
           'Add a Project (name, lead, health, target date).',
-          'Expand a project and Add Task for the detailed work items.',
+          'Optional metrics: Donation drive, Budget, or Course earnings — set goal + raised/spent on the project.',
+          'Expand a project for the whole-project view (metrics tiles + tasks).',
+          'Dashboard shows Fundraising & analytics: bar chart + table for projects with metrics.',
           'Keep Owner names consistent with user directory names so My Tasks works.',
         ],
       },
@@ -152,7 +155,8 @@ export const HELP_SECTIONS = [
           'Manage courses — create a course (path, facilitator, status).',
           'Authoring — start from Academy/Flagship/orientation templates; draft quiz outlines; use Branching/Simulation module types.',
           'Open a course to add modules (lessons, quizzes, office hours, etc.).',
-          'Enrollments — add learners with name + login email + course.',
+          'Enrollments — add learners with name + login email + course; set payment status and amount for paid courses.',
+          'Dashboard — Earnings & analytics shows a bar chart and table of paid/pending tuition by course.',
           'Tracking — see at-risk learners, overdue check-ins, course completion, and send email nudges.',
           'Office Hours / Check-ins / Issue certificates — schedule sessions and track milestones.',
           'Office Hours — Export calendar (.ics) to add sessions to your calendar app.',
