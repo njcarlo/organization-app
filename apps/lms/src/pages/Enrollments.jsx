@@ -8,6 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { ENROLLMENT_STATUSES } from '../constants'
 
@@ -15,6 +16,8 @@ export default function Enrollments() {
   const [enrollments, setEnrollments] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     learnerName: '',
     learnerEmail: '',
@@ -62,6 +65,7 @@ export default function Enrollments() {
       status: 'Enrolled',
       progress: '0',
     })
+    setOpen(false)
     load()
   }
 
@@ -87,17 +91,31 @@ export default function Enrollments() {
         </p>
       </header>
 
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
+      
+      
+      <div className="hae-form-actions">
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Enroll learner
+        </button>
+      </div>
+<Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Enroll learner"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="enroll-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Enroll learner'}
+            </button>
+          </>
+        }
       >
+        <form id="enroll-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
 
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
-            Enroll learner
-          </button>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 <input
           required
           placeholder="Learner name"
@@ -143,8 +161,9 @@ export default function Enrollments() {
           onChange={(e) => setForm({ ...form, progress: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
-        </div>
-      </form>
+        </form>
+      </Modal>
+
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[800px] text-left">

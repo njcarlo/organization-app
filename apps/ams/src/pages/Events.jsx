@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures } from '@hae/ui'
+import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
@@ -17,6 +17,8 @@ export default function Events() {
   const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: '',
     date: '',
@@ -55,6 +57,7 @@ export default function Events() {
       capacity: '',
       description: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -89,14 +92,15 @@ export default function Events() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Events</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Event listings linked to membership engagement
           </p>
         </div>
-        {canExportCalendar ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {canExportCalendar ? (
           <button
             type="button"
             onClick={exportIcs}
@@ -106,19 +110,34 @@ export default function Events() {
             Export calendar (.ics)
           </button>
         ) : null}
-      </header>
-
-      {canManage ? (
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
-      >
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
+          
+        {canManage ? (
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
             Add event
           </button>
+        ) : null}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+      </header>
+
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add event"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-event-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add event'}
+            </button>
+          </>
+        }
+      >
+        <form id="add-event-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
           <input
             required
             placeholder="Event name"
@@ -151,9 +170,9 @@ export default function Events() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
           />
-        </div>
-      </form>
-      ) : null}
+        </form>
+      </Modal>
+
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">

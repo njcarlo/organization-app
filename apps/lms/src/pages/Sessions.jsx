@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
@@ -16,6 +17,8 @@ export default function Sessions() {
   const [sessions, setSessions] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     title: 'Office Hours',
     courseId: '',
@@ -62,6 +65,7 @@ export default function Sessions() {
       location: '',
       zoomLink: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -98,14 +102,15 @@ export default function Sessions() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Office Hours</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Live working sessions — schedule, location, and Zoom links
           </p>
         </div>
-        {canExportCalendar ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {canExportCalendar ? (
           <button
             type="button"
             onClick={exportIcs}
@@ -115,19 +120,31 @@ export default function Sessions() {
             Export calendar (.ics)
           </button>
         ) : null}
-      </header>
-
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
-      >
-
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
             Add session
           </button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      </header>
+
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add session"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-session-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add session'}
+            </button>
+          </>
+        }
+      >
+        <form id="add-session-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
 <input
           placeholder="Title"
           value={form.title}
@@ -170,8 +187,9 @@ export default function Sessions() {
           onChange={(e) => setForm({ ...form, zoomLink: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
-        </div>
-      </form>
+        </form>
+      </Modal>
+
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">

@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
 import {
@@ -19,6 +20,8 @@ export default function Interactions() {
   const [interactions, setInteractions] = useState([])
   const [contacts, setContacts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     contactId: '',
     type: 'Email',
@@ -68,6 +71,7 @@ export default function Interactions() {
       notes: '',
       attachmentLines: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -88,17 +92,31 @@ export default function Interactions() {
         </p>
       </header>
 
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
+      
+      
+      <div className="hae-form-actions">
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Log interaction
+        </button>
+      </div>
+<Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Log interaction"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="interaction-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Log interaction'}
+            </button>
+          </>
+        }
       >
+        <form id="interaction-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
 
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
-            Log interaction
-          </button>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 <select
           required
           value={form.contactId}
@@ -144,8 +162,9 @@ export default function Interactions() {
           value={form.attachmentLines}
           onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
         />
-        </div>
-      </form>
+        </form>
+      </Modal>
+
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">

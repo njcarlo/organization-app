@@ -7,20 +7,25 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { MEMBER_STATUSES } from '../constants'
+
+const emptyForm = {
+  name: '',
+  email: '',
+  cohort: '',
+  chapter: '',
+  status: 'active',
+  joinDate: '',
+}
 
 export default function Members() {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    cohort: '',
-    chapter: '',
-    status: 'active',
-    joinDate: '',
-  })
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState(emptyForm)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'members'))
@@ -34,27 +39,32 @@ export default function Members() {
     load()
   }, [load])
 
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    setForm(emptyForm)
+  }
+
   const create = async (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    await addDoc(collection(db, 'members'), {
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      cohort: form.cohort.trim(),
-      chapter: form.chapter.trim(),
-      status: form.status,
-      joinDate: form.joinDate || '',
-      createdAt: serverTimestamp(),
-    })
-    setForm({
-      name: '',
-      email: '',
-      cohort: '',
-      chapter: '',
-      status: 'active',
-      joinDate: '',
-    })
-    load()
+    setSaving(true)
+    try {
+      await addDoc(collection(db, 'members'), {
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        cohort: form.cohort.trim(),
+        chapter: form.chapter.trim(),
+        status: form.status,
+        joinDate: form.joinDate || '',
+        createdAt: serverTimestamp(),
+      })
+      setForm(emptyForm)
+      setOpen(false)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const remove = async (id) => {
@@ -67,23 +77,35 @@ export default function Members() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Members</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Directory of HAE members — cohort, chapter, and status
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Members</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Directory of HAE members — cohort, chapter, and status
+          </p>
+        </div>
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Add member
+        </button>
       </header>
 
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
+      <Modal
+        open={open}
+        onClose={close}
+        title="Add member"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-member-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add member'}
+            </button>
+          </>
+        }
       >
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
-            Add member
-          </button>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <form id="add-member-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
           <input
             required
             placeholder="Name"
@@ -127,8 +149,8 @@ export default function Members() {
             onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
             className="border border-hae-line px-3 py-2 text-sm"
           />
-        </div>
-      </form>
+        </form>
+      </Modal>
 
       <div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[800px] text-left">

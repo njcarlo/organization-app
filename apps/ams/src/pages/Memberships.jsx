@@ -8,6 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { MEMBERSHIP_TIERS, PAYMENT_STATUSES } from '../constants'
 
@@ -15,6 +16,8 @@ export default function Memberships() {
   const [memberships, setMemberships] = useState([])
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     memberId: '',
     tier: 'standard',
@@ -57,6 +60,7 @@ export default function Memberships() {
       renewalDate: '',
       paymentStatus: 'Pending',
     })
+    setOpen(false)
     load()
   }
 
@@ -75,23 +79,37 @@ export default function Memberships() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Memberships</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Tiers, renewal dates, and payment status
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Memberships</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Tiers, renewal dates, and payment status
+          </p>
+        </div>
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Add membership
+        </button>
       </header>
 
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add membership"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-membership-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add membership'}
+            </button>
+          </>
+        }
       >
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
-            Add membership
-          </button>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form id="add-membership-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
           <select
             required
             value={form.memberId}
@@ -131,10 +149,9 @@ export default function Memberships() {
               <option key={s}>{s}</option>
             ))}
           </select>
-        </div>
-      </form>
-
-      <div className="overflow-x-auto border border-hae-line bg-white">
+        </form>
+      </Modal>
+<div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>

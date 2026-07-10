@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COMMITTEE_ROLES } from '../constants'
 
@@ -14,6 +15,8 @@ export default function Committees() {
   const [items, setItems] = useState([])
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: '',
     memberId: '',
@@ -50,6 +53,7 @@ export default function Committees() {
       createdAt: serverTimestamp(),
     })
     setForm({ name: '', memberId: '', role: 'Member', notes: '' })
+    setOpen(false)
     load()
   }
 
@@ -63,23 +67,37 @@ export default function Committees() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Committees</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Committee and volunteer assignments
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Committees</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Committee and volunteer assignments
+          </p>
+        </div>
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Add assignment
+        </button>
       </header>
 
-      <form
-        onSubmit={create}
-        className="border border-hae-line bg-white p-4"
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add assignment"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-committee-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add assignment'}
+            </button>
+          </>
+        }
       >
-        <div className="hae-form-actions">
-          <button type="submit" className="hae-btn">
-            Add assignment
-          </button>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form id="add-committee-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
           <input
             required
             placeholder="Committee name"
@@ -114,10 +132,9 @@ export default function Committees() {
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             className="border border-hae-line px-3 py-2 text-sm"
           />
-        </div>
-      </form>
-
-      <div className="overflow-x-auto border border-hae-line bg-white">
+        </form>
+      </Modal>
+<div className="overflow-x-auto border border-hae-line bg-white">
         <table className="w-full min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
