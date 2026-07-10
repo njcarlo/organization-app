@@ -28,6 +28,7 @@ export default function ProgramPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [dense, setDense] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
 
   const load = useCallback(async () => {
@@ -108,20 +109,33 @@ export default function ProgramPage() {
   if (!program) return <p className="text-sm text-hae-red">Program not found.</p>
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-wider text-hae-crimson uppercase">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
             Program
           </p>
-          <h1 className="mt-1 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">{program.name}</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hae-ink sm:text-3xl">
+            {program.name}
+          </h1>
           <p className="mt-1 text-sm text-hae-slate">
             Overall lead: {program.lead || '—'}
+            {projects.length ? ` · ${projects.length} projects` : ''}
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-          + Add Project
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDense((v) => !v)}
+            className="hae-btn-secondary"
+            title={dense ? 'Switch to compact list' : 'Show full table'}
+          >
+            {dense ? 'Compact list' : 'Dense table'}
+          </button>
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            + Add Project
+          </button>
+        </div>
       </header>
 
       <Modal
@@ -178,9 +192,11 @@ export default function ProgramPage() {
         </form>
       </Modal>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {projects.length === 0 ? (
-          <p className="text-sm text-hae-slate">No projects yet. Add one to get started.</p>
+          <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
+            No projects yet. Add one to get started.
+          </div>
         ) : (
           projects.map((project) => (
             <ProjectCard
@@ -189,6 +205,7 @@ export default function ProgramPage() {
               program={program}
               tasks={tasksByProject[project.id] || []}
               onChanged={load}
+              dense={dense}
             />
           ))
         )}

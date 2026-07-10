@@ -1,18 +1,42 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { HEALTH_OPTIONS } from '../constants'
-import { healthBadgeClass, healthLabel } from '../utils'
+import { formatDate, healthBadgeClass, healthLabel } from '../utils'
 import TaskTable from './TaskTable'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
 
-export default function ProjectCard({ project, program, tasks, onChanged }) {
+function isComplete(task) {
+  return String(task.status || '').toLowerCase() === 'complete'
+}
+
+export default function ProjectCard({
+  project,
+  program,
+  tasks,
+  onChanged,
+  dense = false,
+}) {
   const [open, setOpen] = useState(true)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
   const tableRef = useRef(null)
+
+  const summary = useMemo(() => {
+    const active = tasks.filter((t) => !isComplete(t))
+    const completed = tasks.length - active.length
+    const dated = active
+      .filter((t) => t.dueDate)
+      .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+    const nextDue = dated[0]?.dueDate || null
+    return {
+      activeCount: active.length,
+      completedCount: completed,
+      nextDue,
+    }
+  }, [tasks])
 
   const startEdit = () => {
     setDraft({
@@ -47,13 +71,12 @@ export default function ProjectCard({ project, program, tasks, onChanged }) {
 
   const handleAddTask = () => {
     setOpen(true)
-    // Allow expand to render before focusing add row
     requestAnimationFrame(() => tableRef.current?.startAdd())
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-hae-line bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hae-line px-4 py-3">
+    <div className="overflow-hidden rounded-xl border border-hae-line/80 bg-white/85 shadow-[0_1px_0_rgba(26,26,26,0.03)] backdrop-blur-[2px]">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hae-line/70 bg-hae-mist/35 px-4 py-3.5">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -120,20 +143,28 @@ export default function ProjectCard({ project, program, tasks, onChanged }) {
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-semibold text-hae-ink">{project.name}</h3>
+                <h3 className="text-[15px] font-semibold text-hae-ink">{project.name}</h3>
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${healthBadgeClass(project.health)}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${healthBadgeClass(project.health)}`}
                 >
                   {healthLabel(project.health)}
                 </span>
-                <span className="text-xs text-hae-slate">{open ? '▾' : '▸'}</span>
+                <span className="text-xs text-hae-slate/70">{open ? '▾' : '▸'}</span>
               </div>
-              <p className="mt-1 text-xs text-hae-slate">
-                Lead: {project.lead || '—'}
-                {project.targetDate ? ` · Target ${project.targetDate}` : ''}
+              <p className="mt-1.5 text-xs text-hae-slate">
+                <span>{summary.activeCount} active</span>
+                {summary.completedCount > 0 ? (
+                  <span> · {summary.completedCount} done</span>
+                ) : null}
+                {summary.nextDue ? (
+                  <span> · Next due {formatDate(summary.nextDue)}</span>
+                ) : (
+                  <span> · No upcoming due dates</span>
+                )}
+                {project.lead ? <span> · Lead {project.lead}</span> : null}
               </p>
               {project.promise ? (
-                <p className="mt-1 text-sm text-hae-slate">{project.promise}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-hae-slate/90">{project.promise}</p>
               ) : null}
             </>
           )}
@@ -141,17 +172,13 @@ export default function ProjectCard({ project, program, tasks, onChanged }) {
 
         {!editing && (
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleAddTask}
-              className="rounded-md bg-hae-crimson px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-hae-crimson-dark"
-            >
+            <button type="button" onClick={handleAddTask} className="hae-btn">
               + Add Task
             </button>
             <button
               type="button"
               onClick={startEdit}
-              className="text-xs text-hae-slate hover:text-hae-crimson"
+              className="hae-btn-secondary"
             >
               Edit
             </button>
@@ -167,13 +194,14 @@ export default function ProjectCard({ project, program, tasks, onChanged }) {
       </div>
 
       {open && (
-        <div className="p-3">
+        <div className="bg-gradient-to-b from-white/40 to-hae-mist/20 p-3 sm:p-4">
           <TaskTable
             ref={tableRef}
             tasks={tasks}
             project={project}
             program={program}
             onChanged={onChanged}
+            dense={dense}
           />
         </div>
       )}

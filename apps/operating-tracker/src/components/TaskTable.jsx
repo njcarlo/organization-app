@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import {
   addDoc,
   collection,
@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
-import { formatDate } from '../utils'
+import { effectivePriority, formatDate, priorityBadgeClass } from '../utils'
 
 const emptyNew = {
   name: '',
@@ -25,14 +25,35 @@ const emptyNew = {
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
 
+function isComplete(task) {
+  return String(task.status || '').toLowerCase() === 'complete'
+}
+
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 block text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
+      <span className="mb-1 block text-[10px] font-semibold tracking-wide text-hae-slate/80 uppercase">
         {label}
       </span>
       {children}
     </label>
+  )
+}
+
+function StatusPill({ status }) {
+  const s = status || '—'
+  const tone =
+    s === 'Complete'
+      ? 'bg-emerald-50 text-hae-green'
+      : s === 'Waiting' || s === 'Review'
+        ? 'bg-amber-50 text-hae-yellow'
+        : s === 'In Progress'
+          ? 'bg-sky-50 text-sky-800'
+          : 'bg-hae-mist text-hae-slate'
+  return (
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${tone}`}>
+      {s}
+    </span>
   )
 }
 
@@ -46,24 +67,20 @@ function TaskEditForm({
   autoFocus = true,
 }) {
   return (
-    <div className="px-3 py-4">
+    <div className="rounded-lg border border-hae-line/80 bg-white px-3 py-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
+        <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
           {title}
         </p>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-hae-line px-3 py-1.5 text-xs font-semibold text-hae-slate hover:bg-white"
-          >
+          <button type="button" onClick={onCancel} className="hae-btn-secondary">
             Cancel
           </button>
           <button
             type="button"
             disabled={saving}
             onClick={onSave}
-            className="rounded-md bg-hae-crimson px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+            className="hae-btn disabled:opacity-60"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -159,7 +176,14 @@ function TaskEditForm({
 }
 
 const TaskTable = forwardRef(function TaskTable(
-  { tasks, project, program, onChanged, showOwner = true },
+  {
+    tasks,
+    project,
+    program,
+    onChanged,
+    showOwner = true,
+    dense = false,
+  },
   ref
 ) {
   const [adding, setAdding] = useState(false)
@@ -167,8 +191,21 @@ const TaskTable = forwardRef(function TaskTable(
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
+  const [showCompleted, setShowCompleted] = useState(false)
 
-  const colCount = showOwner ? 9 : 8
+  const { active, completed } = useMemo(() => {
+    const a = []
+    const c = []
+    for (const t of tasks) {
+      if (isComplete(t)) c.push(t)
+      else a.push(t)
+    }
+    return { active: a, completed: c }
+  }, [tasks])
+
+  const visible = showCompleted ? [...active, ...completed] : active
+  const colCount = dense ? (showOwner ? 9 : 8) : showOwner ? 5 : 4
 
   const startAdd = () => {
     setAdding(true)
@@ -178,6 +215,7 @@ const TaskTable = forwardRef(function TaskTable(
     })
     setEditingId(null)
     setDraft(null)
+    setExpandedId(null)
   }
 
   useImperativeHandle(ref, () => ({ startAdd }))
@@ -217,6 +255,7 @@ const TaskTable = forwardRef(function TaskTable(
   const startEdit = (task) => {
     setAdding(false)
     setEditingId(task.id)
+    setExpandedId(task.id)
     setDraft({
       name: task.name || '',
       owner: task.owner || '',
@@ -262,126 +301,249 @@ const TaskTable = forwardRef(function TaskTable(
     onChanged?.()
   }
 
+  const toggleExpand = (id) => {
+    setExpandedId((cur) => (cur === id ? null : id))
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[960px] table-fixed text-left">
-        <colgroup>
-          <col className="w-[18%]" />
-          {showOwner ? <col className="w-[10%]" /> : null}
-          <col className="w-[10%]" />
-          <col className="w-[11%]" />
-          <col className="w-[9%]" />
-          <col className="w-[11%]" />
-          <col className="w-[12%]" />
-          <col className="w-[12%]" />
-          <col className="w-[7%]" />
-        </colgroup>
-        <thead className="text-[11px] tracking-wide text-hae-slate uppercase">
-          <tr className="border-b border-hae-line">
-            <th className="px-2 py-1.5 font-semibold">Task</th>
-            {showOwner && <th className="px-2 py-1.5 font-semibold">Owner</th>}
-            <th className="px-2 py-1.5 font-semibold">Due</th>
-            <th className="px-2 py-1.5 font-semibold">Status</th>
-            <th className="px-2 py-1.5 font-semibold">Priority</th>
-            <th className="px-2 py-1.5 font-semibold">Waiting On</th>
-            <th className="px-2 py-1.5 font-semibold">Leadership</th>
-            <th className="px-2 py-1.5 font-semibold">Next Action</th>
-            <th className="px-2 py-1.5 font-semibold" />
-          </tr>
-        </thead>
-        <tbody>
-          {adding && (
-            <tr className="bg-sky-50/80">
-              <td colSpan={colCount}>
-                <TaskEditForm
-                  draft={newTask}
-                  setDraft={setNewTask}
-                  onSave={saveNew}
-                  onCancel={cancelAdd}
-                  saving={saving}
-                  title="New task"
-                />
-              </td>
-            </tr>
-          )}
+    <div className="space-y-3">
+      {adding ? (
+        <TaskEditForm
+          draft={newTask}
+          setDraft={setNewTask}
+          onSave={saveNew}
+          onCancel={cancelAdd}
+          saving={saving}
+          title="New task"
+        />
+      ) : null}
 
-          {tasks.map((task) =>
-            editingId === task.id && draft ? (
-              <tr key={task.id} className="bg-amber-50/80">
-                <td colSpan={colCount}>
-                  <TaskEditForm
-                    draft={draft}
-                    setDraft={setDraft}
-                    onSave={saveEdit}
-                    onCancel={cancelEdit}
-                    saving={saving}
-                  />
-                </td>
+      {visible.length === 0 && !adding ? (
+        <p className="px-1 py-6 text-center text-sm text-hae-slate">
+          {tasks.length === 0
+            ? 'No tasks yet'
+            : 'No active tasks — show completed below if needed'}
+        </p>
+      ) : dense ? (
+        <div className="overflow-x-auto rounded-lg border border-hae-line/70 bg-white/80">
+          <table className="w-full min-w-[960px] table-fixed text-left">
+            <thead className="text-[10px] tracking-wide text-hae-slate/80 uppercase">
+              <tr className="border-b border-hae-line/80 bg-hae-mist/50">
+                <th className="px-3 py-2 font-semibold">Task</th>
+                {showOwner ? <th className="px-3 py-2 font-semibold">Owner</th> : null}
+                <th className="px-3 py-2 font-semibold">Due</th>
+                <th className="px-3 py-2 font-semibold">Status</th>
+                <th className="px-3 py-2 font-semibold">Priority</th>
+                <th className="px-3 py-2 font-semibold">Waiting</th>
+                <th className="px-3 py-2 font-semibold">Leadership</th>
+                <th className="px-3 py-2 font-semibold">Next</th>
+                <th className="px-3 py-2 font-semibold" />
               </tr>
-            ) : (
-              <tr key={task.id} className="group border-b border-hae-line/60">
-                <td className="px-2 py-2 text-sm font-medium">
-                  <span className="line-clamp-2">{task.name}</span>
-                </td>
-                {showOwner && (
-                  <td className="px-2 py-2 text-sm text-hae-slate">
-                    {task.owner || '—'}
-                  </td>
-                )}
-                <td className="whitespace-nowrap px-2 py-2 text-sm text-hae-slate">
-                  {formatDate(task.dueDate)}
-                </td>
-                <td className="px-2 py-2 text-sm text-hae-slate">{task.status}</td>
-                <td className="px-2 py-2 text-sm text-hae-slate">
-                  {task.priority || 'Auto'}
-                </td>
-                <td className="px-2 py-2 text-sm text-hae-slate">
-                  <span className="line-clamp-2">{task.waitingOn || '—'}</span>
-                </td>
-                <td className="px-2 py-2 text-sm text-hae-slate">
-                  <span className="line-clamp-2">
-                    {task.leadershipAttention || 'None'}
-                  </span>
-                </td>
-                <td className="px-2 py-2 text-sm text-hae-slate">
-                  <span className="line-clamp-2">{task.nextAction || '—'}</span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(task)}
-                      className="text-xs text-hae-slate hover:text-hae-crimson"
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeTask(task.id)}
-                      className="text-xs text-hae-slate hover:text-hae-red"
-                      title="Delete"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )
-          )}
-
-          {tasks.length === 0 && !adding && (
-            <tr>
-              <td
-                colSpan={colCount}
-                className="px-2 py-4 text-center text-sm text-hae-slate"
+            </thead>
+            <tbody>
+              {visible.map((task) =>
+                editingId === task.id && draft ? (
+                  <tr key={task.id} className="bg-amber-50/60">
+                    <td colSpan={colCount} className="p-2">
+                      <TaskEditForm
+                        draft={draft}
+                        setDraft={setDraft}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                        saving={saving}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr
+                    key={task.id}
+                    className={`group border-b border-hae-line/50 ${
+                      isComplete(task) ? 'opacity-60' : ''
+                    }`}
+                  >
+                    <td className="px-3 py-2.5 text-sm font-medium text-hae-ink">
+                      <span className="line-clamp-2">{task.name}</span>
+                    </td>
+                    {showOwner ? (
+                      <td className="px-3 py-2.5 text-sm text-hae-slate">
+                        {task.owner || '—'}
+                      </td>
+                    ) : null}
+                    <td className="whitespace-nowrap px-3 py-2.5 text-sm text-hae-slate">
+                      {formatDate(task.dueDate)}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <StatusPill status={task.status} />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
+                          effectivePriority(task)
+                        )}`}
+                      >
+                        {effectivePriority(task)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                      <span className="line-clamp-1">{task.waitingOn || '—'}</span>
+                    </td>
+                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                      <span className="line-clamp-1">
+                        {task.leadershipAttention || 'None'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                      <span className="line-clamp-1">{task.nextAction || '—'}</span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(task)}
+                          className="text-xs text-hae-slate hover:text-hae-crimson"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeTask(task.id)}
+                          className="text-xs text-hae-slate hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {visible.map((task) => {
+            const open = expandedId === task.id
+            const editing = editingId === task.id && draft
+            return (
+              <li
+                key={task.id}
+                className={`rounded-lg border border-hae-line/70 bg-white/90 ${
+                  isComplete(task) ? 'opacity-65' : ''
+                }`}
               >
-                No tasks yet
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                {editing ? (
+                  <div className="p-2">
+                    <TaskEditForm
+                      draft={draft}
+                      setDraft={setDraft}
+                      onSave={saveEdit}
+                      onCancel={cancelEdit}
+                      saving={saving}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-2 px-3 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(task.id)}
+                        className="mt-0.5 shrink-0 rounded px-1 text-hae-slate hover:bg-hae-mist"
+                        aria-expanded={open}
+                        aria-label={open ? 'Collapse details' : 'Expand details'}
+                      >
+                        {open ? '▾' : '▸'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(task.id)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-hae-ink">
+                            {task.name}
+                          </span>
+                          <StatusPill status={task.status} />
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-hae-slate">
+                          {showOwner ? <span>{task.owner || 'Unassigned'}</span> : null}
+                          <span>Due {formatDate(task.dueDate)}</span>
+                          {task.nextAction ? (
+                            <span className="line-clamp-1 text-hae-ink/70">
+                              Next: {task.nextAction}
+                            </span>
+                          ) : null}
+                        </div>
+                      </button>
+                      <div className="flex shrink-0 gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(task)}
+                          className="text-xs text-hae-slate hover:text-hae-crimson"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeTask(task.id)}
+                          className="text-xs text-hae-slate hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    {open ? (
+                      <div className="grid gap-2 border-t border-hae-line/60 bg-hae-mist/40 px-3 py-3 text-xs text-hae-slate sm:grid-cols-3">
+                        <div>
+                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                            Priority
+                          </div>
+                          <div className="mt-0.5">
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
+                                effectivePriority(task)
+                              )}`}
+                            >
+                              {effectivePriority(task)}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                            Waiting on
+                          </div>
+                          <div className="mt-0.5 text-hae-ink/80">
+                            {task.waitingOn || '—'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                            Leadership
+                          </div>
+                          <div className="mt-0.5 text-hae-ink/80">
+                            {task.leadershipAttention || 'None'}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {completed.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setShowCompleted((v) => !v)}
+          className="text-xs font-medium text-hae-slate hover:text-hae-crimson"
+        >
+          {showCompleted
+            ? 'Hide completed'
+            : `Show ${completed.length} completed`}
+        </button>
+      ) : null}
     </div>
   )
 })
