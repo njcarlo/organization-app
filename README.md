@@ -137,6 +137,26 @@ Collections: `courses`, `modules`, `enrollments`, `sessions`, `checkIns`, `certi
 - Auth: email/password
 - Rules: authenticated read/write (`firestore.rules`)
 
+### Password reset / email action links
+
+Firebase sometimes sends password-reset links with an empty `apiKey=`, which makes the default hosted page (`/__/auth/action`) show **“The selected page mode is invalid.”**
+
+This repo serves a custom handler at **`/auth/action`** on every app (uses the configured Firebase API key via the client SDK). Point Auth email templates at it:
+
+1. Firebase Console → **Authentication** → **Templates**
+2. Edit **Password reset** (and optionally **Email address verification** / **Email address change**)
+3. Customize action URL to:
+
+```
+https://tracker-hae.web.app/auth/action?mode=%MODE%&oobCode=%OOB_CODE%&apiKey=%API_KEY%&lang=%LANG%
+```
+
+4. Save, then send a fresh reset email (old links keep the broken hosted URL)
+
+**Immediate workaround for an already-open broken link:** in the address bar, put the web API key after `apiKey=` (from Project settings → Your apps), then reload. Example: `...&apiKey=AIzaSy…&lang=en`
+
+**Project-level fix (often restores default `/__/auth/action` links):** Authentication → Sign-in method → delete **Email/Password** → re-enable it (does not delete existing users).
+
 ### Operating Tracker modules
 
 - **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins

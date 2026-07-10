@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
-import { FeaturesProvider, useFeatures, FEATURES } from '@hae/ui'
+import { AuthActionPage, FeaturesProvider, useFeatures, FEATURES } from '@hae/ui'
 import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
@@ -46,6 +46,10 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route
+              path="/auth/action"
+              element={<AuthActionPage appName="Operating Tracker" />}
+            />
             <Route path="/setup" element={<Setup />} />
             {/* Public survey response — no login required */}
             <Route path="/s/:surveyId" element={<SurveyRespond />} />
