@@ -11,6 +11,12 @@ const SECTIONS = [
   { tag: 'action_item', title: 'Action Items' },
 ]
 
+const OAUTH_ERROR_MESSAGES = {
+  missing_params: 'Google did not return the expected authorization details. Try connecting again.',
+  invalid_state: 'This Google connection link expired or was already used. Try connecting again.',
+  oauth_failed: 'Google connection failed. Check the OAuth client redirect URI and try again.',
+}
+
 function formatDateTime(value) {
   if (!value) return '—'
   const date = typeof value === 'number' ? new Date(value) : new Date(value)
@@ -99,28 +105,43 @@ export default function ExecutiveInbox() {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const [statusSnap, emailSnap, meetingSnap] = await Promise.all([
-      getDoc(doc(db, 'execInboxStatus', 'singleton')),
-      getDocs(collection(db, 'execInboxEmails')),
-      getDocs(collection(db, 'execInboxMeetings')),
-    ])
-    setStatus(statusSnap.exists() ? statusSnap.data() : null)
-    setEmails(emailSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setMeetings(
-      meetingSnap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => new Date(a.start) - new Date(b.start))
-    )
-    setLoading(false)
+    setError('')
+    try {
+      const [statusSnap, emailSnap, meetingSnap] = await Promise.all([
+        getDoc(doc(db, 'execInboxStatus', 'singleton')),
+        getDocs(collection(db, 'execInboxEmails')),
+        getDocs(collection(db, 'execInboxMeetings')),
+      ])
+      setStatus(statusSnap.exists() ? statusSnap.data() : null)
+      setEmails(emailSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setMeetings(
+        meetingSnap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => new Date(a.start) - new Date(b.start))
+      )
+    } catch (err) {
+      setError(err.message || 'Could not load executive inbox.')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
     if (allowed) load()
+    else setLoading(false)
   }, [allowed, load])
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('connected') === '1') {
+    const params = new URLSearchParams(window.location.search)
+    const oauthError = params.get('error')
+    if (oauthError) {
+      setError(OAUTH_ERROR_MESSAGES[oauthError] || `Google connection error: ${oauthError}`)
+      window.history.replaceState({}, '', window.location.pathname)
+      return
+    }
+    if (params.get('connected') === '1') {
       load()
+      window.history.replaceState({}, '', window.location.pathname)
     }
   }, [load])
 

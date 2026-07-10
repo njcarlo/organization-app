@@ -77,7 +77,7 @@ npm run import:real   # upsert production programs/projects/tasks/users
 
 ### Auto-deploy (GitHub Actions)
 
-Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting + Firestore rules.
+Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebase Hosting, Firestore rules, and Cloud Functions.
 
 1. Generate a CI token locally: `npx firebase login:ci`
 2. Add it as a repo secret named `FIREBASE_TOKEN`  
@@ -153,11 +153,25 @@ https://tracker-hae.web.app/auth/action?mode=%MODE%&oobCode=%OOB_CODE%&apiKey=%A
 
 4. Save, then send a fresh reset email (old links keep the broken hosted URL)
 
-**Immediate workaround for an already-open broken link:** in the address bar, put the web API key after `apiKey=` (from Project settings → Your apps), then reload. Example: `...&apiKey=AIzaSy…&lang=en`
+**Immediate workaround for an already-open broken link (after this handler is deployed):** in the address bar, change `/__/auth/action` → `/auth/action` (keep the same query string) and reload. The custom page ignores an empty `apiKey`. Alternately, paste the web API key after `apiKey=` (Project settings → Your apps).
 
 **Project-level fix (often restores default `/__/auth/action` links):** Authentication → Sign-in method → delete **Email/Password** → re-enable it (does not delete existing users).
 
-### Operating Tracker modules
+### Executive Inbox (PR #39)
+
+Allowlisted users: `rmarchadesch@harvardae.org`, `rryan@harvardae.org`.
+
+Before Connect / Sync work in production:
+
+1. Blaze plan + deploy functions (`npm run deploy` / CI now includes `functions`)
+2. Enable Gmail API + Google Calendar API on the GCP project
+3. Create an OAuth 2.0 Web client; authorized redirect URI must be exactly:
+   `https://us-east1-hae-operating-tracker.cloudfunctions.net/oauthCallback`
+4. Set secrets:
+   `firebase functions:secrets:set GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET ANTHROPIC_API_KEY`
+5. An allowlisted user opens Operations → Executive Inbox → **Connect Google Account**, then **Sync now**
+
+### Operations modules
 
 - **Dashboard** (`/`) — This Week’s Priorities, Upcoming, Waiting On, Attention Required, Wins
 - **Programs** (`/programs/:programId`) — projects + inline tasks

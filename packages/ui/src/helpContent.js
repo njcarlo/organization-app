@@ -93,6 +93,14 @@ export const HELP_SECTIONS = [
         ],
       },
       {
+        heading: 'Executive Inbox (allowlisted only)',
+        steps: [
+          'Visible only to the President / EA allowlist under Operations → Executive Inbox.',
+          'Connect Google Account once (Gmail + Calendar read-only), then Sync now or wait for the 15-minute schedule.',
+          'Needs Reply / Urgent / Action Items exclude newsletters; Meetings shows the next 7 days.',
+        ],
+      },
+      {
         heading: 'Programs → Projects → Tasks',
         steps: [
           'Open a program from the sidebar.',

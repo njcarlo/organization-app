@@ -48,7 +48,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route
               path="/auth/action"
-              element={<AuthActionPage appName="Operating Tracker" />}
+              element={<AuthActionPage appName="Operations" />}
             />
             <Route path="/setup" element={<Setup />} />
             {/* Public survey response — no login required */}

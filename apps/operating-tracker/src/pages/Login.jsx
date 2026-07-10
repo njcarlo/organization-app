@@ -23,7 +23,7 @@ export default function Login() {
       if (mode === 'reset') {
         await requestPasswordReset(email.trim())
         setMessage(
-          'If an account exists for that email, a reset link is on the way. Check your inbox (and spam).'
+          'If an account exists for that email, a reset link is on the way. Check your inbox (and spam). If the link says “page mode is invalid”, change /__/auth/action to /auth/action in the URL and reload.'
         )
       } else {
         await login(email.trim(), password)

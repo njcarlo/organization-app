@@ -181,12 +181,26 @@ async function syncCalendar(oauth2Client) {
 }
 
 export async function runSync({ clientId, clientSecret, anthropicApiKey }) {
-  const tokensSnap = await db.collection('execInboxTokens').limit(1).get();
-  if (tokensSnap.empty) {
-    throw new Error('No connected Google account.');
+  const statusSnap = await db.collection('execInboxStatus').doc('singleton').get();
+  const connectedBy = statusSnap.exists ? statusSnap.data()?.connectedBy : null;
+
+  let tokenRef;
+  let tokenDoc;
+  if (connectedBy) {
+    tokenRef = db.collection('execInboxTokens').doc(connectedBy);
+    const tokenSnap = await tokenRef.get();
+    if (!tokenSnap.exists) {
+      throw new Error('No connected Google account.');
+    }
+    tokenDoc = tokenSnap.data();
+  } else {
+    const tokensSnap = await db.collection('execInboxTokens').limit(1).get();
+    if (tokensSnap.empty) {
+      throw new Error('No connected Google account.');
+    }
+    tokenRef = tokensSnap.docs[0].ref;
+    tokenDoc = tokensSnap.docs[0].data();
   }
-  const tokenRef = tokensSnap.docs[0].ref;
-  const tokenDoc = tokensSnap.docs[0].data();
 
   const oauth2Client = await getAuthorizedClient(clientId, clientSecret, tokenDoc, tokenRef);
 
