@@ -3,11 +3,37 @@ import { useAuth } from './AuthContext.jsx'
 import { sectionsForRole } from './helpContent.js'
 
 /**
- * In-app documentation. Pass moduleId to highlight that app's section
- * (e.g. "lms", "tracker") when the page loads.
+ * In-app documentation.
+ *
+ * Apps that use @hae/ui AuthProvider can render <HelpGuide moduleId="lms" />.
+ * Operating Tracker uses its own AuthProvider — pass role + roleLabel props:
+ *   <HelpGuide moduleId="tracker" role={role} roleLabel={roleLabel} />
  */
-export default function HelpGuide({ moduleId = null }) {
+export default function HelpGuide({
+  moduleId = null,
+  role: roleProp,
+  roleLabel: roleLabelProp,
+}) {
+  if (roleProp != null) {
+    return (
+      <HelpGuideView
+        moduleId={moduleId}
+        role={roleProp}
+        roleLabel={roleLabelProp || ''}
+      />
+    )
+  }
+  return <HelpGuideFromAuth moduleId={moduleId} />
+}
+
+function HelpGuideFromAuth({ moduleId }) {
   const { role, roleLabel } = useAuth()
+  return (
+    <HelpGuideView moduleId={moduleId} role={role} roleLabel={roleLabel} />
+  )
+}
+
+function HelpGuideView({ moduleId, role, roleLabel }) {
   const sections = useMemo(() => sectionsForRole(role), [role])
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState(
