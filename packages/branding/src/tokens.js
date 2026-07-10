@@ -6,8 +6,8 @@ export const brand = {
   name: 'Harvard Alumni Entrepreneurs',
   shortName: 'HAE',
   fonts: {
-    display: '"Archivo Black", "Arial Black", Impact, sans-serif',
-    sans: '"Libre Franklin", "Helvetica Neue", Helvetica, Arial, sans-serif',
+    display: '"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif',
+    sans: '"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif',
   },
   colors: {
     crimson: '#b80028',
