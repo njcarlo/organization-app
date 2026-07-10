@@ -189,7 +189,7 @@ export const HELP_SECTIONS = [
         heading: 'Stripe payments',
         steps: [
           'Create a Payment Link per tier in the Stripe Dashboard (amount should match AMS Pricing).',
-          'Set success URL to https://ams-hae.web.app/payment/success and cancel to /payment/cancel.',
+          'Set success URL to https://hae-ams.web.app/payment/success and cancel to /payment/cancel.',
           'Paste each buy.stripe.com link under AMS → Pricing & Stripe, then Save.',
           'Members pay from My membership; staff can also open a Stripe link from the Memberships table.',
         ],

@@ -106,11 +106,11 @@ export default function Pricing() {
             <li>
               Under After payment, set success redirect to{' '}
               <code className="rounded bg-hae-mist px-1 text-xs">
-                https://ams-hae.web.app/payment/success
+                https://hae-ams.web.app/payment/success
               </code>{' '}
               and cancel to{' '}
               <code className="rounded bg-hae-mist px-1 text-xs">
-                https://ams-hae.web.app/payment/cancel
+                https://hae-ams.web.app/payment/cancel
               </code>
               .
             </li>
