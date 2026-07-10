@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
+import { Fragment, forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import {
   addDoc,
   collection,
@@ -29,6 +29,14 @@ function isComplete(task) {
   return String(task.status || '').toLowerCase() === 'complete'
 }
 
+const emptySubtask = { name: '', status: 'Not Started', dueDate: '' }
+
+function makeSubtaskId() {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `sub-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block ${className}`}>
@@ -50,6 +58,147 @@ function StatusPill({ status }) {
     >
       {s}
     </span>
+  )
+}
+
+function SubtaskForm({ draft, setDraft, onSave, onCancel, saving }) {
+  return (
+    <div
+      className="grid gap-2 rounded-md border border-hae-line/60 bg-hae-mist/40 p-2 sm:grid-cols-[1fr_auto_auto_auto]"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCancel()
+      }}
+    >
+      <select
+        className={fieldClass}
+        value={draft.status}
+        onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+      >
+        {TASK_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+      <input
+        autoFocus
+        className={fieldClass}
+        value={draft.name}
+        onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+        placeholder="Subtask name"
+      />
+      <input
+        type="date"
+        className={fieldClass}
+        value={draft.dueDate}
+        onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
+      />
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="hae-btn-secondary">
+          Cancel
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={onSave}
+          className="hae-btn disabled:opacity-60"
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SubtaskList({
+  task,
+  editingSubtaskId,
+  subtaskDraft,
+  setSubtaskDraft,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onDelete,
+  adding,
+  newSubtask,
+  setNewSubtask,
+  onStartAdd,
+  onSaveNew,
+  onCancelAdd,
+  saving,
+}) {
+  const subtasks = task.subtasks || []
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-semibold tracking-wide text-hae-slate/70 uppercase">
+          Subtasks
+        </div>
+        {!adding ? (
+          <button
+            type="button"
+            onClick={onStartAdd}
+            className="text-xs font-medium text-hae-slate hover:text-hae-crimson"
+          >
+            + Add subtask
+          </button>
+        ) : null}
+      </div>
+      {subtasks.length === 0 && !adding ? (
+        <p className="text-xs text-hae-slate/70">No subtasks yet</p>
+      ) : null}
+      <ul className="space-y-1.5">
+        {subtasks.map((sub) =>
+          editingSubtaskId === sub.id && subtaskDraft ? (
+            <li key={sub.id}>
+              <SubtaskForm
+                draft={subtaskDraft}
+                setDraft={setSubtaskDraft}
+                onSave={onSaveEdit}
+                onCancel={onCancelEdit}
+                saving={saving}
+              />
+            </li>
+          ) : (
+            <li
+              key={sub.id}
+              className="flex flex-wrap items-center gap-2 rounded-md border border-hae-line/50 bg-white px-2 py-1.5"
+            >
+              <StatusPill status={sub.status} />
+              <span className="min-w-0 flex-1 text-sm text-hae-ink">{sub.name}</span>
+              <span className="text-xs whitespace-nowrap text-hae-slate">
+                Due {formatDate(sub.dueDate)}
+              </span>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => onStartEdit(sub)}
+                  className="text-xs text-hae-slate hover:text-hae-crimson"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(sub.id)}
+                  className="text-xs text-hae-slate hover:text-hae-red"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          )
+        )}
+      </ul>
+      {adding ? (
+        <SubtaskForm
+          draft={newSubtask}
+          setDraft={setNewSubtask}
+          onSave={onSaveNew}
+          onCancel={onCancelAdd}
+          saving={saving}
+        />
+      ) : null}
+    </div>
   )
 }
 
@@ -189,6 +338,11 @@ const TaskTable = forwardRef(function TaskTable(
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [addingSubtaskFor, setAddingSubtaskFor] = useState(null)
+  const [newSubtask, setNewSubtask] = useState(emptySubtask)
+  const [editingSubtask, setEditingSubtask] = useState(null)
+  const [subtaskDraft, setSubtaskDraft] = useState(null)
+  const [subtaskSaving, setSubtaskSaving] = useState(false)
 
   const { active, completed } = useMemo(() => {
     const a = []
@@ -302,6 +456,84 @@ const TaskTable = forwardRef(function TaskTable(
     setExpandedId((cur) => (cur === id ? null : id))
   }
 
+  const startAddSubtask = (taskId) => {
+    setEditingSubtask(null)
+    setSubtaskDraft(null)
+    setAddingSubtaskFor(taskId)
+    setNewSubtask(emptySubtask)
+  }
+
+  const cancelAddSubtask = () => {
+    setAddingSubtaskFor(null)
+    setNewSubtask(emptySubtask)
+  }
+
+  const saveNewSubtask = async (task) => {
+    if (!newSubtask.name.trim() || subtaskSaving) return
+    setSubtaskSaving(true)
+    try {
+      const subtask = {
+        id: makeSubtaskId(),
+        name: newSubtask.name.trim(),
+        status: newSubtask.status,
+        dueDate: newSubtask.dueDate || '',
+      }
+      await updateDoc(doc(db, 'tasks', task.id), {
+        subtasks: [...(task.subtasks || []), subtask],
+      })
+      setAddingSubtaskFor(null)
+      setNewSubtask(emptySubtask)
+      onChanged?.()
+    } finally {
+      setSubtaskSaving(false)
+    }
+  }
+
+  const startEditSubtask = (sub) => {
+    setAddingSubtaskFor(null)
+    setEditingSubtask(sub.id)
+    setSubtaskDraft({
+      name: sub.name || '',
+      status: sub.status || 'Not Started',
+      dueDate: sub.dueDate || '',
+    })
+  }
+
+  const cancelEditSubtask = () => {
+    setEditingSubtask(null)
+    setSubtaskDraft(null)
+  }
+
+  const saveEditSubtask = async (task) => {
+    if (!subtaskDraft?.name.trim() || subtaskSaving) return
+    setSubtaskSaving(true)
+    try {
+      const updated = (task.subtasks || []).map((s) =>
+        s.id === editingSubtask
+          ? {
+              ...s,
+              name: subtaskDraft.name.trim(),
+              status: subtaskDraft.status,
+              dueDate: subtaskDraft.dueDate || '',
+            }
+          : s
+      )
+      await updateDoc(doc(db, 'tasks', task.id), { subtasks: updated })
+      setEditingSubtask(null)
+      setSubtaskDraft(null)
+      onChanged?.()
+    } finally {
+      setSubtaskSaving(false)
+    }
+  }
+
+  const removeSubtask = async (task, subtaskId) => {
+    if (!confirm('Delete this subtask?')) return
+    const updated = (task.subtasks || []).filter((s) => s.id !== subtaskId)
+    await updateDoc(doc(db, 'tasks', task.id), { subtasks: updated })
+    onChanged?.()
+  }
+
   return (
     <div className="space-y-3">
       {adding ? (
@@ -354,14 +586,27 @@ const TaskTable = forwardRef(function TaskTable(
                     </td>
                   </tr>
                 ) : (
+                  <Fragment key={task.id}>
                   <tr
-                    key={task.id}
                     className={`group border-b border-hae-line/50 ${
                       isComplete(task) ? 'opacity-60' : ''
                     }`}
                   >
                     <td className="px-3 py-2.5 text-sm font-medium text-hae-ink">
-                      <span className="line-clamp-2">{task.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(task.id)}
+                        className="flex items-center gap-1.5 text-left"
+                        aria-expanded={expandedId === task.id}
+                        aria-label={
+                          expandedId === task.id ? 'Collapse subtasks' : 'Expand subtasks'
+                        }
+                      >
+                        <span className="shrink-0 text-hae-slate">
+                          {expandedId === task.id ? '▾' : '▸'}
+                        </span>
+                        <span className="line-clamp-2">{task.name}</span>
+                      </button>
                     </td>
                     {showOwner ? (
                       <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
@@ -413,6 +658,30 @@ const TaskTable = forwardRef(function TaskTable(
                       </div>
                     </td>
                   </tr>
+                  {expandedId === task.id ? (
+                    <tr className="border-b border-hae-line/50 bg-hae-mist/30">
+                      <td colSpan={colCount} className="px-3 py-3">
+                        <SubtaskList
+                          task={task}
+                          editingSubtaskId={editingSubtask}
+                          subtaskDraft={subtaskDraft}
+                          setSubtaskDraft={setSubtaskDraft}
+                          onStartEdit={startEditSubtask}
+                          onSaveEdit={() => saveEditSubtask(task)}
+                          onCancelEdit={cancelEditSubtask}
+                          onDelete={(subId) => removeSubtask(task, subId)}
+                          adding={addingSubtaskFor === task.id}
+                          newSubtask={newSubtask}
+                          setNewSubtask={setNewSubtask}
+                          onStartAdd={() => startAddSubtask(task.id)}
+                          onSaveNew={() => saveNewSubtask(task)}
+                          onCancelAdd={cancelAddSubtask}
+                          saving={subtaskSaving}
+                        />
+                      </td>
+                    </tr>
+                  ) : null}
+                  </Fragment>
                 )
               )}
             </tbody>
@@ -491,36 +760,57 @@ const TaskTable = forwardRef(function TaskTable(
                       </div>
                     </div>
                     {open ? (
-                      <div className="grid gap-2 border-t border-hae-line/60 bg-hae-mist/40 px-3 py-3 text-xs text-hae-slate sm:grid-cols-3">
-                        <div>
-                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
-                            Priority
+                      <div className="border-t border-hae-line/60 bg-hae-mist/40 px-3 py-3">
+                        <div className="grid gap-2 text-xs text-hae-slate sm:grid-cols-3">
+                          <div>
+                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                              Priority
+                            </div>
+                            <div className="mt-0.5">
+                              <span
+                                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
+                                  effectivePriority(task)
+                                )}`}
+                              >
+                                {effectivePriority(task)}
+                              </span>
+                            </div>
                           </div>
-                          <div className="mt-0.5">
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
-                                effectivePriority(task)
-                              )}`}
-                            >
-                              {effectivePriority(task)}
-                            </span>
+                          <div>
+                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                              Waiting on
+                            </div>
+                            <div className="mt-0.5 text-hae-ink/80">
+                              {task.waitingOn || '—'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                              Leadership
+                            </div>
+                            <div className="mt-0.5 text-hae-ink/80">
+                              {task.leadershipAttention || 'None'}
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
-                            Waiting on
-                          </div>
-                          <div className="mt-0.5 text-hae-ink/80">
-                            {task.waitingOn || '—'}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
-                            Leadership
-                          </div>
-                          <div className="mt-0.5 text-hae-ink/80">
-                            {task.leadershipAttention || 'None'}
-                          </div>
+                        <div className="mt-3 border-t border-hae-line/50 pt-3">
+                          <SubtaskList
+                            task={task}
+                            editingSubtaskId={editingSubtask}
+                            subtaskDraft={subtaskDraft}
+                            setSubtaskDraft={setSubtaskDraft}
+                            onStartEdit={startEditSubtask}
+                            onSaveEdit={() => saveEditSubtask(task)}
+                            onCancelEdit={cancelEditSubtask}
+                            onDelete={(subId) => removeSubtask(task, subId)}
+                            adding={addingSubtaskFor === task.id}
+                            newSubtask={newSubtask}
+                            setNewSubtask={setNewSubtask}
+                            onStartAdd={() => startAddSubtask(task.id)}
+                            onSaveNew={() => saveNewSubtask(task)}
+                            onCancelAdd={cancelAddSubtask}
+                            saving={subtaskSaving}
+                          />
                         </div>
                       </div>
                     ) : null}
