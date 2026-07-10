@@ -8,6 +8,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COURSE_STATUSES, LEARNING_PATHS } from '../constants'
 
@@ -15,6 +16,8 @@ export default function Courses() {
   const [courses, setCourses] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: '',
     path: 'academy',
@@ -56,6 +59,7 @@ export default function Courses() {
       durationWeeks: '',
       status: 'Draft',
     })
+    setOpen(false)
     load()
   }
 
@@ -72,11 +76,19 @@ export default function Courses() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage courses</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Staff catalog — create and manage Academy / Flagship courses. Students browse the Catalog.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Manage courses</h1>
+          <p className="mt-1 text-sm text-hae-slate">
+            Staff catalog — create and manage Academy / Flagship courses. Students browse the Catalog.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            Add course
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-2">
@@ -100,11 +112,26 @@ export default function Courses() {
         ))}
       </div>
 
-      <form
-        onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add course"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-course-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add course'}
+            </button>
+          </>
+        }
       >
-        <input
+        <form id="add-course-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
+<input
           required
           placeholder="Course name"
           value={form.name}
@@ -151,16 +178,12 @@ export default function Courses() {
             <option key={s}>{s}</option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase lg:col-span-2"
-        >
-          Add course
-        </button>
-      </form>
+        </form>
+      </Modal>
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Course</th>

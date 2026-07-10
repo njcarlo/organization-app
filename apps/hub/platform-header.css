@@ -1,0 +1,225 @@
+/**
+ * Shared platform header — used by React apps (PlatformHeader) and the static hub.
+ * Keep markup in sync with packages/ui/src/PlatformHeader.jsx and apps/hub/index.html.
+ *
+ * Single row: brand + “Now in” on the left, app chips on the right.
+ */
+.hae-platform-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--hae-line, #e7e7e7);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.hae-platform-header__row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+}
+
+.hae-platform-header__menu {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hae-line, #e7e7e7);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--hae-ink, #1a1a1a);
+  cursor: pointer;
+}
+
+.hae-platform-header__menu:hover {
+  background: var(--hae-mist, #f6f6f6);
+}
+
+.hae-platform-header__brand {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  text-decoration: none;
+}
+
+.hae-platform-header__brand img {
+  height: 2.25rem;
+  width: auto;
+  max-width: 170px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.hae-platform-header__divider {
+  display: none;
+  height: 1.75rem;
+  width: 1px;
+  flex-shrink: 0;
+  background: var(--hae-line, #e7e7e7);
+}
+
+.hae-platform-header__title-block {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.hae-platform-header__kicker {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hae-slate, #3e3e3e);
+  line-height: 1.2;
+}
+
+.hae-platform-header__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hae-ink, #1a1a1a);
+  line-height: 1.25;
+}
+
+.hae-platform-header__spacer {
+  flex: 1 1 auto;
+  min-width: 0.5rem;
+}
+
+.hae-platform-header__nav {
+  display: flex;
+  flex-shrink: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.15rem;
+  max-width: min(100%, 28rem);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  margin-left: auto;
+  padding: 0.15rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hae-platform-header__chip {
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: rgba(26, 26, 26, 0.8);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.hae-platform-header__chip:hover {
+  background: var(--hae-mist, #f6f6f6);
+  color: var(--hae-crimson, #b80028);
+}
+
+.hae-platform-header__chip.is-current,
+.hae-platform-header__chip[aria-current='page'] {
+  background: var(--hae-crimson, #b80028);
+  color: #fff;
+}
+
+.hae-platform-header__chip.is-current:hover,
+.hae-platform-header__chip[aria-current='page']:hover {
+  background: var(--hae-crimson, #b80028);
+  color: #fff;
+}
+
+.hae-platform-header__user {
+  display: none;
+  min-width: 0;
+  flex-shrink: 0;
+  text-align: right;
+  margin-left: 0.25rem;
+}
+
+.hae-platform-header__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--hae-ink, #1a1a1a);
+  max-width: 9rem;
+}
+
+.hae-platform-header__user-role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  color: var(--hae-slate, #3e3e3e);
+  max-width: 9rem;
+}
+
+@media (min-width: 640px) {
+  .hae-platform-header__row {
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .hae-platform-header__brand img {
+    height: 2.5rem;
+    max-width: 200px;
+  }
+
+  .hae-platform-header__divider {
+    display: block;
+  }
+
+  .hae-platform-header__kicker {
+    font-size: 0.6875rem;
+  }
+
+  .hae-platform-header__title {
+    font-size: 1rem;
+  }
+
+  .hae-platform-header__nav {
+    max-width: none;
+    gap: 0.25rem;
+  }
+
+  .hae-platform-header__chip {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .hae-platform-header__user {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hae-platform-header__row {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .hae-platform-header__menu {
+    display: none;
+  }
+
+  .hae-platform-header__brand img {
+    height: 2.75rem;
+    max-width: 220px;
+  }
+
+  .hae-platform-header__title {
+    font-size: 1.0625rem;
+  }
+}

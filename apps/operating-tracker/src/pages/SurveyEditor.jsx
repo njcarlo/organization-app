@@ -485,7 +485,7 @@ export default function SurveyEditor() {
                 type="button"
                 onClick={exportCsv}
                 disabled={!responses.length}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+                className="hae-btn-secondary disabled:opacity-50"
               >
                 Export CSV
               </button>

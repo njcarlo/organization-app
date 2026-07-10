@@ -7,19 +7,28 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
+import {
+  AttachmentField,
+  AttachmentList,
+  formLinesToAttachments,
+} from '../components/Attachments'
 
 export default function Interactions() {
   const [interactions, setInteractions] = useState([])
   const [contacts, setContacts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     contactId: '',
     type: 'Email',
     date: '',
     subject: '',
     notes: '',
+    attachmentLines: '',
   })
 
   const load = useCallback(async () => {
@@ -51,6 +60,7 @@ export default function Interactions() {
       date: form.date || new Date().toISOString().slice(0, 10),
       subject: form.subject.trim(),
       notes: form.notes.trim(),
+      attachments: formLinesToAttachments(form.attachmentLines),
       createdAt: serverTimestamp(),
     })
     setForm({
@@ -59,7 +69,9 @@ export default function Interactions() {
       date: '',
       subject: '',
       notes: '',
+      attachmentLines: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -80,11 +92,32 @@ export default function Interactions() {
         </p>
       </header>
 
-      <form
-        onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+      
+      
+      <div className="hae-form-actions">
+        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+          Log interaction
+        </button>
+      </div>
+<Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Log interaction"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="interaction-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Log interaction'}
+            </button>
+          </>
+        }
       >
-        <select
+        <form id="interaction-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
+<select
           required
           value={form.contactId}
           onChange={(e) => setForm({ ...form, contactId: e.target.value })}
@@ -124,16 +157,17 @@ export default function Interactions() {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
-        >
-          Log interaction
-        </button>
-      </form>
+        <AttachmentField
+          className="sm:col-span-2 lg:col-span-3"
+          value={form.attachmentLines}
+          onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
+        />
+        </form>
+      </Modal>
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Date</th>
@@ -161,6 +195,7 @@ export default function Interactions() {
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {row.subject || '—'}
+                    <AttachmentList attachments={row.attachments} />
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
                   <td className="px-3 py-2 text-right">

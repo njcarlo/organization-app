@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
 } from 'firebase/auth'
 import {
@@ -23,6 +24,9 @@ import {
 } from '../utils/dataTransfer'
 import AdminAddItems from '../components/AdminAddItems'
 import ModuleImportPanel from '../components/ModuleImportPanel'
+import AdminFeatureToggles from '../components/AdminFeatureToggles'
+import { useAuth } from '../context/AuthContext'
+import { FEATURES, useFeatures } from '@hae/ui'
 
 const CREATE_GUIDE = [
   {
@@ -73,19 +77,60 @@ const CREATE_GUIDE = [
 
 const TABS = [
   { id: 'add', label: 'Add items' },
-  { id: 'bulk', label: 'Bulk import' },
+  { id: 'bulk', label: 'Bulk import', feature: 'bulk_import' },
   { id: 'users', label: 'Users' },
   { id: 'programs', label: 'Programs' },
+  { id: 'features', label: 'Features', superadminOnly: true },
   { id: 'data', label: 'Import / Export' },
   { id: 'guide', label: 'Where to create' },
 ]
 
+function BulkImportGate() {
+  const { isEnabled } = useFeatures()
+  if (!isEnabled(FEATURES.BULK_IMPORT)) {
+    return (
+      <p className="text-sm text-hae-slate">
+        Bulk import is turned off in Feature toggles.
+      </p>
+    )
+  }
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-hae-slate">
+        Import CSV or JSON lists into Surveys, LMS, EiR, CRM, AMS, or Tracker
+        tasks. Expand <strong>How to format your list</strong> for column
+        names, examples, and how to paste data for Cursor / AI.
+      </p>
+      <ModuleImportPanel
+        moduleIds={[
+          'surveys',
+          'contacts',
+          'members',
+          'experts',
+          'courses',
+          'enrollments',
+          'tasks',
+        ]}
+        defaultModuleId="contacts"
+      />
+    </div>
+  )
+}
+
 export default function Admin() {
+  const { isSuperAdmin } = useAuth()
+  const { isEnabled } = useFeatures()
   const [tab, setTab] = useState('add')
+  const visibleTabs = TABS.filter((t) => {
+    if (t.superadminOnly && !isSuperAdmin) return false
+    if (t.feature && !isEnabled(t.feature)) return false
+    return true
+  })
   const [users, setUsers] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   const [newUser, setNewUser] = useState({
     name: '',
@@ -243,6 +288,21 @@ export default function Admin() {
     await load()
   }
 
+  const sendReset = async (email) => {
+    if (!email) {
+      setError('User has no email')
+      return
+    }
+    setError('')
+    setNotice('')
+    try {
+      await sendPasswordResetEmail(secondaryAuth, String(email).trim())
+      setNotice(`Password reset email sent to ${email}`)
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email')
+    }
+  }
+
   const addProgram = async (e) => {
     e.preventDefault()
     if (!newProgram.name.trim()) return
@@ -294,7 +354,7 @@ export default function Admin() {
       </header>
 
       <div className="flex flex-wrap gap-2 border-b border-hae-line">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -311,30 +371,11 @@ export default function Admin() {
       </div>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
+      {notice && <p className="text-sm text-hae-green">{notice}</p>}
 
       {tab === 'add' && <AdminAddItems />}
 
-      {tab === 'bulk' && (
-        <div className="space-y-4">
-          <p className="text-sm text-hae-slate">
-            Import CSV or JSON lists into Surveys, LMS, EiR, CRM, AMS, or Tracker
-            tasks. Expand <strong>How to format your list</strong> for column
-            names, examples, and how to paste data for Cursor / AI.
-          </p>
-          <ModuleImportPanel
-            moduleIds={[
-              'surveys',
-              'contacts',
-              'members',
-              'experts',
-              'courses',
-              'enrollments',
-              'tasks',
-            ]}
-            defaultModuleId="contacts"
-          />
-        </div>
-      )}
+      {tab === 'bulk' && <BulkImportGate />}
 
       {tab === 'users' && (
         <div className="space-y-4">
@@ -387,7 +428,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
+          <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
@@ -469,6 +510,13 @@ export default function Admin() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => sendReset(u.email)}
+                            className="text-xs text-hae-slate hover:text-hae-crimson"
+                          >
+                            Reset pw
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => removeUser(u.id)}
                             className="text-xs text-hae-slate hover:text-hae-red"
                           >
@@ -484,6 +532,8 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {tab === 'features' && isSuperAdmin && <AdminFeatureToggles />}
 
       {tab === 'programs' && (
         <div className="space-y-4">
@@ -516,7 +566,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
+          <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>

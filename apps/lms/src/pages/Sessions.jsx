@@ -7,13 +7,18 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { downloadIcs } from '@hae/ui'
+import { Modal } from '@hae/ui'
+import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Sessions() {
+  const { isEnabled } = useFeatures()
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [sessions, setSessions] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     title: 'Office Hours',
     courseId: '',
@@ -60,6 +65,7 @@ export default function Sessions() {
       location: '',
       zoomLink: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -96,28 +102,50 @@ export default function Sessions() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Office Hours</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Live working sessions — schedule, location, and Zoom links
           </p>
         </div>
-        <button
-          type="button"
-          onClick={exportIcs}
-          disabled={!sessions.some((s) => s.date)}
-          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
-        >
-          Export calendar (.ics)
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {canExportCalendar ? (
+          <button
+            type="button"
+            onClick={exportIcs}
+            disabled={!sessions.some((s) => s.date)}
+            className="hae-btn-secondary disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+        ) : null}
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            Add session
+          </button>
+        </div>
       </header>
 
-      <form
-        onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add session"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-session-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add session'}
+            </button>
+          </>
+        }
       >
-        <input
+        <form id="add-session-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+
+<input
           placeholder="Title"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -159,16 +187,12 @@ export default function Sessions() {
           onChange={(e) => setForm({ ...form, zoomLink: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
-        >
-          Add session
-        </button>
-      </form>
+        </form>
+      </Modal>
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Date</th>

@@ -5,6 +5,9 @@
   "type": "module",
   "exports": {
     "./theme.css": "./src/theme.css",
+    "./base.css": "./src/base.css",
+    "./platform-header.css": "./src/platform-header.css",
+    "./hub.css": "./src/hub.css",
     "./tokens": "./src/tokens.js"
   }
 }

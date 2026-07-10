@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@hae/firebase'
 import {
@@ -12,6 +17,8 @@ import {
   permissionsForRole,
   roleLabel,
 } from './rbac.js'
+import { isSuperAdminEmail } from './superadmin.js'
+import { ensureSuperAdminProfile } from './ensureSuperAdmin.js'
 import { consumeSsoTokenIfPresent } from './sso.js'
 
 const AuthContext = createContext(null)
@@ -41,8 +48,15 @@ export function AuthProvider({ children }) {
           return
         }
         try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-          setUserProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+          let profile = null
+          if (isSuperAdminEmail(firebaseUser.email)) {
+            profile = await ensureSuperAdminProfile(db, firebaseUser)
+          }
+          if (!profile) {
+            const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+            profile = snap.exists() ? { id: snap.id, ...snap.data() } : null
+          }
+          setUserProfile(profile)
         } catch {
           setUserProfile(null)
         } finally {
@@ -59,8 +73,9 @@ export function AuthProvider({ children }) {
 
   const role = normalizeRole(userProfile?.role)
   const permissions = useMemo(() => permissionsForRole(role), [role])
-  const isAdmin = isAdminRole(role)
-  const isStaff = isStaffRole(role)
+  const isSuperAdmin = isSuperAdminEmail(user?.email || userProfile?.email)
+  const isAdmin = isAdminRole(role) || isSuperAdmin
+  const isStaff = isStaffRole(role) || isSuperAdmin
 
   const value = useMemo(
     () => ({
@@ -68,17 +83,22 @@ export function AuthProvider({ children }) {
       userProfile,
       loading,
       role,
-      roleLabel: roleLabel(role),
+      roleLabel: isSuperAdmin ? 'Superadmin' : roleLabel(role),
       permissions,
       isAdmin,
       isStaff,
-      hasPermission: (perm) => hasPermission(permissions, perm),
-      hasAnyPermission: (perms) => hasAnyPermission(permissions, perms),
-      canAccessModule: (moduleId) => canAccessModule(permissions, moduleId),
+      isSuperAdmin,
+      hasPermission: (perm) => isSuperAdmin || hasPermission(permissions, perm),
+      hasAnyPermission: (perms) =>
+        isSuperAdmin || hasAnyPermission(permissions, perms),
+      canAccessModule: (moduleId) =>
+        isSuperAdmin || canAccessModule(permissions, moduleId),
       login: (email, password) => signInWithEmailAndPassword(auth, email, password),
+      requestPasswordReset: (email) =>
+        sendPasswordResetEmail(auth, String(email || '').trim()),
       logout: () => signOut(auth),
     }),
-    [user, userProfile, loading, role, permissions, isAdmin, isStaff]
+    [user, userProfile, loading, role, permissions, isAdmin, isStaff, isSuperAdmin]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -88,4 +108,9 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
+}
+
+/** Returns null when rendered outside @hae/ui AuthProvider (e.g. Tracker). */
+export function useAuthOptional() {
+  return useContext(AuthContext)
 }

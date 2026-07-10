@@ -7,14 +7,18 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS, downloadIcs } from '@hae/ui'
+import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
   const { hasPermission } = useAuth()
+  const { isEnabled } = useFeatures()
   const canManage = hasPermission(PERMISSIONS.AMS_MANAGE)
+  const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: '',
     date: '',
@@ -53,6 +57,7 @@ export default function Events() {
       capacity: '',
       description: '',
     })
+    setOpen(false)
     load()
   }
 
@@ -87,71 +92,90 @@ export default function Events() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Events</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Event listings linked to membership engagement
           </p>
         </div>
-        <button
-          type="button"
-          onClick={exportIcs}
-          disabled={!events.some((e) => e.date)}
-          className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
-        >
-          Export calendar (.ics)
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {canExportCalendar ? (
+          <button
+            type="button"
+            onClick={exportIcs}
+            disabled={!events.some((e) => e.date)}
+            className="hae-btn-secondary disabled:opacity-50"
+          >
+            Export calendar (.ics)
+          </button>
+        ) : null}
+          
+        {canManage ? (
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            Add event
+          </button>
+        ) : null}
+        </div>
       </header>
 
-      {canManage ? (
-      <form
-        onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2"
+      
+      <Modal
+        open={open}
+        onClose={() => !saving && setOpen(false)}
+        title="Add event"
+        busy={saving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" form="add-event-form" className="hae-btn" disabled={saving}>
+              {saving ? 'Saving…' : 'Add event'}
+            </button>
+          </>
+        }
       >
-        <input
-          required
-          placeholder="Event name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Location / Zoom"
-          value={form.location}
-          onChange={(e) => setForm({ ...form, location: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          placeholder="Capacity"
-          value={form.capacity}
-          onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
-        />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2"
-        >
-          Add event
-        </button>
-      </form>
-      ) : null}
+        <form id="add-event-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+          <input
+            required
+            placeholder="Event name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Location / Zoom"
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            placeholder="Capacity"
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
+          />
+        </form>
+      </Modal>
+
+
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Date</th>
