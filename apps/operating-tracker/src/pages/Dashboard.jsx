@@ -6,24 +6,35 @@ import WaitingOnSection from '../components/WaitingOnSection'
 import AttentionSection from '../components/AttentionSection'
 import WinsSection from '../components/WinsSection'
 
+const CATEGORIES = [
+  { id: 'programs', label: 'Programs', collectionName: 'programs' },
+  { id: 'academy', label: 'Academy', collectionName: 'academyPrograms' },
+  { id: 'custom-programs', label: 'Custom Programs', collectionName: 'customPrograms' },
+]
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState(CATEGORIES[0].id)
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const [taskSnap, projectSnap, programSnap] = await Promise.all([
+      const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
         getDocs(collection(db, 'tasks')),
         getDocs(collection(db, 'projects')),
-        getDocs(collection(db, 'programs')),
+        ...CATEGORIES.map((c) => getDocs(collection(db, c.collectionName))),
       ])
       if (cancelled) return
       setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-      setPrograms(programSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setPrograms(
+        categorySnaps.flatMap((snap, i) =>
+          snap.docs.map((d) => ({ id: d.id, ...d.data(), category: CATEGORIES[i].id }))
+        )
+      )
       setLoading(false)
     })()
     return () => {
@@ -37,11 +48,26 @@ export default function Dashboard() {
     return map
   }, [programs])
 
+  const categoryProgramIds = useMemo(
+    () => new Set(programs.filter((p) => p.category === category).map((p) => p.id)),
+    [programs, category]
+  )
+
+  const categoryTasks = useMemo(
+    () => tasks.filter((t) => categoryProgramIds.has(t.programId)),
+    [tasks, categoryProgramIds]
+  )
+
+  const categoryProjects = useMemo(
+    () => projects.filter((p) => categoryProgramIds.has(p.programId)),
+    [projects, categoryProgramIds]
+  )
+
   const projectsById = useMemo(() => {
     const map = {}
-    for (const p of projects) map[p.id] = p
+    for (const p of categoryProjects) map[p.id] = p
     return map
-  }, [projects])
+  }, [categoryProjects])
 
   if (loading) {
     return <p className="text-sm text-hae-slate">Loading dashboard…</p>
@@ -61,23 +87,40 @@ export default function Dashboard() {
         </p>
       </header>
 
+      <div className="flex flex-wrap gap-2">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setCategory(c.id)}
+            className={
+              category === c.id
+                ? 'rounded-full bg-hae-crimson px-4 py-1.5 text-xs font-semibold text-white'
+                : 'rounded-full border border-hae-line px-4 py-1.5 text-xs font-semibold text-hae-slate hover:bg-hae-mist'
+            }
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
       <PrioritiesSection
-        tasks={tasks}
+        tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
       />
       <WaitingOnSection
-        tasks={tasks}
+        tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
       />
       <AttentionSection
-        tasks={tasks}
-        projects={projects}
+        tasks={categoryTasks}
+        projects={categoryProjects}
         programsById={programsById}
         projectsById={projectsById}
       />
-      <WinsSection tasks={tasks} projectsById={projectsById} />
+      <WinsSection tasks={categoryTasks} projectsById={projectsById} />
     </div>
   )
 }
