@@ -161,6 +161,43 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               ? ` · ${formatMoney(metricsRollup.raisedCents)} / ${formatMoney(metricsRollup.goalCents)} across ${metricsRollup.count} metric project${metricsRollup.count === 1 ? '' : 's'}`
               : ''}
           </p>
+
+          {collectionName === 'academyPrograms' ? (
+            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  HAE Lead
+                </dt>
+                <dd className="text-hae-ink">{program.haeLead || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Start date
+                </dt>
+                <dd className="text-hae-ink">{program.startDate || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Duration
+                </dt>
+                <dd className="text-hae-ink">
+                  {program.durationWeeks ? `${program.durationWeeks} weeks` : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Instructor
+                </dt>
+                <dd className="text-hae-ink">{program.instructor || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Guest speaker
+                </dt>
+                <dd className="text-hae-ink">{program.guestSpeaker || '—'}</dd>
+              </div>
+            </dl>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button

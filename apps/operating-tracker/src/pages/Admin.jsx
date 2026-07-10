@@ -659,7 +659,7 @@ export default function Admin() {
       )}
 
       {tab === 'academy' && (
-        <CategoryItemsAdmin collectionName="academyPrograms" itemLabel="Academy item" />
+        <CategoryItemsAdmin collectionName="academyPrograms" itemLabel="Academy item" showCourseFields />
       )}
 
       {tab === 'customPrograms' && (
