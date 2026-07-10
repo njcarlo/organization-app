@@ -58,6 +58,7 @@ export function healthBadgeClass(health) {
   if (health === 'on-track') return 'bg-emerald-100 text-hae-green'
   if (health === 'needs-attention') return 'bg-amber-100 text-hae-yellow'
   if (health === 'at-risk') return 'bg-red-100 text-hae-red'
+  if (health === 'completed') return 'bg-blue-100 text-blue-700'
   return 'bg-slate-100 text-hae-slate'
 }
 
@@ -65,5 +66,6 @@ export function healthLabel(health) {
   if (health === 'on-track') return 'On Track'
   if (health === 'needs-attention') return 'Needs Attention'
   if (health === 'at-risk') return 'At Risk'
+  if (health === 'completed') return 'Completed'
   return health || '—'
 }
