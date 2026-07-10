@@ -6,7 +6,7 @@ export const HUB_LOCAL_PORT = 5180
 export const MODULES = [
   {
     id: 'tracker',
-    name: 'Operating Tracker',
+    name: 'Operations',
     short: 'Tracker',
     milestone: 1,
     path: 'https://tracker-hae.web.app',

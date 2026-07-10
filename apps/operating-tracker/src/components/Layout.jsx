@@ -26,7 +26,7 @@ export default function Layout() {
       <div className="shrink-0">
         <PlatformHeader
           moduleId="tracker"
-          title="Operating Tracker"
+          title="Operations"
           userName={userProfile?.name}
           roleLabel={roleLabel}
           canAccessModule={canAccessModule}

@@ -58,7 +58,7 @@ export default function Login() {
             alt="Harvard Alumni Entrepreneurs"
             className="mx-auto h-14 w-auto object-contain"
           />
-          <h1 className="mt-5 font-display text-2xl text-hae-ink sm:text-3xl">Operating Tracker</h1>
+          <h1 className="mt-5 font-display text-2xl text-hae-ink sm:text-3xl">Operations</h1>
           <p className="mt-2 text-sm text-hae-slate">
             {mode === 'reset'
               ? 'We will email you a password reset link'

@@ -29,7 +29,7 @@ export const FEATURE_CATALOG = [
     items: [
       {
         id: FEATURES.MODULE_TRACKER,
-        label: 'Operating Tracker',
+        label: 'Operations',
         description: 'Programs, projects, tasks, dashboard',
       },
       {
