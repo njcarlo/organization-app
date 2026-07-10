@@ -135,11 +135,22 @@ export default function ManageExperts() {
 
       <form
         onSubmit={save}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2"
+        className="border border-hae-line bg-white p-4"
       >
-        <div className="sm:col-span-2 text-xs font-semibold tracking-wider text-hae-slate uppercase">
+        <div className="hae-form-actions">
+          <button type="submit" disabled={saving} className="hae-btn">
+            {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add expert'}
+          </button>
+          {editingId ? (
+            <button type="button" onClick={cancelEdit} className="hae-btn-secondary">
+              Cancel
+            </button>
+          ) : null}
+        </div>
+        <div className="mb-3 text-xs font-semibold tracking-wider text-hae-slate uppercase">
           {editingId ? 'Edit expert' : 'Add expert'}
         </div>
+        <div className="grid gap-3 sm:grid-cols-2">
         <input
           required
           placeholder="Full name"
@@ -220,23 +231,6 @@ export default function ManageExperts() {
             <option key={s}>{s}</option>
           ))}
         </select>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add expert'}
-          </button>
-          {editingId ? (
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="border border-hae-line px-3 py-2 text-sm text-hae-slate"
-            >
-              Cancel
-            </button>
-          ) : null}
         </div>
       </form>
 

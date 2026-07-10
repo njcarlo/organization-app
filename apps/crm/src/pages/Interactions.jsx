@@ -90,9 +90,16 @@ export default function Interactions() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <select
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Log interaction
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<select
           required
           value={form.contactId}
           onChange={(e) => setForm({ ...form, contactId: e.target.value })}
@@ -137,12 +144,7 @@ export default function Interactions() {
           value={form.attachmentLines}
           onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
         />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
-        >
-          Log interaction
-        </button>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

@@ -84,53 +84,54 @@ export default function Memberships() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="border border-hae-line bg-white p-4"
       >
-        <select
-          required
-          value={form.memberId}
-          onChange={(e) => setForm({ ...form, memberId: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          <option value="">Select member</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={form.tier}
-          onChange={(e) => setForm({ ...form, tier: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          {MEMBERSHIP_TIERS.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={form.renewalDate}
-          onChange={(e) => setForm({ ...form, renewalDate: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <select
-          value={form.paymentStatus}
-          onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          {PAYMENT_STATUSES.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
-        >
-          Add membership
-        </button>
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add membership
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <select
+            required
+            value={form.memberId}
+            onChange={(e) => setForm({ ...form, memberId: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            <option value="">Select member</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.tier}
+            onChange={(e) => setForm({ ...form, tier: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            {MEMBERSHIP_TIERS.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={form.renewalDate}
+            onChange={(e) => setForm({ ...form, renewalDate: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <select
+            value={form.paymentStatus}
+            onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            {PAYMENT_STATUSES.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

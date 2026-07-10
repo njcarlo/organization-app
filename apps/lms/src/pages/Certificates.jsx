@@ -77,9 +77,16 @@ export default function Certificates() {
 
       <form
         onSubmit={issue}
-        className="grid gap-3 border border-hae-line bg-white p-4 md:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <select
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Issue certificate
+          </button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+<select
           required
           value={enrollmentId}
           onChange={(e) => setEnrollmentId(e.target.value)}
@@ -92,12 +99,7 @@ export default function Certificates() {
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase"
-        >
-          Issue certificate
-        </button>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

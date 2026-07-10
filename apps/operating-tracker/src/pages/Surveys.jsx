@@ -84,7 +84,7 @@ export default function Surveys() {
           )}
           <Link
             to="/surveys/new"
-            className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white hover:bg-hae-crimson-dark"
+            className="hae-btn"
           >
             + New survey
           </Link>

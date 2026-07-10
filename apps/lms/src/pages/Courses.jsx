@@ -102,9 +102,16 @@ export default function Courses() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add course
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<input
           required
           placeholder="Course name"
           value={form.name}
@@ -151,12 +158,7 @@ export default function Courses() {
             <option key={s}>{s}</option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase lg:col-span-2"
-        >
-          Add course
-        </button>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

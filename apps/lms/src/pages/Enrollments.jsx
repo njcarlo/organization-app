@@ -89,9 +89,16 @@ export default function Enrollments() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Enroll learner
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<input
           required
           placeholder="Learner name"
           value={form.learnerName}
@@ -136,12 +143,7 @@ export default function Enrollments() {
           onChange={(e) => setForm({ ...form, progress: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase"
-        >
-          Enroll learner
-        </button>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

@@ -101,7 +101,7 @@ export default function Events() {
             type="button"
             onClick={exportIcs}
             disabled={!events.some((e) => e.date)}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+            className="hae-btn-secondary disabled:opacity-50"
           >
             Export calendar (.ics)
           </button>
@@ -111,46 +111,47 @@ export default function Events() {
       {canManage ? (
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
-          required
-          placeholder="Event name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Location / Zoom"
-          value={form.location}
-          onChange={(e) => setForm({ ...form, location: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          placeholder="Capacity"
-          value={form.capacity}
-          onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
-        />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2"
-        >
-          Add event
-        </button>
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add event
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            required
+            placeholder="Event name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Location / Zoom"
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            placeholder="Capacity"
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
+          />
+        </div>
       </form>
       ) : null}
 

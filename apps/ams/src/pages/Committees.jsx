@@ -72,48 +72,49 @@ export default function Committees() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
-          required
-          placeholder="Committee name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <select
-          value={form.memberId}
-          onChange={(e) => setForm({ ...form, memberId: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          <option value="">Member (optional)</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          {COMMITTEE_ROLES.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
-        <input
-          placeholder="Notes"
-          value={form.notes}
-          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
-        >
-          Add assignment
-        </button>
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add assignment
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input
+            required
+            placeholder="Committee name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <select
+            value={form.memberId}
+            onChange={(e) => setForm({ ...form, memberId: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            <option value="">Member (optional)</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            {COMMITTEE_ROLES.map((r) => (
+              <option key={r}>{r}</option>
+            ))}
+          </select>
+          <input
+            placeholder="Notes"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

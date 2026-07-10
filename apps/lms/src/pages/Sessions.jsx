@@ -110,7 +110,7 @@ export default function Sessions() {
             type="button"
             onClick={exportIcs}
             disabled={!sessions.some((s) => s.date)}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm font-semibold text-hae-ink hover:bg-hae-mist disabled:opacity-50"
+            className="hae-btn-secondary disabled:opacity-50"
           >
             Export calendar (.ics)
           </button>
@@ -119,9 +119,16 @@ export default function Sessions() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add session
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<input
           placeholder="Title"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -163,12 +170,7 @@ export default function Sessions() {
           onChange={(e) => setForm({ ...form, zoomLink: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
-        >
-          Add session
-        </button>
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">

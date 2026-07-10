@@ -151,9 +151,25 @@ export default function Contacts() {
 
       <form
         onSubmit={save}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            {editingId ? 'Update contact' : 'Add contact'}
+          </button>
+          {editingId ? (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="hae-btn-secondary"
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+<input
           required
           placeholder="Name"
           value={form.name}
@@ -230,22 +246,6 @@ export default function Contacts() {
             <PersonLinks email={linkEmail || form.email} />
           </div>
         ) : null}
-        <div className="flex gap-2 sm:col-span-2 lg:col-span-3">
-          <button
-            type="submit"
-            className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase"
-          >
-            {editingId ? 'Update contact' : 'Add contact'}
-          </button>
-          {editingId ? (
-            <button
-              type="button"
-              onClick={resetForm}
-              className="border border-hae-line px-3 py-2 text-sm font-semibold text-hae-slate"
-            >
-              Cancel
-            </button>
-          ) : null}
         </div>
       </form>
 

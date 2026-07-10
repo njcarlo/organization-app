@@ -113,7 +113,7 @@ export default function ProgramPage() {
         <button
           type="button"
           onClick={() => setAddingProject((v) => !v)}
-          className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white hover:bg-hae-crimson-dark"
+          className="hae-btn"
         >
           {addingProject ? 'Cancel' : '+ Add Project'}
         </button>
@@ -122,48 +122,49 @@ export default function ProgramPage() {
       {addingProject && (
         <form
           onSubmit={createProject}
-          className="grid gap-3 rounded-xl border border-hae-line bg-white p-4 sm:grid-cols-2"
+          className="rounded-xl border border-hae-line bg-white p-4"
         >
-          <input
-            required
-            placeholder="Project name"
-            value={newProject.name}
-            onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-          />
-          <input
-            placeholder="Lead"
-            value={newProject.lead}
-            onChange={(e) => setNewProject({ ...newProject, lead: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-          />
-          <input
-            placeholder="Promise / outcome"
-            value={newProject.promise}
-            onChange={(e) => setNewProject({ ...newProject, promise: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
-          />
-          <select
-            value={newProject.health}
-            onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm"
-          >
-            <option value="on-track">On Track</option>
-            <option value="needs-attention">Needs Attention</option>
-            <option value="at-risk">At Risk</option>
-          </select>
-          <input
-            type="date"
-            value={newProject.targetDate}
-            onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white sm:col-span-2"
-          >
-            Create project
-          </button>
+          <div className="hae-form-actions">
+            <button type="submit" className="hae-btn">
+              Create project
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              required
+              placeholder="Project name"
+              value={newProject.name}
+              onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              placeholder="Lead"
+              value={newProject.lead}
+              onChange={(e) => setNewProject({ ...newProject, lead: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              placeholder="Promise / outcome"
+              value={newProject.promise}
+              onChange={(e) => setNewProject({ ...newProject, promise: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+            />
+            <select
+              value={newProject.health}
+              onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            >
+              <option value="on-track">On Track</option>
+              <option value="needs-attention">Needs Attention</option>
+              <option value="at-risk">At Risk</option>
+            </select>
+            <input
+              type="date"
+              value={newProject.targetDate}
+              onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            />
+          </div>
         </form>
       )}
 

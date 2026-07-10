@@ -140,9 +140,16 @@ export default function CourseDetail() {
         {canManage ? (
           <form
             onSubmit={addModule}
-            className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
+            className="border border-hae-line bg-white p-4"
           >
-            <input
+
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add module
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+<input
               required
               placeholder="Module title"
               value={form.title}
@@ -171,13 +178,8 @@ export default function CourseDetail() {
               onChange={(e) => setForm({ ...form, resourceUrl: e.target.value })}
               className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
-            <button
-              type="submit"
-              className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-4"
-            >
-              Add module
-            </button>
-          </form>
+        </div>
+      </form>
         ) : null}
 
         <div className="overflow-x-auto border border-hae-line bg-white">

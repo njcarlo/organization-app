@@ -76,57 +76,58 @@ export default function Members() {
 
       <form
         onSubmit={create}
-        className="grid gap-3 border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="border border-hae-line bg-white p-4"
       >
-        <input
-          required
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Cohort"
-          value={form.cohort}
-          onChange={(e) => setForm({ ...form, cohort: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <input
-          placeholder="Chapter"
-          value={form.chapter}
-          onChange={(e) => setForm({ ...form, chapter: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <select
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        >
-          {MEMBER_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={form.joinDate}
-          onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
-          className="border border-hae-line px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          className="bg-hae-crimson px-3 py-2 text-sm font-semibold tracking-wide text-white uppercase sm:col-span-2 lg:col-span-3"
-        >
-          Add member
-        </button>
+        <div className="hae-form-actions">
+          <button type="submit" className="hae-btn">
+            Add member
+          </button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <input
+            required
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Cohort"
+            value={form.cohort}
+            onChange={(e) => setForm({ ...form, cohort: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Chapter"
+            value={form.chapter}
+            onChange={(e) => setForm({ ...form, chapter: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          >
+            {MEMBER_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={form.joinDate}
+            onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
+            className="border border-hae-line px-3 py-2 text-sm"
+          />
+        </div>
       </form>
 
       <div className="overflow-x-auto border border-hae-line bg-white">
