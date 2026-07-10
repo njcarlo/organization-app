@@ -89,7 +89,7 @@ Primary pattern: **`[app]-hae.web.app`** (Firebase Hosting site IDs cannot use d
 
 | App | Primary | Legacy (still deployed) |
 |-----|---------|-------------------------|
-| Hub | https://hae.web.app | Landing with people photography (Unsplash, free license) |
+| Hub | https://hae.web.app | Landing with people photography |
 | Tracker | https://tracker-hae.web.app | https://hae-operating-tracker.web.app |
 | LMS | https://lms-hae.web.app | https://hae-lms.web.app |
 | EiR | https://eir-hae.web.app | https://hae-eir.web.app |
