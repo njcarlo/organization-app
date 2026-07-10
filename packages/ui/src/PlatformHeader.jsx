@@ -4,24 +4,28 @@ import { useFeatures } from './FeaturesContext.jsx'
 
 /**
  * Top site header — brand + platform switcher.
+ * Markup/classes match packages/branding/src/platform-header.css and the hub landing.
  * Full-width; logo flush left. Sidenav stays scoped to the selected platform.
- * Module chips respect feature toggles (superadmins always see all).
  */
 export default function PlatformHeader({
-  moduleId,
+  moduleId = null,
   title,
   userName,
   roleLabel,
   canAccessModule,
   onMenuClick,
   menuOpen = false,
+  /** When true (hub), Hub chip is current and all modules are listed. */
+  isHub = false,
 }) {
   const current = getModule(moduleId)
-  const displayTitle = title || current?.name || 'HAE Platform'
+  const displayTitle =
+    title || (isHub ? 'Platform Hub' : current?.name) || 'HAE Platform'
   const { isModuleEnabled } = useFeatures()
 
   const platforms = MODULES.filter((m) => {
     if (!isModuleEnabled(m.id)) return false
+    if (isHub) return true
     return m.id === moduleId || (canAccessModule ? canAccessModule(m.id) : true)
   })
 
@@ -32,13 +36,13 @@ export default function PlatformHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hae-line bg-white/95 backdrop-blur">
-      <div className="flex w-full items-center gap-4 px-4 py-3.5 sm:gap-5 sm:px-5 sm:py-4 lg:px-6">
+    <header className="hae-platform-header">
+      <div className="hae-platform-header__row">
         {onMenuClick ? (
           <button
             type="button"
             onClick={onMenuClick}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-hae-line text-hae-ink hover:bg-hae-mist lg:hidden"
+            className="hae-platform-header__menu"
             aria-label="Open navigation"
             aria-expanded={menuOpen}
           >
@@ -55,58 +59,53 @@ export default function PlatformHeader({
 
         <a
           href={hubHref()}
-          className="flex shrink-0 items-center no-underline"
+          className="hae-platform-header__brand"
           title="HAE Platform hub"
         >
-          <img
-            src="/hae-logo.webp"
-            alt="Harvard Alumni Entrepreneurs"
-            className="h-11 w-auto max-w-[200px] object-contain object-left sm:h-12 sm:max-w-[220px]"
-          />
+          <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" />
         </a>
 
-        <div className="hidden h-8 w-px bg-hae-line sm:block" aria-hidden />
+        <div className="hae-platform-header__divider" aria-hidden />
 
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[11px] font-semibold tracking-[0.14em] text-hae-slate uppercase">
-            Now in
-          </div>
-          <div className="truncate text-base font-semibold text-hae-ink sm:text-lg">
-            {displayTitle}
-          </div>
+        <div className="hae-platform-header__title-block">
+          <div className="hae-platform-header__kicker">Now in</div>
+          <div className="hae-platform-header__title">{displayTitle}</div>
         </div>
 
         {(userName || roleLabel) && (
-          <div className="hidden min-w-0 shrink-0 text-right md:block">
-            <div className="truncate text-sm font-medium text-hae-ink">
+          <div className="hae-platform-header__user">
+            <div className="hae-platform-header__user-name">
               {userName || 'Signed in'}
             </div>
             {roleLabel ? (
-              <div className="truncate text-xs text-hae-slate">{roleLabel}</div>
+              <div className="hae-platform-header__user-role">{roleLabel}</div>
             ) : null}
           </div>
         )}
       </div>
 
-      <div className="border-t border-hae-line/80 bg-hae-mist/50">
-        <nav
-          className="flex w-full gap-1 overflow-x-auto px-4 py-2 sm:px-5 lg:px-6"
-          aria-label="Platform apps"
-        >
-          <a
-            href={hubHref()}
-            className="shrink-0 rounded-md px-3 py-2 text-sm font-semibold text-hae-slate transition-colors hover:bg-white hover:text-hae-ink"
-          >
-            Hub
-          </a>
+      <div className="hae-platform-header__bar">
+        <nav className="hae-platform-header__nav" aria-label="Platform apps">
+          {isHub ? (
+            <span
+              className="hae-platform-header__chip is-current"
+              aria-current="page"
+            >
+              Hub
+            </span>
+          ) : (
+            <a href={hubHref()} className="hae-platform-header__chip">
+              Hub
+            </a>
+          )}
           {platforms.map((m) => {
-            const active = m.id === moduleId
+            const active = !isHub && m.id === moduleId
             if (active) {
               return (
                 <span
                   key={m.id}
                   aria-current="page"
-                  className="shrink-0 rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white"
+                  className="hae-platform-header__chip is-current"
                 >
                   {m.short}
                 </span>
@@ -117,7 +116,7 @@ export default function PlatformHeader({
                 key={m.id}
                 href={moduleHref(m)}
                 onClick={(e) => goModule(e, m)}
-                className="shrink-0 rounded-md px-3 py-2 text-sm font-semibold text-hae-ink/80 transition-colors hover:bg-white hover:text-hae-crimson"
+                className="hae-platform-header__chip"
               >
                 {m.short}
               </a>

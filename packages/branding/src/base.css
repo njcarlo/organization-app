@@ -1,4 +1,14 @@
 /* Shared app base — import after Tailwind + theme in each app's index.css */
+
+/* Aliases for platform-header.css (shared with static hub) */
+:root {
+  --hae-ink: var(--color-hae-ink, #1a1a1a);
+  --hae-slate: var(--color-hae-slate, #3e3e3e);
+  --hae-crimson: var(--color-hae-crimson, #b80028);
+  --hae-line: var(--color-hae-line, #e7e7e7);
+  --hae-mist: var(--color-hae-mist, #f6f6f6);
+}
+
 html,
 body,
 #root {

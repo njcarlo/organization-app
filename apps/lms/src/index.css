@@ -2,3 +2,4 @@
 @source "../../../packages/ui/src";
 @import "@hae/branding/theme.css";
 @import "@hae/branding/base.css";
+@import "@hae/branding/platform-header.css";

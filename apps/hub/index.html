@@ -12,29 +12,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/platform-header.css" />
     <link rel="stylesheet" href="/hub.css" />
   </head>
   <body>
-    <header class="site-header">
-      <div class="site-header-inner">
-        <a class="brand" href="/">
+    <header class="hae-platform-header">
+      <div class="hae-platform-header__row">
+        <a class="hae-platform-header__brand" href="/" title="HAE Platform hub">
           <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" />
         </a>
-        <div class="header-spacer"></div>
-        <a class="header-link" href="https://www.harvardae.org/">harvardae.org</a>
-        <a class="header-cta" href="#apps">Open apps</a>
+        <div class="hae-platform-header__divider" aria-hidden="true"></div>
+        <div class="hae-platform-header__title-block">
+          <div class="hae-platform-header__kicker">Now in</div>
+          <div class="hae-platform-header__title">Platform Hub</div>
+        </div>
       </div>
-      <div class="platform-bar">
-        <nav class="platform-bar-inner" aria-label="Platform apps">
-          <span class="platform-chip is-current" aria-current="page">Hub</span>
-          <a class="platform-chip" href="https://tracker-hae.web.app">Tracker</a>
-          <a class="platform-chip" href="https://lms-hae.web.app">LMS</a>
-          <a class="platform-chip" href="https://eir-hae.web.app">EiR</a>
-          <a class="platform-chip" href="https://crm-hae.web.app">CRM</a>
-          <a class="platform-chip" href="https://ams-hae.web.app">AMS</a>
+      <div class="hae-platform-header__bar">
+        <nav class="hae-platform-header__nav" aria-label="Platform apps">
+          <span class="hae-platform-header__chip is-current" aria-current="page">Hub</span>
+          <a class="hae-platform-header__chip" href="https://tracker-hae.web.app">Tracker</a>
+          <a class="hae-platform-header__chip" href="https://lms-hae.web.app">LMS</a>
+          <a class="hae-platform-header__chip" href="https://eir-hae.web.app">EiR</a>
+          <a class="hae-platform-header__chip" href="https://crm-hae.web.app">CRM</a>
+          <a class="hae-platform-header__chip" href="https://ams-hae.web.app">AMS</a>
         </nav>
       </div>
     </header>

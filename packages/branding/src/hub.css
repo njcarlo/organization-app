@@ -1,4 +1,6 @@
 /* Hub landing styles — shared HAE brand (used by apps/hub/index.html) */
+@import './platform-header.css';
+
 :root {
   --ink: #1a1a1a;
   --charcoal: #272727;
@@ -6,11 +8,17 @@
   --crimson: #b80028;
   --crimson-dark: #960021;
   --coral: #f0523d;
-  --line: #dddddd;
+  --line: #e7e7e7;
   --mist: #f6f6f6;
   --paper: #ffffff;
-  --font-sans: 'Libre Franklin', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* Aliases for shared platform-header.css */
+  --hae-ink: var(--ink);
+  --hae-slate: var(--slate);
+  --hae-crimson: var(--crimson);
+  --hae-line: var(--line);
+  --hae-mist: var(--mist);
 }
 
 * {
@@ -36,142 +44,8 @@ a {
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-/* —— Site header (matches PlatformHeader in apps) —— */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-}
-
-.site-header-inner {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  margin: 0;
-  max-width: none;
-  padding: 0.95rem 1.25rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  min-width: 0;
-  flex-shrink: 0;
-}
-
-.brand img {
-  height: 2.75rem;
-  width: auto;
-  max-width: 220px;
-  object-fit: contain;
-  object-position: left center;
-}
-
-.brand-text {
-  display: none;
-}
-
-.brand-kicker {
-  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--crimson);
-}
-
-.brand-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header-spacer {
-  flex: 1;
-}
-
-.header-link {
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  color: var(--slate);
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.35rem;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-.header-link:hover {
-  color: var(--crimson);
-  background: rgba(184, 0, 40, 0.06);
-}
-
-.header-cta {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: #fff;
-  background: var(--crimson);
-  padding: 0.65rem 1.05rem;
-  border-radius: 0.35rem;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.header-cta:hover {
-  background: var(--crimson-dark);
-  transform: translateY(-1px);
-}
-
-.platform-bar {
-  border-top: 1px solid rgba(221, 221, 221, 0.85);
-  background: rgba(246, 246, 246, 0.7);
-}
-
-.platform-bar-inner {
-  display: flex;
-  gap: 0.35rem;
-  overflow-x: auto;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0.55rem 1.25rem;
-  scrollbar-width: thin;
-}
-
-.platform-chip {
-  flex-shrink: 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: none;
-  color: rgba(26, 26, 26, 0.8);
-  padding: 0.5rem 0.85rem;
-  border-radius: 0.35rem;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.platform-chip:hover {
-  background: #fff;
-  color: var(--crimson);
-}
-
-.platform-chip.is-current {
-  background: var(--crimson);
-  color: #fff;
+  letter-spacing: -0.01em;
 }
 
 /* —— Full-bleed photo hero —— */
