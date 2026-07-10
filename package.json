@@ -5,7 +5,8 @@
   "description": "HAE platform monorepo \u2014 one app per milestone module",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "functions"
   ],
   "scripts": {
     "dev": "npm run dev -w @hae/operating-tracker",
@@ -23,8 +24,9 @@
     "build:all": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "import:real": "node scripts/import-real-data.mjs",
-    "deploy": "npm run build:all && firebase deploy --only hosting,firestore:rules,auth",
+    "deploy": "npm run build:all && firebase deploy --only hosting,firestore:rules,auth,functions",
     "deploy:hosting": "npm run build:all && firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
     "deploy:tracker": "npm run build:tracker && firebase deploy --only hosting:tracker",
     "deploy:lms": "npm run build:lms && firebase deploy --only hosting:lms",
     "deploy:eir": "npm run build:eir && firebase deploy --only hosting:eir",

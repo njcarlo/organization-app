@@ -6,9 +6,11 @@ import { useAuth } from '../context/AuthContext'
 import { MODULES, moduleHref } from '@hae/ui'
 import { canAccessModule } from '../../../../packages/ui/src/rbac.js'
 import { navigateToModule } from '../../../../packages/ui/src/sso.js'
+import { EXEC_INBOX_EMAILS } from '../constants'
 
 export default function Sidebar({ open = false, onClose }) {
-  const { userProfile, isAdmin, logout, roleLabel, permissions } = useAuth()
+  const { user, userProfile, isAdmin, logout, roleLabel, permissions } = useAuth()
+  const isExecInboxUser = EXEC_INBOX_EMAILS.includes((user?.email || '').toLowerCase())
   const [programs, setPrograms] = useState([])
 
   useEffect(() => {
@@ -81,6 +83,11 @@ export default function Sidebar({ open = false, onClose }) {
           <NavLink to="/surveys" className={linkClass} onClick={handleNav}>
             Surveys
           </NavLink>
+          {isExecInboxUser && (
+            <NavLink to="/executive-inbox" className={linkClass} onClick={handleNav}>
+              Executive Inbox
+            </NavLink>
+          )}
           {isAdmin && (
             <NavLink to="/admin" className={linkClass} onClick={handleNav}>
               Admin

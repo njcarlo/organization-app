@@ -28,6 +28,8 @@ export const LEADERSHIP_ATTENTION = [
   'Decision Needed',
 ]
 
+export const EXEC_INBOX_EMAILS = ['rmarchadesch@harvardae.org', 'rryan@harvardae.org']
+
 export const HEALTH_OPTIONS = [
   { value: 'on-track', label: 'On Track', className: 'bg-emerald-100 text-hae-green' },
   { value: 'needs-attention', label: 'Needs Attention', className: 'bg-amber-100 text-hae-yellow' },
