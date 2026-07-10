@@ -22,26 +22,89 @@ function PriorityCell({ task }) {
   )
 }
 
-function TaskTableRows({ tasks, programsById, projectsById }) {
-  return tasks.map((task) => (
-    <tr key={task.id} className="border-b border-hae-line/70 last:border-0">
-      <td className="px-3 py-2">
-        <PriorityCell task={task} />
-      </td>
-      <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
-      <td className="px-3 py-2 text-sm text-hae-slate">
-        {programNameOf(task, programsById)}
-      </td>
-      <td className="px-3 py-2 text-sm text-hae-slate">
-        {projectNameOf(task, projectsById)}
-      </td>
-      <td className="px-3 py-2 text-sm text-hae-slate">
-        {projectsById[task.projectId]?.lead || '—'}
-      </td>
-      <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(task.dueDate)}</td>
-      <td className="px-3 py-2 text-sm text-hae-slate">{task.nextAction || '—'}</td>
-    </tr>
-  ))
+function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel }) {
+  if (!tasks.length) {
+    return (
+      <div className="hae-mobile-card text-center text-sm text-hae-slate">{emptyLabel}</div>
+    )
+  }
+  return (
+    <div className="hae-mobile-cards p-3">
+      {tasks.map((task) => (
+        <div key={task.id} className="hae-mobile-card">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
+            <PriorityCell task={task} />
+          </div>
+          <div className="hae-mobile-card__meta">
+            <span>Due {formatDate(task.dueDate)}</span>
+            <span className="line-clamp-1">
+              {programNameOf(task, programsById)}
+              {projectNameOf(task, projectsById)
+                ? ` · ${projectNameOf(task, projectsById)}`
+                : ''}
+            </span>
+            {task.nextAction ? (
+              <span className="line-clamp-2 w-full">Next: {task.nextAction}</span>
+            ) : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
+  return (
+    <div className="hae-table-scroll">
+      <table className="w-full min-w-[640px] text-left lg:min-w-[900px]">
+        <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
+          <tr>
+            <th className="px-3 py-2 font-semibold">Priority</th>
+            <th className="px-3 py-2 font-semibold">Task</th>
+            <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
+            <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
+            <th className="hae-col-sm-hide px-3 py-2 font-semibold">Project Owner</th>
+            <th className="px-3 py-2 font-semibold">Due</th>
+            <th className="hae-col-sm-hide px-3 py-2 font-semibold">Next Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tasks.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
+                {emptyLabel}
+              </td>
+            </tr>
+          ) : (
+            tasks.map((task) => (
+              <tr key={task.id} className="border-b border-hae-line/70 last:border-0">
+                <td className="px-3 py-2">
+                  <PriorityCell task={task} />
+                </td>
+                <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
+                <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
+                  {programNameOf(task, programsById)}
+                </td>
+                <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
+                  {projectNameOf(task, projectsById)}
+                </td>
+                <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
+                  {projectsById[task.projectId]?.lead || '—'}
+                </td>
+                <td className="px-3 py-2 text-sm text-hae-slate">
+                  {formatDate(task.dueDate)}
+                </td>
+                <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
+                  {task.nextAction || '—'}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 export default function PrioritiesSection({ tasks, programsById, projectsById }) {
@@ -72,35 +135,21 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
             Incomplete tasks due within 7 days (or with no due date)
           </p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left">
-            <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
-              <tr>
-                <th className="px-3 py-2 font-semibold">Priority</th>
-                <th className="px-3 py-2 font-semibold">Task</th>
-                <th className="px-3 py-2 font-semibold">Program</th>
-                <th className="px-3 py-2 font-semibold">Project</th>
-                <th className="px-3 py-2 font-semibold">Project Owner</th>
-                <th className="px-3 py-2 font-semibold">Due</th>
-                <th className="px-3 py-2 font-semibold">Next Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {thisWeek.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
-                    No priorities this week
-                  </td>
-                </tr>
-              ) : (
-                <TaskTableRows
-                  tasks={thisWeek}
-                  programsById={programsById}
-                  projectsById={projectsById}
-                />
-              )}
-            </tbody>
-          </table>
+        <div className="hae-mobile-only">
+          <MobileTaskCards
+            tasks={thisWeek}
+            programsById={programsById}
+            projectsById={projectsById}
+            emptyLabel="No priorities this week"
+          />
+        </div>
+        <div className="hae-desktop-only">
+          <DesktopTaskTable
+            tasks={thisWeek}
+            programsById={programsById}
+            projectsById={projectsById}
+            emptyLabel="No priorities this week"
+          />
         </div>
       </div>
 
@@ -118,38 +167,26 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
           </div>
           <span className="text-xs text-hae-slate">{upcomingOpen ? 'Hide' : 'Show'}</span>
         </button>
-        {upcomingOpen && (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left">
-              <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">Priority</th>
-                  <th className="px-3 py-2 font-semibold">Task</th>
-                  <th className="px-3 py-2 font-semibold">Program</th>
-                  <th className="px-3 py-2 font-semibold">Project</th>
-                  <th className="px-3 py-2 font-semibold">Project Owner</th>
-                  <th className="px-3 py-2 font-semibold">Due</th>
-                  <th className="px-3 py-2 font-semibold">Next Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {upcomingTop.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
-                      No upcoming tasks
-                    </td>
-                  </tr>
-                ) : (
-                  <TaskTableRows
-                    tasks={upcomingTop}
-                    programsById={programsById}
-                    projectsById={projectsById}
-                  />
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {upcomingOpen ? (
+          <>
+            <div className="hae-mobile-only">
+              <MobileTaskCards
+                tasks={upcomingTop}
+                programsById={programsById}
+                projectsById={projectsById}
+                emptyLabel="No upcoming tasks"
+              />
+            </div>
+            <div className="hae-desktop-only">
+              <DesktopTaskTable
+                tasks={upcomingTop}
+                programsById={programsById}
+                projectsById={projectsById}
+                emptyLabel="No upcoming tasks"
+              />
+            </div>
+          </>
+        ) : null}
       </div>
     </section>
   )

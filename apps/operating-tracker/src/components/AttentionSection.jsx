@@ -75,16 +75,40 @@ export default function AttentionSection({
           At-risk projects and tasks needing leadership action
         </p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left">
+      <div className="hae-mobile-only">
+        <div className="hae-mobile-cards p-3">
+          {slice.length === 0 ? (
+            <div className="hae-mobile-card text-center text-sm text-hae-slate">
+              Nothing needs attention
+            </div>
+          ) : (
+            slice.map((row) => (
+              <div key={row.id} className="hae-mobile-card">
+                <div className="hae-mobile-card__title">{row.taskName}</div>
+                <div className="hae-mobile-card__meta">
+                  <span>{row.issue}</span>
+                  <span>Due {formatDate(row.dueDate)}</span>
+                  <span>{row.owner}</span>
+                  <span className="line-clamp-1">
+                    {row.programName || '—'}
+                    {row.projectName ? ` · ${row.projectName}` : ''}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <div className="hae-desktop-only hae-table-scroll">
+        <table className="w-full min-w-[640px] text-left lg:min-w-[900px]">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Task</th>
-              <th className="px-3 py-2 font-semibold">Program</th>
-              <th className="px-3 py-2 font-semibold">Project</th>
+              <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
+              <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
               <th className="px-3 py-2 font-semibold">Issue</th>
-              <th className="px-3 py-2 font-semibold">Waiting On</th>
-              <th className="px-3 py-2 font-semibold">Leadership Action</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Waiting On</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Leadership Action</th>
               <th className="px-3 py-2 font-semibold">Owner</th>
               <th className="px-3 py-2 font-semibold">Due</th>
             </tr>
@@ -92,15 +116,19 @@ export default function AttentionSection({
           <tbody>
             {rows.map((row, i) =>
               row ? (
-                <tr key={row.id} className="border-b border-hae-line/70 h-11">
+                <tr key={row.id} className="h-11 border-b border-hae-line/70">
                   <td className="px-3 py-2 text-sm font-medium">{row.taskName}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
+                  <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {row.programName || '—'}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{row.projectName}</td>
+                  <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
+                    {row.projectName}
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.issue}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{row.waitingOn || '—'}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
+                    {row.waitingOn || '—'}
+                  </td>
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
                     {row.leadershipAction}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.owner}</td>
@@ -109,8 +137,10 @@ export default function AttentionSection({
                   </td>
                 </tr>
               ) : (
-                <tr key={`pad-${i}`} className="border-b border-hae-line/40 h-11">
-                  <td colSpan={8} className="px-3 py-2">&nbsp;</td>
+                <tr key={`pad-${i}`} className="h-11 border-b border-hae-line/40">
+                  <td colSpan={8} className="px-3 py-2">
+                    &nbsp;
+                  </td>
                 </tr>
               )
             )}

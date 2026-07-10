@@ -325,18 +325,20 @@ const TaskTable = forwardRef(function TaskTable(
             : 'No active tasks — show completed below if needed'}
         </p>
       ) : dense ? (
-        <div className="overflow-x-auto rounded-lg border border-hae-line/70 bg-white/80">
-          <table className="w-full min-w-[960px] table-fixed text-left">
+        <div className="hae-table-scroll rounded-lg border border-hae-line/70 bg-white/80">
+          <table className="w-full min-w-[640px] text-left lg:min-w-[960px]">
             <thead className="text-[10px] tracking-wide text-hae-slate/80 uppercase">
               <tr className="border-b border-hae-line/80 bg-hae-mist/50">
                 <th className="px-3 py-2 font-semibold">Task</th>
-                {showOwner ? <th className="px-3 py-2 font-semibold">Owner</th> : null}
+                {showOwner ? (
+                  <th className="hae-col-sm-hide px-3 py-2 font-semibold">Owner</th>
+                ) : null}
                 <th className="px-3 py-2 font-semibold">Due</th>
                 <th className="px-3 py-2 font-semibold">Status</th>
-                <th className="px-3 py-2 font-semibold">Priority</th>
-                <th className="px-3 py-2 font-semibold">Waiting</th>
-                <th className="px-3 py-2 font-semibold">Leadership</th>
-                <th className="px-3 py-2 font-semibold">Next</th>
+                <th className="hae-col-sm-hide px-3 py-2 font-semibold">Priority</th>
+                <th className="hae-col-lg-hide px-3 py-2 font-semibold">Waiting</th>
+                <th className="hae-col-lg-hide px-3 py-2 font-semibold">Leadership</th>
+                <th className="hae-col-sm-hide px-3 py-2 font-semibold">Next</th>
                 <th className="px-3 py-2 font-semibold" />
               </tr>
             </thead>
@@ -365,7 +367,7 @@ const TaskTable = forwardRef(function TaskTable(
                       <span className="line-clamp-2">{task.name}</span>
                     </td>
                     {showOwner ? (
-                      <td className="px-3 py-2.5 text-sm text-hae-slate">
+                      <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
                         {task.owner || '—'}
                       </td>
                     ) : null}
@@ -375,7 +377,7 @@ const TaskTable = forwardRef(function TaskTable(
                     <td className="px-3 py-2.5">
                       <StatusPill status={task.status} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="hae-col-sm-hide px-3 py-2.5">
                       <span
                         className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
                           effectivePriority(task)
@@ -384,15 +386,15 @@ const TaskTable = forwardRef(function TaskTable(
                         {effectivePriority(task)}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                    <td className="hae-col-lg-hide px-3 py-2.5 text-sm text-hae-slate">
                       <span className="line-clamp-1">{task.waitingOn || '—'}</span>
                     </td>
-                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                    <td className="hae-col-lg-hide px-3 py-2.5 text-sm text-hae-slate">
                       <span className="line-clamp-1">
                         {task.leadershipAttention || 'None'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-sm text-hae-slate">
+                    <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
                       <span className="line-clamp-1">{task.nextAction || '—'}</span>
                     </td>
                     <td className="px-3 py-2.5 text-right">

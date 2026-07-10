@@ -102,7 +102,7 @@ export default function Surveys() {
         />
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
+      <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
         <table className="w-full min-w-[640px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>

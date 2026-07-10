@@ -428,7 +428,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
+          <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
@@ -566,7 +566,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <div className="overflow-x-auto rounded-xl border border-hae-line bg-white">
+          <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>

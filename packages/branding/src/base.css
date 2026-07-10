@@ -104,3 +104,90 @@ body {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
+
+/* —— Responsive data tables —— */
+.hae-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  max-width: 100%;
+}
+
+/* Keep the primary column readable while scrolling sideways on phones */
+.hae-table-scroll table th:first-child,
+.hae-table-scroll table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  box-shadow: 1px 0 0 var(--color-hae-line, #e7e7e7);
+}
+
+.hae-table-scroll thead th:first-child {
+  background: color-mix(in srgb, var(--color-hae-mist, #f6f6f6) 80%, #fff);
+  z-index: 2;
+}
+
+.hae-table-scroll tbody tr[class*='bg-amber'] td:first-child {
+  background: #fffbeb;
+}
+
+/* Hide secondary columns by breakpoint (mark cells/headers with these classes) */
+@media (max-width: 639px) {
+  .hae-col-sm-hide {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .hae-col-lg-hide {
+    display: none !important;
+  }
+}
+
+/* Mobile card stack — pair with a desktop table via md:hidden / hidden md:block */
+.hae-mobile-cards {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.hae-mobile-card {
+  border: 1px solid var(--color-hae-line, #e7e7e7);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.85rem 1rem;
+}
+
+.hae-mobile-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-hae-ink, #1a1a1a);
+}
+
+.hae-mobile-card__meta {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-hae-slate, #3e3e3e);
+}
+
+.hae-mobile-card__actions {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .hae-mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hae-desktop-only {
+    display: none !important;
+  }
+}

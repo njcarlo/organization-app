@@ -168,8 +168,8 @@ export default function CheckIns() {
       </Modal>
 
 
-      <div className="overflow-x-auto border border-hae-line bg-white">
-        <table className="w-full min-w-[700px] text-left">
+      <div className="hae-table-scroll border border-hae-line bg-white">
+        <table className="w-full min-w-[520px] lg:min-w-[700px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Due</th>

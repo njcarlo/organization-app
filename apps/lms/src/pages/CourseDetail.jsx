@@ -212,7 +212,7 @@ export default function CourseDetail() {
           </Modal>
         ) : null}
 
-        <div className="overflow-x-auto border border-hae-line bg-white">
+        <div className="hae-table-scroll border border-hae-line bg-white">
           <table className="w-full min-w-[560px] text-left">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
