@@ -11,16 +11,26 @@ export default function Sidebar({ open = false, onClose }) {
   const { isEnabled } = useFeatures()
   const isExecInboxUser = EXEC_INBOX_EMAILS.includes((user?.email || '').toLowerCase())
   const [programs, setPrograms] = useState([])
+  const [academyPrograms, setAcademyPrograms] = useState([])
+  const [customPrograms, setCustomPrograms] = useState([])
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      const snap = await getDocs(collection(db, 'programs'))
-      if (cancelled) return
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      setPrograms(list)
-    })()
+    const sortByOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0)
+    const toList = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const loadInto = (collectionName, setter) => {
+      getDocs(collection(db, collectionName))
+        .then((snap) => {
+          if (cancelled) return
+          setter(toList(snap).sort(sortByOrder))
+        })
+        .catch((err) => {
+          console.error(`Failed to load ${collectionName}`, err)
+        })
+    }
+    loadInto('programs', setPrograms)
+    loadInto('academyPrograms', setAcademyPrograms)
+    loadInto('customPrograms', setCustomPrograms)
     return () => {
       cancelled = true
     }
@@ -74,8 +84,48 @@ export default function Sidebar({ open = false, onClose }) {
       })
     }
 
+    if (academyPrograms.length > 0) {
+      next.push({
+        id: 'academy',
+        label: 'Academy',
+        items: academyPrograms.map((p) => ({
+          to: `/academy/${p.id}`,
+          label: p.name,
+          icon: 'folder',
+          description: p.lead || undefined,
+        })),
+      })
+    } else {
+      next.push({
+        id: 'academy',
+        label: 'Academy',
+        items: [],
+        emptyLabel: 'No Academy items yet',
+      })
+    }
+
+    if (customPrograms.length > 0) {
+      next.push({
+        id: 'custom-programs',
+        label: 'Custom Programs',
+        items: customPrograms.map((p) => ({
+          to: `/custom-programs/${p.id}`,
+          label: p.name,
+          icon: 'folder',
+          description: p.lead || undefined,
+        })),
+      })
+    } else {
+      next.push({
+        id: 'custom-programs',
+        label: 'Custom Programs',
+        items: [],
+        emptyLabel: 'No Custom Programs yet',
+      })
+    }
+
     return next
-  }, [programs, isAdmin, isEnabled, isExecInboxUser])
+  }, [programs, academyPrograms, customPrograms, isAdmin, isEnabled, isExecInboxUser])
 
   return (
     <SideNav

@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
+import CategoryProgramPage from './pages/CategoryProgramPage'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
@@ -84,6 +85,24 @@ export default function App() {
                   }
                 />
                 <Route path="/programs/:programId" element={<ProgramPage />} />
+                <Route
+                  path="/academy/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="academyPrograms"
+                      categoryLabel="Academy"
+                    />
+                  }
+                />
+                <Route
+                  path="/custom-programs/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="customPrograms"
+                      categoryLabel="Custom Program"
+                    />
+                  }
+                />
                 <Route
                   element={
                     <ProtectedRoute
