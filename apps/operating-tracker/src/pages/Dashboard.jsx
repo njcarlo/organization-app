@@ -13,24 +13,50 @@ import {
   rollupProjectMetrics,
 } from '../utils/projectMetrics'
 
+const CATEGORIES = [
+  { id: 'programs', label: 'Programs', collectionName: 'programs', pathPrefix: '/programs' },
+  { id: 'academy', label: 'Academy', collectionName: 'academyPrograms', pathPrefix: '/academy' },
+  {
+    id: 'custom-programs',
+    label: 'Custom Programs',
+    collectionName: 'customPrograms',
+    pathPrefix: '/custom-programs',
+  },
+]
+
+function programHref(program) {
+  if (!program?.id) return '/'
+  const cat = CATEGORIES.find((c) => c.id === program.category)
+  return `${cat?.pathPrefix || '/programs'}/${program.id}`
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState(CATEGORIES[0].id)
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const [taskSnap, projectSnap, programSnap] = await Promise.all([
+      const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
         getDocs(collection(db, 'tasks')),
         getDocs(collection(db, 'projects')),
-        getDocs(collection(db, 'programs')),
+        ...CATEGORIES.map((c) => getDocs(collection(db, c.collectionName))),
       ])
       if (cancelled) return
       setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-      setPrograms(programSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setPrograms(
+        categorySnaps.flatMap((snap, i) =>
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+            category: CATEGORIES[i].id,
+          }))
+        )
+      )
       setLoading(false)
     })()
     return () => {
@@ -44,20 +70,38 @@ export default function Dashboard() {
     return map
   }, [programs])
 
+  const categoryProgramIds = useMemo(
+    () =>
+      new Set(
+        programs.filter((p) => p.category === category).map((p) => p.id)
+      ),
+    [programs, category]
+  )
+
+  const categoryTasks = useMemo(
+    () => tasks.filter((t) => categoryProgramIds.has(t.programId)),
+    [tasks, categoryProgramIds]
+  )
+
+  const categoryProjects = useMemo(
+    () => projects.filter((p) => categoryProgramIds.has(p.programId)),
+    [projects, categoryProgramIds]
+  )
+
   const projectsById = useMemo(() => {
     const map = {}
-    for (const p of projects) map[p.id] = p
+    for (const p of categoryProjects) map[p.id] = p
     return map
-  }, [projects])
+  }, [categoryProjects])
 
   const metricProjects = useMemo(
     () =>
-      projects
+      categoryProjects
         .filter((p) => p.metricType)
         .sort(
           (a, b) => (Number(b.raisedCents) || 0) - (Number(a.raisedCents) || 0)
         ),
-    [projects]
+    [categoryProjects]
   )
 
   const metricsRollup = useMemo(
@@ -93,6 +137,23 @@ export default function Dashboard() {
           Live view of priorities, blockers, attention items, and wins across all programs.
         </p>
       </header>
+
+      <div className="flex flex-wrap gap-2 border-b border-hae-line">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setCategory(c.id)}
+            className={`border-b-2 px-3 py-2 text-sm font-semibold ${
+              category === c.id
+                ? 'border-hae-crimson text-hae-crimson'
+                : 'border-transparent text-hae-slate'
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
 
       {metricProjects.length > 0 ? (
         <section className="border border-hae-line bg-white">
@@ -136,7 +197,7 @@ export default function Dashboard() {
                 const raisedPct = Math.round((raised / maxBar) * 100)
                 const goalPct = goal ? Math.round((goal / maxBar) * 100) : 0
                 const pct = pctTowardGoal(raised, goal)
-                const href = p.programId ? `/programs/${p.programId}` : '/'
+                const href = programHref(programsById[p.programId])
                 return (
                   <li key={p.id}>
                     <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
@@ -202,7 +263,7 @@ export default function Dashboard() {
               <tbody className="divide-y divide-hae-line">
                 {metricProjects.map((p) => {
                   const pct = pctTowardGoal(p.raisedCents, p.goalCents)
-                  const href = p.programId ? `/programs/${p.programId}` : '/'
+                  const href = programHref(programsById[p.programId])
                   return (
                     <tr key={p.id} className="hover:bg-hae-mist/30">
                       <td className="px-4 py-3 sm:px-5">
@@ -275,22 +336,22 @@ export default function Dashboard() {
       ) : null}
 
       <PrioritiesSection
-        tasks={tasks}
+        tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
       />
       <WaitingOnSection
-        tasks={tasks}
+        tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
       />
       <AttentionSection
-        tasks={tasks}
-        projects={projects}
+        tasks={categoryTasks}
+        projects={categoryProjects}
         programsById={programsById}
         projectsById={projectsById}
       />
-      <WinsSection tasks={tasks} projectsById={projectsById} />
+      <WinsSection tasks={categoryTasks} projectsById={projectsById} />
     </div>
   )
 }

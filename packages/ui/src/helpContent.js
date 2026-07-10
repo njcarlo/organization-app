@@ -63,6 +63,7 @@ export const HELP_SECTIONS = [
         heading: 'Dashboard',
         steps: [
           'Shows program health, priorities, and items needing leadership attention.',
+          'Switch Programs / Academy / Custom Programs tabs to filter priorities, waiting-on, attention, wins, and fundraising analytics.',
           'Use it for a quick weekly scan of what is at risk.',
         ],
       },
