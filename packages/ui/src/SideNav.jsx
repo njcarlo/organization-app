@@ -5,8 +5,8 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
 /**
  * HAE in-app sidenav.
  *
- * Inspired by expandable section + icon-tile navigation patterns, but styled
- * for the HAE platform (light surface, crimson accents, soft mist).
+ * Expandable sections with a single-column icon + label list.
+ * Crimson accents mark the active route and open groups.
  *
  * sections: [
  *   { id, label, to?, end?, icon?, emptyLabel?, items?: [{ to, label, end?, icon?, description? }] }
@@ -64,11 +64,17 @@ export default function SideNav({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-64 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-60 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
         open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="shrink-0 border-b border-hae-line bg-hae-mist/60 px-4 py-4">
+      {/* Crimson accent rail */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-hae-crimson"
+      />
+
+      <div className="shrink-0 border-b border-hae-line bg-hae-mist/60 px-4 py-4 pl-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
@@ -90,7 +96,7 @@ export default function SideNav({
       </div>
 
       <nav
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 pl-3"
         aria-label={`${title} navigation`}
       >
         <div className="space-y-1">
@@ -104,17 +110,36 @@ export default function SideNav({
                   end={section.end}
                   onClick={close}
                   className={({ isActive }) =>
-                    `flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    `relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-hae-crimson/10 text-hae-crimson'
                         : 'text-hae-ink/80 hover:bg-hae-mist hover:text-hae-ink'
                     }`
                   }
                 >
-                  <span className="truncate">{section.label}</span>
-                  <span className="text-hae-slate/70">
-                    <Chevron open={false} />
-                  </span>
+                  {({ isActive }) => (
+                    <>
+                      {isActive ? (
+                        <span
+                          aria-hidden
+                          className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-r bg-hae-crimson"
+                        />
+                      ) : null}
+                      <span
+                        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                          isActive
+                            ? 'bg-hae-crimson/15 text-hae-crimson'
+                            : 'bg-hae-mist text-hae-slate'
+                        }`}
+                      >
+                        <NavIcon
+                          name={iconForNavItem(section)}
+                          className="[&>svg]:h-4 [&>svg]:w-4"
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{section.label}</span>
+                    </>
+                  )}
                 </NavLink>
               )
             }
@@ -136,15 +161,19 @@ export default function SideNav({
                   }`}
                 >
                   <span className="truncate">{section.label}</span>
-                  <span className={groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'}>
+                  <span
+                    className={
+                      groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'
+                    }
+                  >
                     <Chevron open={isOpen} />
                   </span>
                 </button>
 
                 {isOpen ? (
-                  <div className="mt-1 mb-2 grid grid-cols-2 gap-1.5 px-1">
+                  <div className="mb-2 mt-0.5 space-y-0.5">
                     {childItems.length === 0 ? (
-                      <p className="col-span-2 px-2 py-4 text-center text-xs text-hae-slate">
+                      <p className="px-3 py-4 text-center text-xs text-hae-slate">
                         {section.emptyLabel || 'Nothing here yet'}
                       </p>
                     ) : (
@@ -162,22 +191,31 @@ export default function SideNav({
                             end={item.end}
                             onClick={close}
                             title={item.description || item.label}
-                            className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-colors ${
+                            className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                               active
-                                ? 'border-hae-crimson/25 bg-hae-crimson/10 text-hae-crimson'
-                                : 'border-transparent bg-hae-mist/70 text-hae-ink/75 hover:border-hae-line hover:bg-white hover:text-hae-ink'
+                                ? 'bg-hae-crimson/10 font-semibold text-hae-crimson'
+                                : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
                             }`}
                           >
+                            {active ? (
+                              <span
+                                aria-hidden
+                                className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-r bg-hae-crimson"
+                              />
+                            ) : null}
                             <span
-                              className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${
+                              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                                 active
                                   ? 'bg-hae-crimson/15 text-hae-crimson'
-                                  : 'bg-white text-hae-slate'
+                                  : 'bg-hae-mist/80 text-hae-slate'
                               }`}
                             >
-                              <NavIcon name={icon} className="[&>svg]:h-5 [&>svg]:w-5" />
+                              <NavIcon
+                                name={icon}
+                                className="[&>svg]:h-4 [&>svg]:w-4"
+                              />
                             </span>
-                            <span className="line-clamp-2 text-[11px] font-medium leading-tight">
+                            <span className="min-w-0 flex-1 truncate leading-snug">
                               {item.label}
                             </span>
                           </NavLink>
@@ -192,7 +230,7 @@ export default function SideNav({
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-hae-line bg-hae-mist/40 px-4 py-3">
+      <div className="shrink-0 border-t border-hae-line bg-hae-mist/40 px-4 py-3 pl-5">
         <div className="truncate text-sm font-medium text-hae-ink">
           {userName || 'User'}
         </div>
