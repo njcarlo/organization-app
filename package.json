@@ -2,10 +2,11 @@
   "name": "hae-platform",
   "private": true,
   "version": "0.1.0",
-  "description": "HAE platform monorepo \u2014 one app per milestone module",
+  "description": "HAE platform monorepo — one app per milestone module",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "functions"
   ],
   "scripts": {
     "dev": "npm run dev -w @hae/operating-tracker",
@@ -27,6 +28,7 @@
     "deploy": "npm run sync:hub && npm run build:all && firebase deploy --only hosting,firestore:rules,auth",
     "deploy:hosting": "npm run sync:hub && npm run build:all && firebase deploy --only hosting",
     "deploy:hub": "npm run sync:hub && firebase deploy --only hosting:hub",
+    "deploy:functions": "firebase deploy --only functions",
     "deploy:tracker": "npm run build:tracker && firebase deploy --only hosting:tracker",
     "deploy:lms": "npm run build:lms && firebase deploy --only hosting:lms",
     "deploy:eir": "npm run build:eir && firebase deploy --only hosting:eir",

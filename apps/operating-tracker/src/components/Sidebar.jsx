@@ -3,11 +3,13 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { FEATURES, SideNav, useFeatures } from '@hae/ui'
+import { EXEC_INBOX_EMAILS } from '../constants'
 
-/** Tracker sidenav — expandable dark chrome; platform switch lives in the header. */
+/** Tracker sidenav — expandable chrome; platform switch lives in the header. */
 export default function Sidebar({ open = false, onClose }) {
-  const { userProfile, isAdmin, logout, roleLabel } = useAuth()
+  const { user, userProfile, isAdmin, logout, roleLabel } = useAuth()
   const { isEnabled } = useFeatures()
+  const isExecInboxUser = EXEC_INBOX_EMAILS.includes((user?.email || '').toLowerCase())
   const [programs, setPrograms] = useState([])
 
   useEffect(() => {
@@ -29,6 +31,13 @@ export default function Sidebar({ open = false, onClose }) {
       { to: '/', label: 'Dashboard', end: true, icon: 'home' },
       { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
     ]
+    if (isExecInboxUser) {
+      workspaceItems.push({
+        to: '/executive-inbox',
+        label: 'Executive Inbox',
+        icon: 'message',
+      })
+    }
     if (isEnabled(FEATURES.NOTIFICATIONS)) {
       workspaceItems.push({
         to: '/notifications',
@@ -73,7 +82,7 @@ export default function Sidebar({ open = false, onClose }) {
     }
 
     return next
-  }, [programs, isAdmin, isEnabled])
+  }, [programs, isAdmin, isEnabled, isExecInboxUser])
 
   return (
     <SideNav

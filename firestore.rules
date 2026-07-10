@@ -51,6 +51,13 @@ service cloud.firestore {
       return signedIn() && (role() == 'admin' || role() == 'staff' || role() == 'student' || isSuperAdmin());
     }
 
+    function isExecInboxUser() {
+      return signedIn() && (
+        emailLower() == 'rmarchadesch@harvardae.org' ||
+        emailLower() == 'rryan@harvardae.org'
+      );
+    }
+
     // —— Users ——
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
@@ -197,6 +204,26 @@ service cloud.firestore {
     match /platformSettings/{id} {
       allow read: if signedIn();
       allow write: if isSuperAdmin();
+    }
+
+    // —— Executive Inbox (all writes via Admin SDK in Cloud Functions only) ——
+    match /execInboxTokens/{uid} {
+      allow read, write: if false;
+    }
+    match /execInboxOAuthState/{state} {
+      allow read, write: if false;
+    }
+    match /execInboxStatus/{id} {
+      allow read: if isExecInboxUser();
+      allow write: if false;
+    }
+    match /execInboxEmails/{id} {
+      allow read: if isExecInboxUser();
+      allow write: if false;
+    }
+    match /execInboxMeetings/{id} {
+      allow read: if isExecInboxUser();
+      allow write: if false;
     }
 
     match /{document=**} {

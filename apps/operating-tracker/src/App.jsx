@@ -10,12 +10,14 @@ import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
 import MyTasks from './pages/MyTasks'
 import Notifications from './pages/Notifications'
+import ExecutiveInbox from './pages/ExecutiveInbox'
 import Admin from './pages/Admin'
 import Help from './pages/Help'
 import Surveys from './pages/Surveys'
 import SurveyEditor from './pages/SurveyEditor'
 import SurveyRespond from './pages/SurveyRespond'
 import { PERMISSIONS } from '../../../packages/ui/src/rbac.js'
+import { EXEC_INBOX_EMAILS } from './constants'
 
 function TrackerFeaturesProvider({ children }) {
   const { isSuperAdmin } = useAuth()
@@ -27,6 +29,13 @@ function TrackerFeaturesProvider({ children }) {
 function FeatureRoute({ feature, children }) {
   const { isEnabled } = useFeatures()
   if (!isEnabled(feature)) return <Navigate to="/" replace />
+  return children
+}
+
+function ExecInboxRoute({ children }) {
+  const { user } = useAuth()
+  const allowed = EXEC_INBOX_EMAILS.includes((user?.email || '').toLowerCase())
+  if (!allowed) return <Navigate to="/" replace />
   return children
 }
 
@@ -52,6 +61,14 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
+                <Route
+                  path="/executive-inbox"
+                  element={
+                    <ExecInboxRoute>
+                      <ExecutiveInbox />
+                    </ExecInboxRoute>
+                  }
+                />
                 <Route
                   path="/notifications"
                   element={
