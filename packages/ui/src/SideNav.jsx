@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
 
@@ -64,21 +65,50 @@ export default function SideNav({
   const close = () => onClose?.()
 
   const [openMenuKey, setOpenMenuKey] = useState(null)
+  const [menuRect, setMenuRect] = useState(null)
+  const buttonRef = useRef(null)
   const menuRef = useRef(null)
+
+  const closeMenu = () => {
+    setOpenMenuKey(null)
+    setMenuRect(null)
+  }
+
+  const toggleMenu = (key, buttonEl, actionCount) => {
+    if (openMenuKey === key) {
+      closeMenu()
+      return
+    }
+    const rect = buttonEl.getBoundingClientRect()
+    const estimatedHeight = actionCount * 36 + 16
+    const openUpward = rect.bottom + estimatedHeight + 4 > window.innerHeight
+    setMenuRect({
+      top: openUpward ? null : rect.bottom + 4,
+      bottom: openUpward ? window.innerHeight - rect.top + 4 : null,
+      right: window.innerWidth - rect.right,
+    })
+    setOpenMenuKey(key)
+  }
 
   useEffect(() => {
     if (!openMenuKey) return
     const handlePointer = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuKey(null)
+      if (buttonRef.current?.contains(e.target)) return
+      if (menuRef.current && !menuRef.current.contains(e.target)) closeMenu()
     }
     const handleKey = (e) => {
-      if (e.key === 'Escape') setOpenMenuKey(null)
+      if (e.key === 'Escape') closeMenu()
     }
+    const handleScrollOrResize = () => closeMenu()
     document.addEventListener('mousedown', handlePointer)
     document.addEventListener('keydown', handleKey)
+    window.addEventListener('scroll', handleScrollOrResize, true)
+    window.addEventListener('resize', handleScrollOrResize)
     return () => {
       document.removeEventListener('mousedown', handlePointer)
       document.removeEventListener('keydown', handleKey)
+      window.removeEventListener('scroll', handleScrollOrResize, true)
+      window.removeEventListener('resize', handleScrollOrResize)
     }
   }, [openMenuKey])
 
@@ -261,11 +291,13 @@ export default function SideNav({
                             {hasActions ? (
                               <div
                                 className="absolute right-1 top-1/2 -translate-y-1/2"
-                                ref={menuOpen ? menuRef : undefined}
+                                ref={menuOpen ? buttonRef : undefined}
                               >
                                 <button
                                   type="button"
-                                  onClick={() => setOpenMenuKey(menuOpen ? null : menuKey)}
+                                  onClick={(e) =>
+                                    toggleMenu(menuKey, e.currentTarget, item.actions.length)
+                                  }
                                   aria-label={`${item.label} actions`}
                                   aria-haspopup="menu"
                                   aria-expanded={menuOpen}
@@ -274,29 +306,39 @@ export default function SideNav({
                                 >
                                   <NavIcon name="kebab" className="[&>svg]:h-4 [&>svg]:w-4" />
                                 </button>
-                                {menuOpen ? (
-                                  <div
-                                    role="menu"
-                                    className="absolute right-0 top-full z-10 mt-1 w-44 overflow-hidden rounded-lg border border-hae-line bg-white py-1 shadow-lg"
-                                  >
-                                    {item.actions.map((action) => (
-                                      <button
-                                        key={action.key}
-                                        type="button"
-                                        role="menuitem"
-                                        onClick={() => {
-                                          setOpenMenuKey(null)
-                                          action.onClick()
+                                {menuOpen && menuRect
+                                  ? createPortal(
+                                      <div
+                                        ref={menuRef}
+                                        role="menu"
+                                        style={{
+                                          position: 'fixed',
+                                          top: menuRect.top ?? undefined,
+                                          bottom: menuRect.bottom ?? undefined,
+                                          right: menuRect.right,
                                         }}
-                                        className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
-                                          action.danger ? 'text-hae-red' : 'text-hae-ink'
-                                        }`}
+                                        className="z-50 w-44 overflow-hidden rounded-lg border border-hae-line bg-white py-1 shadow-lg"
                                       >
-                                        {action.label}
-                                      </button>
-                                    ))}
-                                  </div>
-                                ) : null}
+                                        {item.actions.map((action) => (
+                                          <button
+                                            key={action.key}
+                                            type="button"
+                                            role="menuitem"
+                                            onClick={() => {
+                                              closeMenu()
+                                              action.onClick()
+                                            }}
+                                            className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
+                                              action.danger ? 'text-hae-red' : 'text-hae-ink'
+                                            }`}
+                                          >
+                                            {action.label}
+                                          </button>
+                                        ))}
+                                      </div>,
+                                      document.body
+                                    )
+                                  : null}
                               </div>
                             ) : null}
                           </div>
