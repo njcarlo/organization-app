@@ -3,6 +3,13 @@
  * Admins can upload CSV/JSON or paste a table; AI agents can follow the same format.
  */
 
+/** Parses money-like strings such as "$1,000.00" into a plain number. */
+function parseAmount(value) {
+  const cleaned = String(value ?? '').replace(/[^0-9.-]/g, '')
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n : 0
+}
+
 export const MODULE_IMPORT_SPECS = {
   surveys: {
     id: 'surveys',
@@ -279,7 +286,8 @@ Taylor Ng,taylor@harvardae.org,Fast Track GTM,academy,Enrolled,0`,
     optional: ['email', 'amountPaid', '_id'],
     defaults: { amountPaid: 0 },
     exampleCsv: `course,firstName,lastName,email,amountPaid
-Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250`,
+Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250
+Fast Track GTM,Jordan,Lee,jordan@harvardae.org,"$1,500.00"`,
     exampleJson: [
       {
         course: 'Fast Track GTM',
@@ -300,7 +308,7 @@ Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250`,
         firstName,
         lastName,
         email: String(row.email || '').trim().toLowerCase(),
-        amountPaid: Number(row.amountPaid) || 0,
+        amountPaid: parseAmount(row.amountPaid),
       }
     },
   },
@@ -375,6 +383,7 @@ export const HOW_TO_PROVIDE_DATA = {
     'Emails: use the person’s login email when the record must show up in student/member views.',
     'Dates: use YYYY-MM-DD (example: 2026-07-11).',
     'Lists (tags, expertise): comma-separated in CSV, or a JSON array.',
+    'Amounts over 999: wrap in quotes if you include a thousands comma, e.g. "$1,500.00" — otherwise the comma is read as a new column.',
     'Do not mix different modules in one file — one module type per import.',
     'For Cursor / AI help: paste the CSV or JSON in chat and say which module (e.g. “import these as CRM contacts”).',
   ],
