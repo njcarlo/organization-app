@@ -111,6 +111,23 @@ export default function Sidebar({ open = false, onClose }) {
     }
   }
 
+  const emptyCategoryForm = (showCourseFields) => ({
+    name: '',
+    lead: '',
+    ...(showCourseFields
+      ? { haeLead: '', startDate: '', durationWeeks: '', instructor: '', guestSpeaker: '' }
+      : {}),
+  })
+
+  const openAddCategory = (collectionName) => {
+    const showCourseFields = CATEGORY_META[collectionName].showCourseFields
+    setEditCategoryModal({
+      collectionName,
+      id: null,
+      form: emptyCategoryForm(showCourseFields),
+    })
+  }
+
   const openEditCategory = (collectionName, category) => {
     const showCourseFields = CATEGORY_META[collectionName].showCourseFields
     setEditCategoryModal({
@@ -142,21 +159,26 @@ export default function Sidebar({ open = false, onClose }) {
     if (!editCategoryModal?.form.name.trim() || saving) return
     const { collectionName, id, form } = editCategoryModal
     const showCourseFields = CATEGORY_META[collectionName].showCourseFields
+    const data = {
+      name: form.name.trim(),
+      lead: form.lead.trim(),
+      ...(showCourseFields
+        ? {
+            haeLead: form.haeLead.trim(),
+            startDate: form.startDate,
+            durationWeeks: form.durationWeeks ? Number(form.durationWeeks) : null,
+            instructor: form.instructor.trim(),
+            guestSpeaker: form.guestSpeaker.trim(),
+          }
+        : {}),
+    }
     setSaving(true)
     try {
-      await updateDoc(doc(db, collectionName, id), {
-        name: form.name.trim(),
-        lead: form.lead.trim(),
-        ...(showCourseFields
-          ? {
-              haeLead: form.haeLead.trim(),
-              startDate: form.startDate,
-              durationWeeks: form.durationWeeks ? Number(form.durationWeeks) : null,
-              instructor: form.instructor.trim(),
-              guestSpeaker: form.guestSpeaker.trim(),
-            }
-          : {}),
-      })
+      if (id) {
+        await updateDoc(doc(db, collectionName, id), data)
+      } else {
+        await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() })
+      }
       setEditCategoryModal(null)
       reload(collectionName)
     } finally {
@@ -175,6 +197,14 @@ export default function Sidebar({ open = false, onClose }) {
       alert(err.message || `Failed to delete ${label.toLowerCase()}`)
     }
   }
+
+  const sectionActions = (collectionName) => [
+    {
+      key: 'add-category',
+      label: `Add ${CATEGORY_META[collectionName].label.toLowerCase()}`,
+      onClick: () => openAddCategory(collectionName),
+    },
+  ]
 
   const categoryActions = (collectionName, category) => [
     {
@@ -223,30 +253,24 @@ export default function Sidebar({ open = false, onClose }) {
       },
     ]
 
-    if (programs.length > 0) {
-      next.push({
-        id: 'programs',
-        label: 'Programs',
-        items: programs.map((p) => ({
-          to: `/programs/${p.id}`,
-          label: p.name,
-          icon: 'folder',
-          description: p.lead || undefined,
-          actions: categoryActions('programs', p),
-        })),
-      })
-    } else {
-      next.push({
-        id: 'programs',
-        label: 'Programs',
-        items: [],
-        emptyLabel: 'No programs yet',
-      })
-    }
+    next.push({
+      id: 'programs',
+      label: 'Programs',
+      actions: sectionActions('programs'),
+      items: programs.map((p) => ({
+        to: `/programs/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: p.lead || undefined,
+        actions: categoryActions('programs', p),
+      })),
+      emptyLabel: programs.length === 0 ? 'No programs yet' : undefined,
+    })
 
     next.push({
       id: 'academy',
       label: 'Academy',
+      actions: sectionActions('academyPrograms'),
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
         ...academyPrograms.map((p) => ({
@@ -259,26 +283,19 @@ export default function Sidebar({ open = false, onClose }) {
       ],
     })
 
-    if (customPrograms.length > 0) {
-      next.push({
-        id: 'custom-programs',
-        label: 'Custom Programs',
-        items: customPrograms.map((p) => ({
-          to: `/custom-programs/${p.id}`,
-          label: p.name,
-          icon: 'folder',
-          description: p.lead || undefined,
-          actions: categoryActions('customPrograms', p),
-        })),
-      })
-    } else {
-      next.push({
-        id: 'custom-programs',
-        label: 'Custom Programs',
-        items: [],
-        emptyLabel: 'No Custom Programs yet',
-      })
-    }
+    next.push({
+      id: 'custom-programs',
+      label: 'Custom Programs',
+      actions: sectionActions('customPrograms'),
+      items: customPrograms.map((p) => ({
+        to: `/custom-programs/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: p.lead || undefined,
+        actions: categoryActions('customPrograms', p),
+      })),
+      emptyLabel: customPrograms.length === 0 ? 'No Custom Programs yet' : undefined,
+    })
 
     return next
   }, [programs, academyPrograms, customPrograms, isAdmin, isEnabled, isExecInboxUser])
@@ -401,7 +418,11 @@ export default function Sidebar({ open = false, onClose }) {
       <Modal
         open={!!editCategoryModal}
         onClose={closeEditCategory}
-        title={editCategoryModal ? `Edit ${CATEGORY_META[editCategoryModal.collectionName].label.toLowerCase()}` : ''}
+        title={
+          editCategoryModal
+            ? `${editCategoryModal.id ? 'Edit' : 'Add'} ${CATEGORY_META[editCategoryModal.collectionName].label.toLowerCase()}`
+            : ''
+        }
         busy={saving}
         footer={
           <>

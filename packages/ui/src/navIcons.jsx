@@ -147,6 +147,11 @@ const ICONS = {
       <circle cx="12" cy="19" r="1.75" />
     </svg>
   ),
+  plus: (
+    <Svg>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  ),
 }
 
 export function NavIcon({ name, className }) {
