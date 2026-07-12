@@ -15,6 +15,7 @@ export const EXPORT_COLLECTIONS = [
   { id: 'programs', label: 'Programs', app: 'Tracker' },
   { id: 'academyPrograms', label: 'Academy', app: 'Tracker' },
   { id: 'customPrograms', label: 'Custom Programs', app: 'Tracker' },
+  { id: 'courseRegistrations', label: 'Course Registrations', app: 'Tracker' },
   { id: 'projects', label: 'Projects', app: 'Tracker' },
   { id: 'tasks', label: 'Tasks', app: 'Tracker' },
   { id: 'surveys', label: 'Surveys', app: 'Tracker' },

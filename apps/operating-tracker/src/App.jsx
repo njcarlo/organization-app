@@ -9,6 +9,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
+import CourseRegistrations from './pages/CourseRegistrations'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
@@ -85,6 +86,10 @@ export default function App() {
                   }
                 />
                 <Route path="/programs/:programId" element={<ProgramPage />} />
+                <Route
+                  path="/academy/course-registrations"
+                  element={<CourseRegistrations />}
+                />
                 <Route
                   path="/academy/:itemId"
                   element={
