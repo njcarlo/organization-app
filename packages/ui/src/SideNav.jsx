@@ -84,7 +84,7 @@ export default function SideNav({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-60 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-72 max-w-[85vw] flex-col overflow-hidden border-r border-hae-line bg-white transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 ${
         open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
