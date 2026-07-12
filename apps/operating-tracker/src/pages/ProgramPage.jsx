@@ -13,12 +13,6 @@ import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
 import { HEALTH_OPTIONS } from '../constants'
 import { normalizeHealth, sortByHealth } from '../utils'
-import {
-  METRIC_TYPES,
-  formatMoney,
-  parseDollarsToCents,
-  rollupProjectMetrics,
-} from '../utils/projectMetrics'
 
 const emptyProject = {
   name: '',
@@ -26,10 +20,6 @@ const emptyProject = {
   promise: '',
   health: 'ongoing',
   targetDate: '',
-  metricType: '',
-  goalDollars: '',
-  raisedDollars: '',
-  metricsNotes: '',
   notes: '',
 }
 
@@ -106,19 +96,7 @@ export default function ProgramPage() {
         promise: newProject.promise.trim(),
         health: newProject.health,
         targetDate: newProject.targetDate || '',
-        metricType: newProject.metricType || '',
-        goalCents: newProject.metricType
-          ? parseDollarsToCents(newProject.goalDollars)
-          : null,
-        raisedCents: newProject.metricType
-          ? parseDollarsToCents(newProject.raisedDollars)
-          : null,
-        currency: 'usd',
-        metricsNotes: newProject.metricType
-          ? newProject.metricsNotes.trim()
-          : '',
         notes: newProject.notes.trim(),
-        lmsCourseId: '',
         programId,
         createdAt: serverTimestamp(),
       })
@@ -133,7 +111,6 @@ export default function ProgramPage() {
   if (loading) return <p className="text-sm text-hae-slate">Loading program…</p>
   if (!program) return <p className="text-sm text-hae-red">Program not found.</p>
 
-  const metricsRollup = rollupProjectMetrics(projects)
   const activeProjects = projects.filter((p) => normalizeHealth(p.health) !== 'completed')
   const completedProjects = projects.filter((p) => normalizeHealth(p.health) === 'completed')
   const visibleProjects = showCompleted ? projects : activeProjects
@@ -151,9 +128,6 @@ export default function ProgramPage() {
           <p className="mt-1 text-sm text-hae-slate">
             Overall lead: {program.lead || '—'}
             {projects.length ? ` · ${projects.length} projects` : ''}
-            {metricsRollup.count
-              ? ` · ${formatMoney(metricsRollup.raisedCents)} / ${formatMoney(metricsRollup.goalCents)} across ${metricsRollup.count} metric project${metricsRollup.count === 1 ? '' : 's'}`
-              : ''}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -238,54 +212,6 @@ export default function ProgramPage() {
             onChange={(e) => setNewProject({ ...newProject, targetDate: e.target.value })}
             className="rounded-md border border-hae-line px-3 py-2 text-sm"
           />
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="text-xs font-medium text-hae-slate">Metrics (optional)</span>
-            <select
-              value={newProject.metricType}
-              onChange={(e) => setNewProject({ ...newProject, metricType: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
-            >
-              {METRIC_TYPES.map((t) => (
-                <option key={t.value || 'none'} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {newProject.metricType ? (
-            <>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Goal ($)"
-                value={newProject.goalDollars}
-                onChange={(e) =>
-                  setNewProject({ ...newProject, goalDollars: e.target.value })
-                }
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              />
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Raised / spent ($)"
-                value={newProject.raisedDollars}
-                onChange={(e) =>
-                  setNewProject({ ...newProject, raisedDollars: e.target.value })
-                }
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              />
-              <input
-                placeholder="Metrics notes"
-                value={newProject.metricsNotes}
-                onChange={(e) =>
-                  setNewProject({ ...newProject, metricsNotes: e.target.value })
-                }
-                className="rounded-md border border-hae-line px-3 py-2 text-sm sm:col-span-2"
-              />
-            </>
-          ) : null}
           <textarea
             placeholder="Notes"
             rows={3}
