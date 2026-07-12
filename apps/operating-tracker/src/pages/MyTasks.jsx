@@ -124,6 +124,7 @@ export default function MyTasks() {
       waitingOn: task.waitingOn || '',
       leadershipAttention: task.leadershipAttention || 'None',
       nextAction: task.nextAction || '',
+      notes: task.notes || '',
     })
   }
 
@@ -146,6 +147,7 @@ export default function MyTasks() {
         waitingOn: draft.waitingOn.trim(),
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
+        notes: draft.notes.trim(),
       })
       cancelEdit()
       await load()
@@ -299,6 +301,11 @@ export default function MyTasks() {
                     Next: {task.nextAction}
                   </span>
                 ) : null}
+                {task.notes ? (
+                  <span className="line-clamp-2 w-full text-hae-ink/75">
+                    Notes: {task.notes}
+                  </span>
+                ) : null}
               </div>
             </button>
           ))
@@ -417,6 +424,14 @@ export default function MyTasks() {
                 className={fieldClass}
                 value={draft.nextAction}
                 onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
+              />
+            </Field>
+            <Field label="Notes" className="sm:col-span-2">
+              <textarea
+                className={fieldClass}
+                rows={3}
+                value={draft.notes}
+                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               />
             </Field>
           </div>
@@ -561,6 +576,14 @@ export default function MyTasks() {
                               className={fieldClass}
                               value={draft.nextAction}
                               onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
+                            />
+                          </Field>
+                          <Field label="Notes" className="sm:col-span-2 lg:col-span-3">
+                            <textarea
+                              className={fieldClass}
+                              rows={3}
+                              value={draft.notes}
+                              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                             />
                           </Field>
                         </div>
