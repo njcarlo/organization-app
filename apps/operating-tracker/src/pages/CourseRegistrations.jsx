@@ -243,10 +243,33 @@ export default function CourseRegistrations() {
         />
       )}
 
-      {/* Dashboard: courses tabulated + by program type + overall */}
+      {/* Dashboard: totals by program type + overall, then courses tabulated */}
       <div className="rounded-xl border border-hae-line bg-white p-4">
         <h2 className="text-sm font-semibold text-hae-ink">Payments dashboard</h2>
-        <div className="hae-table-scroll mt-3 rounded-lg border border-hae-line">
+        <div className="mt-3 space-y-2">
+          {totalsByProgramType.map((t) => (
+            <div
+              key={t.programType}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hae-mist/40 px-3 py-2"
+            >
+              <p className="text-sm font-semibold text-hae-ink">
+                Total {t.programType} ({t.count} registration{t.count === 1 ? '' : 's'})
+              </p>
+              <p className="text-sm font-semibold text-hae-ink">{formatMoney(t.total)}</p>
+            </div>
+          ))}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hae-crimson/5 px-3 py-2">
+            <p className="text-sm font-semibold text-hae-ink">Total across all courses</p>
+            <p
+              className={`text-lg font-semibold ${
+                grandTotal > 0 ? 'text-emerald-600' : 'text-hae-red'
+              }`}
+            >
+              {formatMoney(grandTotal)}
+            </p>
+          </div>
+        </div>
+        <div className="hae-table-scroll mt-4 rounded-lg border border-hae-line">
           <table className="w-full text-left">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
@@ -276,29 +299,6 @@ export default function CourseRegistrations() {
               )}
             </tbody>
           </table>
-        </div>
-        <div className="mt-4 space-y-2 border-t border-hae-line pt-4">
-          {totalsByProgramType.map((t) => (
-            <div
-              key={t.programType}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hae-mist/40 px-3 py-2"
-            >
-              <p className="text-sm font-semibold text-hae-ink">
-                Total {t.programType} ({t.count} registration{t.count === 1 ? '' : 's'})
-              </p>
-              <p className="text-sm font-semibold text-hae-ink">{formatMoney(t.total)}</p>
-            </div>
-          ))}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-hae-crimson/5 px-3 py-2">
-            <p className="text-sm font-semibold text-hae-ink">Total across all courses</p>
-            <p
-              className={`text-lg font-semibold ${
-                grandTotal > 0 ? 'text-emerald-600' : 'text-hae-red'
-              }`}
-            >
-              {formatMoney(grandTotal)}
-            </p>
-          </div>
         </div>
       </div>
 
