@@ -121,13 +121,46 @@ export default function CourseDetail() {
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
         <p className="mt-1 text-sm text-hae-slate">
           {course.path === 'flagship' ? 'Flagship Deep Dive' : 'Academy Fast Track'}
-          {course.facilitator ? ` · ${course.facilitator}` : ''}
-          {course.durationWeeks ? ` · ${course.durationWeeks} weeks` : ''}
           {course.status ? ` · ${course.status}` : ''}
         </p>
         {course.description ? (
           <p className="mt-3 text-sm text-hae-slate">{course.description}</p>
         ) : null}
+
+        <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+              HAE Lead
+            </dt>
+            <dd className="text-hae-ink">{course.haeLead || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+              Start date
+            </dt>
+            <dd className="text-hae-ink">{course.startDate || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+              Duration
+            </dt>
+            <dd className="text-hae-ink">
+              {course.durationWeeks ? `${course.durationWeeks} weeks` : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+              Instructor
+            </dt>
+            <dd className="text-hae-ink">{course.facilitator || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+              Guest speaker
+            </dt>
+            <dd className="text-hae-ink">{course.guestSpeaker || '—'}</dd>
+          </div>
+        </dl>
       </div>
 
       {canManage ? (

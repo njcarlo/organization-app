@@ -22,7 +22,10 @@ export default function Courses() {
   const [form, setForm] = useState({
     name: '',
     path: 'academy',
+    haeLead: '',
+    startDate: '',
     facilitator: '',
+    guestSpeaker: '',
     description: '',
     durationWeeks: '',
     status: 'Draft',
@@ -47,7 +50,10 @@ export default function Courses() {
     await addDoc(collection(db, 'courses'), {
       name: form.name.trim(),
       path: form.path,
+      haeLead: form.haeLead.trim(),
+      startDate: form.startDate,
       facilitator: form.facilitator.trim(),
+      guestSpeaker: form.guestSpeaker.trim(),
       description: form.description.trim(),
       durationWeeks: form.durationWeeks ? Number(form.durationWeeks) : null,
       status: form.status,
@@ -58,7 +64,10 @@ export default function Courses() {
     setForm({
       name: '',
       path: 'academy',
+      haeLead: '',
+      startDate: '',
       facilitator: '',
+      guestSpeaker: '',
       description: '',
       durationWeeks: '',
       status: 'Draft',
@@ -155,9 +164,28 @@ export default function Courses() {
           ))}
         </select>
         <input
-          placeholder="Facilitator / expert"
+          placeholder="HAE Lead"
+          value={form.haeLead}
+          onChange={(e) => setForm({ ...form, haeLead: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+        />
+        <input
+          type="date"
+          placeholder="Start date"
+          value={form.startDate}
+          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm text-hae-slate"
+        />
+        <input
+          placeholder="Instructor"
           value={form.facilitator}
           onChange={(e) => setForm({ ...form, facilitator: e.target.value })}
+          className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+        />
+        <input
+          placeholder="Guest speaker"
+          value={form.guestSpeaker}
+          onChange={(e) => setForm({ ...form, guestSpeaker: e.target.value })}
           className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
         <input

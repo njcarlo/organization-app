@@ -10,16 +10,30 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
+const emptyCourseFields = {
+  haeLead: '',
+  startDate: '',
+  durationWeeks: '',
+  instructor: '',
+  guestSpeaker: '',
+}
+
 /**
  * Generic add/edit/delete panel for a Program-shaped top-level collection
  * (name + lead + order), mirroring Admin's Programs tab. Powers the Academy
- * and Custom Programs sidebar categories.
+ * and Custom Programs sidebar categories. Pass showCourseFields to also
+ * capture Academy course-style fields (HAE Lead, Start Date, Duration,
+ * Instructor, Guest Speaker), mirroring apps/lms Courses.jsx.
  */
-export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
+export default function CategoryItemsAdmin({ collectionName, itemLabel, showCourseFields }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [newItem, setNewItem] = useState({ name: '', lead: '' })
+  const [newItem, setNewItem] = useState({
+    name: '',
+    lead: '',
+    ...(showCourseFields ? emptyCourseFields : {}),
+  })
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
 
@@ -53,8 +67,17 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
         lead: newItem.lead.trim(),
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
+        ...(showCourseFields
+          ? {
+              haeLead: newItem.haeLead.trim(),
+              startDate: newItem.startDate,
+              durationWeeks: newItem.durationWeeks ? Number(newItem.durationWeeks) : null,
+              instructor: newItem.instructor.trim(),
+              guestSpeaker: newItem.guestSpeaker.trim(),
+            }
+          : {}),
       })
-      setNewItem({ name: '', lead: '' })
+      setNewItem({ name: '', lead: '', ...(showCourseFields ? emptyCourseFields : {}) })
       await load()
     } catch (err) {
       setError(err.message || 'Failed to add item')
@@ -68,6 +91,15 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
       await updateDoc(doc(db, collectionName, editingId), {
         name: draft.name.trim(),
         lead: draft.lead.trim(),
+        ...(showCourseFields
+          ? {
+              haeLead: draft.haeLead.trim(),
+              startDate: draft.startDate,
+              durationWeeks: draft.durationWeeks ? Number(draft.durationWeeks) : null,
+              instructor: draft.instructor.trim(),
+              guestSpeaker: draft.guestSpeaker.trim(),
+            }
+          : {}),
       })
       setEditingId(null)
       setDraft(null)
@@ -116,6 +148,43 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
           onChange={(e) => setNewItem({ ...newItem, lead: e.target.value })}
           className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
+        {showCourseFields ? (
+          <>
+            <input
+              placeholder="HAE Lead"
+              value={newItem.haeLead}
+              onChange={(e) => setNewItem({ ...newItem, haeLead: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              type="date"
+              placeholder="Start date"
+              value={newItem.startDate}
+              onChange={(e) => setNewItem({ ...newItem, startDate: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+            />
+            <input
+              type="number"
+              min="1"
+              placeholder="Duration (weeks)"
+              value={newItem.durationWeeks}
+              onChange={(e) => setNewItem({ ...newItem, durationWeeks: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            />
+            <input
+              placeholder="Instructor"
+              value={newItem.instructor}
+              onChange={(e) => setNewItem({ ...newItem, instructor: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              placeholder="Guest speaker"
+              value={newItem.guestSpeaker}
+              onChange={(e) => setNewItem({ ...newItem, guestSpeaker: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </>
+        ) : null}
         <button
           type="submit"
           className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white"
@@ -144,6 +213,42 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
                       value={draft.name}
                       onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                     />
+                    {showCourseFields ? (
+                      <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                        <input
+                          placeholder="HAE Lead"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs"
+                          value={draft.haeLead}
+                          onChange={(e) => setDraft({ ...draft, haeLead: e.target.value })}
+                        />
+                        <input
+                          type="date"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs text-hae-slate"
+                          value={draft.startDate}
+                          onChange={(e) => setDraft({ ...draft, startDate: e.target.value })}
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Duration (weeks)"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs"
+                          value={draft.durationWeeks}
+                          onChange={(e) => setDraft({ ...draft, durationWeeks: e.target.value })}
+                        />
+                        <input
+                          placeholder="Instructor"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs"
+                          value={draft.instructor}
+                          onChange={(e) => setDraft({ ...draft, instructor: e.target.value })}
+                        />
+                        <input
+                          placeholder="Guest speaker"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs sm:col-span-2"
+                          value={draft.guestSpeaker}
+                          onChange={(e) => setDraft({ ...draft, guestSpeaker: e.target.value })}
+                        />
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2">
                     <input
@@ -165,7 +270,22 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
                 </tr>
               ) : (
                 <tr key={p.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm font-medium">{p.name}</td>
+                  <td className="px-3 py-2 text-sm font-medium">
+                    {p.name}
+                    {showCourseFields ? (
+                      <div className="mt-0.5 text-xs font-normal text-hae-slate">
+                        {[
+                          p.haeLead && `HAE Lead: ${p.haeLead}`,
+                          p.startDate && `Start: ${p.startDate}`,
+                          p.durationWeeks && `${p.durationWeeks} weeks`,
+                          p.instructor && `Instructor: ${p.instructor}`,
+                          p.guestSpeaker && `Guest: ${p.guestSpeaker}`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.lead || '—'}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                   <td className="px-3 py-2 text-right">
@@ -174,7 +294,19 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel }) {
                         type="button"
                         onClick={() => {
                           setEditingId(p.id)
-                          setDraft({ name: p.name, lead: p.lead || '' })
+                          setDraft({
+                            name: p.name,
+                            lead: p.lead || '',
+                            ...(showCourseFields
+                              ? {
+                                  haeLead: p.haeLead || '',
+                                  startDate: p.startDate || '',
+                                  durationWeeks: p.durationWeeks ?? '',
+                                  instructor: p.instructor || '',
+                                  guestSpeaker: p.guestSpeaker || '',
+                                }
+                              : {}),
+                          })
                         }}
                         className="text-xs text-hae-slate hover:text-hae-crimson"
                       >
