@@ -13,13 +13,19 @@ export const DEFAULT_PROGRAMS = [
 ]
 
 export const TASK_STATUSES = [
-  'Time Sensitive',
   'Not Started',
-  'In Progress',
-  'Waiting',
-  'Review',
+  'Ongoing',
+  'Needs Attention',
+  'Time Sensitive',
   'Complete',
 ]
+
+/** Legacy task status values kept for backward-compat with existing data. */
+export const TASK_STATUS_ALIASES = {
+  'In Progress': 'Ongoing',
+  Waiting: 'Needs Attention',
+  Review: 'Needs Attention',
+}
 
 export const PRIORITIES = ['', 'HIGH', 'MEDIUM', 'LOW']
 
@@ -32,10 +38,15 @@ export const LEADERSHIP_ATTENTION = [
 export const EXEC_INBOX_EMAILS = ['rmarchadesch@harvardae.org', 'rryan@harvardae.org']
 
 export const HEALTH_OPTIONS = [
+  { value: 'not-started', label: 'Not Started', className: 'bg-gray-200 text-black' },
+  { value: 'ongoing', label: 'Ongoing', className: 'bg-orange-200 text-amber-900' },
+  { value: 'needs-attention', label: 'Needs Attention', className: 'bg-yellow-200 text-black' },
   { value: 'time-sensitive', label: 'Time Sensitive', className: 'bg-hae-crimson text-white' },
-  { value: 'not-started', label: 'Not Started', className: 'bg-slate-100 text-hae-slate' },
-  { value: 'on-track', label: 'On Track', className: 'bg-emerald-100 text-hae-green' },
-  { value: 'needs-attention', label: 'Needs Attention', className: 'bg-amber-100 text-hae-yellow' },
-  { value: 'at-risk', label: 'At Risk', className: 'bg-red-100 text-hae-red' },
-  { value: 'completed', label: 'Completed', className: 'bg-blue-100 text-blue-700' },
+  { value: 'completed', label: 'Complete', className: 'bg-green-900 text-green-400' },
 ]
+
+/** Legacy project health values kept for backward-compat with existing data. */
+export const HEALTH_ALIASES = {
+  'on-track': 'ongoing',
+  'at-risk': 'needs-attention',
+}

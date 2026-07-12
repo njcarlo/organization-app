@@ -13,22 +13,18 @@ import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import {
   effectivePriority,
   formatDate,
+  isWaitingOn,
+  normalizeTaskStatus,
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
   sortByPriorityThenDue,
+  statusBadgeClass,
+  WAITING_ON_BADGE_CLASS,
 } from '../utils'
 
 const PAGE_SIZE = 10
-const STATUS_FILTERS = [
-  'Active',
-  'All',
-  'Not Started',
-  'In Progress',
-  'Waiting',
-  'Review',
-  'Complete',
-]
+const STATUS_FILTERS = ['Active', 'All', ...TASK_STATUSES]
 
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
@@ -95,9 +91,9 @@ export default function MyTasks() {
       list = list.filter((t) => (t.owner || '').toLowerCase() === myName)
     }
     if (statusFilter === 'Active') {
-      list = list.filter((t) => t.status !== 'Complete')
+      list = list.filter((t) => normalizeTaskStatus(t.status) !== 'Complete')
     } else if (statusFilter !== 'All') {
-      list = list.filter((t) => t.status === statusFilter)
+      list = list.filter((t) => normalizeTaskStatus(t.status) === statusFilter)
     }
     list.sort(sortByPriorityThenDue)
     return list
@@ -123,7 +119,7 @@ export default function MyTasks() {
       name: task.name || '',
       owner: task.owner || '',
       dueDate: task.dueDate || '',
-      status: task.status || 'Not Started',
+      status: normalizeTaskStatus(task.status || 'Not Started'),
       priority: task.priority || '',
       waitingOn: task.waitingOn || '',
       leadershipAttention: task.leadershipAttention || 'None',
@@ -278,7 +274,18 @@ export default function MyTasks() {
                 </span>
               </div>
               <div className="hae-mobile-card__meta">
-                <span>{task.status || '—'}</span>
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadgeClass(task.status)}`}
+                >
+                  {task.status ? normalizeTaskStatus(task.status) : '—'}
+                </span>
+                {isWaitingOn(task) ? (
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${WAITING_ON_BADGE_CLASS}`}
+                  >
+                    Waiting On
+                  </span>
+                ) : null}
                 <span>Due {formatDate(task.dueDate)}</span>
                 {isStaff && viewAll ? <span>{task.owner || 'Unassigned'}</span> : null}
                 <span className="line-clamp-1">
@@ -592,7 +599,22 @@ export default function MyTasks() {
                       <td className="whitespace-nowrap px-3 py-2 text-sm text-hae-slate">
                         {formatDate(task.dueDate)}
                       </td>
-                      <td className="px-3 py-2 text-sm text-hae-slate">{task.status}</td>
+                      <td className="px-3 py-2 text-sm">
+                        <div className="flex flex-wrap gap-1">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(task.status)}`}
+                          >
+                            {normalizeTaskStatus(task.status)}
+                          </span>
+                          {isWaitingOn(task) ? (
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${WAITING_ON_BADGE_CLASS}`}
+                            >
+                              Waiting On
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
                       <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                         <span className="line-clamp-2">{task.waitingOn || '—'}</span>
                       </td>

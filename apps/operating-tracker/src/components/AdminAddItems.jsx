@@ -72,7 +72,7 @@ const emptyForms = {
     name: '',
     lead: '',
     promise: '',
-    health: 'on-track',
+    health: 'ongoing',
     targetDate: '',
   },
   task: {

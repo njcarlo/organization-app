@@ -11,7 +11,8 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
-import { sortByHealth } from '../utils'
+import { HEALTH_OPTIONS } from '../constants'
+import { normalizeHealth, sortByHealth } from '../utils'
 import {
   METRIC_TYPES,
   formatMoney,
@@ -23,7 +24,7 @@ const emptyProject = {
   name: '',
   lead: '',
   promise: '',
-  health: 'on-track',
+  health: 'ongoing',
   targetDate: '',
   metricType: '',
   goalDollars: '',
@@ -46,6 +47,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [dense, setDense] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
 
   const load = useCallback(async () => {
@@ -143,6 +145,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     return <p className="text-sm text-hae-red">{categoryLabel} item not found.</p>
 
   const metricsRollup = rollupProjectMetrics(projects)
+  const activeProjects = projects.filter((p) => normalizeHealth(p.health) !== 'completed')
+  const completedProjects = projects.filter((p) => normalizeHealth(p.health) === 'completed')
+  const visibleProjects = showCompleted ? projects : activeProjects
 
   return (
     <div className="space-y-5">
@@ -163,6 +168,17 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {completedProjects.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowCompleted((v) => !v)}
+              className="hae-btn-secondary"
+            >
+              {showCompleted
+                ? 'Hide completed'
+                : `Show ${completedProjects.length} completed`}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => setDense((v) => !v)}
@@ -220,12 +236,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               onChange={(e) => setNewProject({ ...newProject, health: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
             >
-              <option value="time-sensitive">Time Sensitive</option>
-              <option value="not-started">Not Started</option>
-              <option value="on-track">On Track</option>
-              <option value="needs-attention">Needs Attention</option>
-              <option value="at-risk">At Risk</option>
-              <option value="completed">Completed</option>
+              {HEALTH_OPTIONS.map((h) => (
+                <option key={h.value} value={h.value}>
+                  {h.label}
+                </option>
+              ))}
             </select>
           </label>
           <input
@@ -290,8 +305,12 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
             No projects yet. Add one to get started.
           </div>
+        ) : visibleProjects.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
+            All projects are complete — show completed above if needed.
+          </div>
         ) : (
-          projects.map((project) => (
+          visibleProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
