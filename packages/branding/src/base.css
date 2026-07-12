@@ -19,9 +19,7 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-hae-ink);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184, 0, 40, 0.08), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, var(--color-hae-mist) 100%);
+  background: var(--color-hae-mist);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -51,26 +49,35 @@ body {
   gap: 0.35rem;
   width: auto;
   max-width: max-content;
-  border-radius: 0.375rem;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: var(--color-hae-crimson, #b80028);
-  padding: 0.4rem 0.85rem;
+  padding: 0.55rem 1.1rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 1px 2px rgba(184, 0, 40, 0.15), 0 6px 16px rgba(184, 0, 40, 0.18);
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .hae-btn:hover {
   background: var(--color-hae-crimson-dark, #960021);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(184, 0, 40, 0.18), 0 10px 22px rgba(184, 0, 40, 0.22);
+}
+
+.hae-btn:active {
+  transform: translateY(0);
 }
 
 .hae-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .hae-btn-secondary {
@@ -80,10 +87,10 @@ body {
   gap: 0.35rem;
   width: auto;
   max-width: max-content;
-  border-radius: 0.375rem;
-  border: 1px solid var(--color-hae-line, #e7e7e7);
-  background: #fff;
-  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--color-hae-mist, #f6f6f6);
+  padding: 0.55rem 1.1rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-hae-slate, #3e3e3e);
@@ -92,7 +99,7 @@ body {
 }
 
 .hae-btn-secondary:hover {
-  background: var(--color-hae-mist, #f6f6f6);
+  background: var(--color-hae-line, #e7e7e7);
   color: var(--color-hae-ink, #1a1a1a);
 }
 
@@ -152,10 +159,11 @@ body {
 }
 
 .hae-mobile-card {
-  border: 1px solid var(--color-hae-line, #e7e7e7);
-  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 1.25rem;
   background: #fff;
-  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-card, 0 1px 2px rgba(26, 26, 26, 0.04), 0 10px 28px rgba(26, 26, 26, 0.06));
+  padding: 1rem 1.15rem;
   text-align: left;
 }
 
@@ -172,8 +180,7 @@ button.hae-mobile-card {
 
 button.hae-mobile-card:hover,
 button.hae-mobile-card:focus-visible {
-  border-color: color-mix(in srgb, var(--color-hae-crimson, #a51c30) 45%, var(--color-hae-line, #e7e7e7));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-hae-crimson, #a51c30) 25%, transparent);
+  box-shadow: var(--shadow-card-hover, 0 2px 4px rgba(26, 26, 26, 0.05), 0 16px 36px rgba(26, 26, 26, 0.09));
   outline: none;
 }
 

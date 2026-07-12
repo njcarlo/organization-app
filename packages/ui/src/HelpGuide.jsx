@@ -101,7 +101,7 @@ function HelpGuideView({ moduleId, role, roleLabel }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search help…"
-          className="w-full max-w-md rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          className="w-full max-w-md rounded-full border border-hae-line bg-white px-4 py-2.5 text-sm outline-none focus:border-hae-crimson"
         />
         <p className="text-xs text-hae-slate">
           Tip: open Help anytime from the sidebar.
@@ -118,10 +118,10 @@ function HelpGuideView({ moduleId, role, roleLabel }) {
                 key={s.id}
                 type="button"
                 onClick={() => setActiveId(s.id)}
-                className={`block w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                className={`block w-full rounded-2xl px-3 py-2.5 text-left text-sm transition-colors ${
                   active?.id === s.id
-                    ? 'bg-hae-crimson/10 font-semibold text-hae-crimson'
-                    : 'text-hae-ink/80 hover:bg-black/5'
+                    ? 'bg-hae-crimson text-white font-semibold shadow-[0_4px_12px_rgba(184,0,40,0.22)]'
+                    : 'text-hae-ink/80 hover:bg-hae-mist'
                 }`}
               >
                 {s.title}
@@ -134,7 +134,7 @@ function HelpGuideView({ moduleId, role, roleLabel }) {
           {!active ? (
             <p className="text-sm text-hae-slate">Select a topic.</p>
           ) : (
-            <article className="rounded-xl border border-hae-line bg-white p-5 sm:p-6">
+            <article className="rounded-3xl border border-transparent bg-white p-6 shadow-[0_1px_2px_rgba(26,26,26,0.04),0_10px_28px_rgba(26,26,26,0.06)] sm:p-8">
               <h2 className="font-display text-2xl text-hae-ink">{active.title}</h2>
               <div className="mt-5 space-y-6">
                 {active.body.map((block) => (
@@ -155,7 +155,7 @@ function HelpGuideView({ moduleId, role, roleLabel }) {
             </article>
           )}
 
-          <aside className="rounded-xl border border-dashed border-hae-line bg-hae-mist/50 p-4 text-sm text-hae-slate">
+          <aside className="rounded-3xl border border-transparent bg-hae-mist p-5 text-sm text-hae-slate">
             <p className="font-medium text-hae-ink">Still stuck?</p>
             <p className="mt-1">
               Ask an HAE admin to check your role and email on Tracker → Admin →

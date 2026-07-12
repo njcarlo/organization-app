@@ -61,7 +61,7 @@ export default function LoginPage({
         </div>
         <form
           onSubmit={handleSubmit}
-          className="border border-hae-line bg-white/95 p-4 shadow-[0_8px_28px_rgba(26,26,26,0.04)] sm:p-6"
+          className="rounded-3xl border border-transparent bg-white/95 p-6 shadow-[0_1px_2px_rgba(26,26,26,0.04),0_16px_40px_rgba(26,26,26,0.08)] sm:p-8"
         >
           <label className="block text-sm font-medium text-hae-ink">
             Email
@@ -70,7 +70,7 @@ export default function LoginPage({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              className="mt-1.5 w-full rounded-2xl border border-hae-line bg-hae-mist/60 px-3.5 py-2.5 text-sm outline-none focus:border-hae-crimson focus:bg-white"
             />
           </label>
           {mode === 'signin' ? (
@@ -81,7 +81,7 @@ export default function LoginPage({
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                className="mt-1.5 w-full rounded-2xl border border-hae-line bg-hae-mist/60 px-3.5 py-2.5 text-sm outline-none focus:border-hae-crimson focus:bg-white"
               />
             </label>
           ) : null}
@@ -90,7 +90,7 @@ export default function LoginPage({
           <button
             type="submit"
             disabled={submitting}
-            className="mt-5 w-full bg-hae-crimson px-4 py-2.5 text-sm font-semibold tracking-wide text-white uppercase hover:bg-hae-crimson-dark disabled:opacity-60"
+            className="mt-5 w-full rounded-full bg-hae-crimson px-4 py-3 text-sm font-semibold tracking-wide text-white uppercase shadow-[0_6px_16px_rgba(184,0,40,0.22)] hover:bg-hae-crimson-dark disabled:opacity-60"
           >
             {submitting
               ? mode === 'reset'
