@@ -270,6 +270,41 @@ Taylor Ng,taylor@harvardae.org,Fast Track GTM,academy,Enrolled,0`,
     },
   },
 
+  courseRegistrations: {
+    id: 'courseRegistrations',
+    label: 'Academy course registrations',
+    collection: 'courseRegistrations',
+    description: 'Manual enrollee registrations for Academy courses, with amount paid.',
+    required: ['course', 'firstName', 'lastName'],
+    optional: ['email', 'amountPaid', '_id'],
+    defaults: { amountPaid: 0 },
+    exampleCsv: `course,firstName,lastName,email,amountPaid
+Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250`,
+    exampleJson: [
+      {
+        course: 'Fast Track GTM',
+        firstName: 'Taylor',
+        lastName: 'Ng',
+        email: 'taylor@harvardae.org',
+        amountPaid: 250,
+      },
+    ],
+    mapRow(row) {
+      const course = String(row.course || '').trim()
+      const firstName = String(row.firstName || '').trim()
+      const lastName = String(row.lastName || '').trim()
+      if (!course || !firstName || !lastName) return null
+      return {
+        _id: row._id || row.id || undefined,
+        course,
+        firstName,
+        lastName,
+        email: String(row.email || '').trim().toLowerCase(),
+        amountPaid: Number(row.amountPaid) || 0,
+      }
+    },
+  },
+
   tasks: {
     id: 'tasks',
     label: 'Tracker tasks',
@@ -344,7 +379,7 @@ export const HOW_TO_PROVIDE_DATA = {
     'For Cursor / AI help: paste the CSV or JSON in chat and say which module (e.g. “import these as CRM contacts”).',
   ],
   forAi: [
-    'Say the module name: surveys | contacts | members | experts | courses | enrollments | tasks.',
+    'Say the module name: surveys | contacts | members | experts | courses | enrollments | courseRegistrations | tasks.',
     'Paste CSV with a header row, or a JSON array of objects.',
     'Mention if rows should update existing records (include _id) or always create new ones.',
   ],

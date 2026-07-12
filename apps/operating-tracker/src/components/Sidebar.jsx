@@ -84,25 +84,19 @@ export default function Sidebar({ open = false, onClose }) {
       })
     }
 
-    if (academyPrograms.length > 0) {
-      next.push({
-        id: 'academy',
-        label: 'Academy',
-        items: academyPrograms.map((p) => ({
+    next.push({
+      id: 'academy',
+      label: 'Academy',
+      items: [
+        { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
+        ...academyPrograms.map((p) => ({
           to: `/academy/${p.id}`,
           label: p.name,
           icon: 'folder',
           description: p.lead || undefined,
         })),
-      })
-    } else {
-      next.push({
-        id: 'academy',
-        label: 'Academy',
-        items: [],
-        emptyLabel: 'No Academy items yet',
-      })
-    }
+      ],
+    })
 
     if (customPrograms.length > 0) {
       next.push({

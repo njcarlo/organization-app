@@ -112,6 +112,7 @@ function BulkImportGate() {
           'experts',
           'courses',
           'enrollments',
+          'courseRegistrations',
           'tasks',
         ]}
         defaultModuleId="contacts"
