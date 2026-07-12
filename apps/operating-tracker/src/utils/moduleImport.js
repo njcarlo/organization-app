@@ -274,19 +274,30 @@ Taylor Ng,taylor@harvardae.org,Fast Track GTM,academy,Enrolled,0`,
     id: 'courseRegistrations',
     label: 'Academy course registrations',
     collection: 'courseRegistrations',
-    description: 'Manual enrollee registrations for Academy courses, with amount paid.',
+    description:
+      'Manual enrollee registrations for Academy courses, with amount paid. Tag each row Academy or Academy Flagship via programType.',
     required: ['course', 'firstName', 'lastName'],
-    optional: ['email', 'amountPaid', '_id'],
-    defaults: { amountPaid: 0 },
-    exampleCsv: `course,firstName,lastName,email,amountPaid
-Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250`,
+    optional: ['programType', 'email', 'amountPaid', '_id'],
+    defaults: { amountPaid: 0, programType: 'Academy' },
+    exampleCsv: `course,programType,firstName,lastName,email,amountPaid
+Fast Track GTM,Academy,Taylor,Ng,taylor@harvardae.org,250
+Venture Lab,Academy Flagship,Jordan,Lee,jordan@harvardae.org,500`,
     exampleJson: [
       {
         course: 'Fast Track GTM',
+        programType: 'Academy',
         firstName: 'Taylor',
         lastName: 'Ng',
         email: 'taylor@harvardae.org',
         amountPaid: 250,
+      },
+      {
+        course: 'Venture Lab',
+        programType: 'Academy Flagship',
+        firstName: 'Jordan',
+        lastName: 'Lee',
+        email: 'jordan@harvardae.org',
+        amountPaid: 500,
       },
     ],
     mapRow(row) {
@@ -294,9 +305,11 @@ Fast Track GTM,Taylor,Ng,taylor@harvardae.org,250`,
       const firstName = String(row.firstName || '').trim()
       const lastName = String(row.lastName || '').trim()
       if (!course || !firstName || !lastName) return null
+      const programType = String(row.programType || '').trim()
       return {
         _id: row._id || row.id || undefined,
         course,
+        programType: programType === 'Academy Flagship' ? 'Academy Flagship' : 'Academy',
         firstName,
         lastName,
         email: String(row.email || '').trim().toLowerCase(),
