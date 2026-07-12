@@ -12,6 +12,7 @@ import { db } from '../firebase'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 
 const emptyForm = { course: '', firstName: '', lastName: '', email: '', amountPaid: '' }
+const PAGE_SIZE = 10
 
 function formatMoney(cents) {
   return (cents || 0).toLocaleString('en-US', {
@@ -21,6 +22,29 @@ function formatMoney(cents) {
   })
 }
 
+function toMillis(value) {
+  return value?.toMillis?.() ?? 0
+}
+
+function formatDate(value) {
+  const millis = toMillis(value)
+  if (!millis) return '—'
+  return new Date(millis).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+const COLUMNS = [
+  { key: 'course', label: 'Course' },
+  { key: 'firstName', label: 'First Name' },
+  { key: 'lastName', label: 'Last Name' },
+  { key: 'email', label: 'Email Address' },
+  { key: 'amountPaid', label: 'Amount Paid' },
+  { key: 'createdAt', label: 'Date Added' },
+]
+
 export default function CourseRegistrations() {
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,6 +53,10 @@ export default function CourseRegistrations() {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
   const [showImport, setShowImport] = useState(false)
+  const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState('createdAt')
+  const [sortDir, setSortDir] = useState('desc')
+  const [page, setPage] = useState(1)
 
   const load = useCallback(async () => {
     setError('')
@@ -65,6 +93,45 @@ export default function CourseRegistrations() {
     () => registrations.reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0),
     [registrations]
   )
+
+  const filteredRegistrations = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return registrations
+    return registrations.filter((r) =>
+      [r.course, r.firstName, r.lastName, r.email]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(term))
+    )
+  }, [registrations, search])
+
+  const sortedRegistrations = useMemo(() => {
+    const list = [...filteredRegistrations]
+    const dir = sortDir === 'asc' ? 1 : -1
+    list.sort((a, b) => {
+      if (sortKey === 'createdAt') return dir * (toMillis(a.createdAt) - toMillis(b.createdAt))
+      if (sortKey === 'amountPaid')
+        return dir * ((Number(a.amountPaid) || 0) - (Number(b.amountPaid) || 0))
+      return dir * String(a[sortKey] || '').localeCompare(String(b[sortKey] || ''))
+    })
+    return list
+  }, [filteredRegistrations, sortKey, sortDir])
+
+  const pageCount = Math.max(1, Math.ceil(sortedRegistrations.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const pagedRegistrations = useMemo(
+    () => sortedRegistrations.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [sortedRegistrations, currentPage]
+  )
+
+  const handleSort = (key) => {
+    setPage(1)
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(key === 'createdAt' ? 'desc' : 'asc')
+    }
+  }
 
   const addRegistration = async (e) => {
     e.preventDefault()
@@ -168,7 +235,13 @@ export default function CourseRegistrations() {
         </div>
         <div className="mt-4 flex items-center justify-between rounded-lg bg-hae-crimson/5 px-3 py-2">
           <p className="text-sm font-semibold text-hae-ink">Total across all courses</p>
-          <p className="text-lg font-semibold text-hae-crimson">{formatMoney(grandTotal)}</p>
+          <p
+            className={`text-lg font-semibold ${
+              grandTotal > 0 ? 'text-emerald-600' : 'text-hae-red'
+            }`}
+          >
+            {formatMoney(grandTotal)}
+          </p>
         </div>
       </div>
 
@@ -223,20 +296,43 @@ export default function CourseRegistrations() {
         </div>
       </form>
 
+      <div className="flex items-center justify-between gap-3">
+        <input
+          type="search"
+          placeholder="Search registrations…"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
+          className="w-full max-w-xs rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+        />
+        <p className="whitespace-nowrap text-xs text-hae-slate">
+          {sortedRegistrations.length} registration{sortedRegistrations.length === 1 ? '' : 's'}
+        </p>
+      </div>
+
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
         <table className="w-full text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
-              <th className="px-3 py-2 font-semibold">Course</th>
-              <th className="px-3 py-2 font-semibold">First Name</th>
-              <th className="px-3 py-2 font-semibold">Last Name</th>
-              <th className="px-3 py-2 font-semibold">Email Address</th>
-              <th className="px-3 py-2 font-semibold">Amount Paid</th>
+              {COLUMNS.map((col) => (
+                <th key={col.key} className="px-3 py-2 font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => handleSort(col.key)}
+                    className="flex items-center gap-1 uppercase text-hae-slate hover:text-hae-ink"
+                  >
+                    {col.label}
+                    {sortKey === col.key && <span>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                  </button>
+                </th>
+              ))}
               <th className="px-3 py-2 font-semibold w-24" />
             </tr>
           </thead>
           <tbody>
-            {registrations.map((r) =>
+            {pagedRegistrations.map((r) =>
               editingId === r.id && draft ? (
                 <tr key={r.id} className="bg-amber-50">
                   <td className="px-3 py-2">
@@ -278,6 +374,7 @@ export default function CourseRegistrations() {
                       onChange={(e) => setDraft({ ...draft, amountPaid: e.target.value })}
                     />
                   </td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(r.createdAt)}</td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
                       type="button"
@@ -297,6 +394,7 @@ export default function CourseRegistrations() {
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {formatMoney(Number(r.amountPaid) || 0)}
                   </td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(r.createdAt)}</td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                       <button
@@ -327,16 +425,42 @@ export default function CourseRegistrations() {
                 </tr>
               )
             )}
-            {registrations.length === 0 && (
+            {sortedRegistrations.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-sm text-hae-slate">
-                  No registrations yet. Add one above or import a list.
+                <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
+                  {registrations.length === 0
+                    ? 'No registrations yet. Add one above or import a list.'
+                    : 'No registrations match your search.'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between gap-3 text-sm text-hae-slate">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="hae-btn-secondary rounded-md border border-hae-line px-3 py-1.5 text-xs font-semibold uppercase text-hae-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <p>
+            Page {currentPage} of {pageCount}
+          </p>
+          <button
+            type="button"
+            disabled={currentPage >= pageCount}
+            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+            className="hae-btn-secondary rounded-md border border-hae-line px-3 py-1.5 text-xs font-semibold uppercase text-hae-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }
