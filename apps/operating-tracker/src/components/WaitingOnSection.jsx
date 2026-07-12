@@ -6,7 +6,7 @@ import {
   programNameOf,
   projectNameOf,
 } from '../utils'
-import TaskDetailPopup, { taskDetailRows } from './TaskDetailPopup'
+import TaskDetailPopup from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
 
@@ -23,7 +23,7 @@ function PriorityCell({ task }) {
   )
 }
 
-export default function WaitingOnSection({ tasks, programsById, projectsById }) {
+export default function WaitingOnSection({ tasks, programsById, projectsById, onDataChanged }) {
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState(null)
 
@@ -93,7 +93,11 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
           <tbody>
             {rows.map((task, i) =>
               task ? (
-                <tr key={task.id} className="h-11 border-b border-hae-line/70">
+                <tr
+                  key={task.id}
+                  className="h-11 cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/50"
+                  onClick={() => setSelected(task)}
+                >
                   <td className="px-3 py-2">
                     <PriorityCell task={task} />
                   </td>
@@ -151,16 +155,11 @@ export default function WaitingOnSection({ tasks, programsById, projectsById }) 
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
         title={selected?.name || 'Task'}
-        rows={taskDetailRows(selected, { programsById, projectsById })}
-        footer={
-          <button
-            type="button"
-            className="hae-btn-secondary"
-            onClick={() => setSelected(null)}
-          >
-            Close
-          </button>
-        }
+        task={selected}
+        programsById={programsById}
+        projectsById={projectsById}
+        editable
+        onSaved={onDataChanged}
       />
     </section>
   )

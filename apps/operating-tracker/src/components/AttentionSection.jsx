@@ -15,6 +15,7 @@ export default function AttentionSection({
   projects,
   programsById,
   projectsById,
+  onDataChanged,
 }) {
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState(null)
@@ -52,6 +53,7 @@ export default function AttentionSection({
         rows.push({
           id: `task-${task.id}`,
           kind: 'task',
+          raw: task,
           taskName: task.name,
           programId: task.programId,
           programName: programNameOf(task, programsById),
@@ -126,7 +128,11 @@ export default function AttentionSection({
           <tbody>
             {rows.map((row, i) =>
               row ? (
-                <tr key={row.id} className="h-11 border-b border-hae-line/70">
+                <tr
+                  key={row.id}
+                  className="h-11 cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/50"
+                  onClick={() => setSelected(row)}
+                >
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.issue}</td>
                   <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {row.programName || '—'}
@@ -182,28 +188,22 @@ export default function AttentionSection({
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
         title={selected?.taskName || 'Details'}
+        task={selected?.kind === 'task' ? selected.raw : null}
+        programsById={programsById}
+        projectsById={projectsById}
+        editable={selected?.kind === 'task'}
+        onSaved={onDataChanged}
         rows={
-          selected
+          selected && selected.kind === 'project'
             ? [
-                { label: 'Type', value: selected.kind === 'project' ? 'Project' : 'Task' },
+                { label: 'Type', value: 'Project' },
                 { label: 'Issue', value: selected.issue },
                 { label: 'Program', value: selected.programName || '—' },
                 { label: 'Project', value: selected.projectName || '—' },
-                { label: 'Waiting on', value: selected.waitingOn || '' },
-                { label: 'Leadership', value: selected.leadershipAction || '' },
-                { label: 'Owner', value: selected.owner || '' },
+                { label: 'Owner', value: selected.owner || '—' },
                 { label: 'Due', value: formatDate(selected.dueDate) },
               ]
             : []
-        }
-        footer={
-          <button
-            type="button"
-            className="hae-btn-secondary"
-            onClick={() => setSelected(null)}
-          >
-            Close
-          </button>
         }
       />
     </section>

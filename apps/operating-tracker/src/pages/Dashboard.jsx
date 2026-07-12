@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import PrioritiesSection from '../components/PrioritiesSection'
@@ -24,32 +24,29 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState(CATEGORIES[0].id)
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
-        getDocs(collection(db, 'tasks')),
-        getDocs(collection(db, 'projects')),
-        ...CATEGORIES.map((c) => getDocs(collection(db, c.collectionName))),
-      ])
-      if (cancelled) return
-      setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-      setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-      setPrograms(
-        categorySnaps.flatMap((snap, i) =>
-          snap.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-            category: CATEGORIES[i].id,
-          }))
-        )
+  const loadData = useCallback(async () => {
+    const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
+      getDocs(collection(db, 'tasks')),
+      getDocs(collection(db, 'projects')),
+      ...CATEGORIES.map((c) => getDocs(collection(db, c.collectionName))),
+    ])
+    setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    setPrograms(
+      categorySnaps.flatMap((snap, i) =>
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          category: CATEGORIES[i].id,
+        }))
       )
-      setLoading(false)
-    })()
-    return () => {
-      cancelled = true
-    }
+    )
+    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const programsById = useMemo(() => {
     const map = {}
@@ -120,19 +117,27 @@ export default function Dashboard() {
         tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
+        onDataChanged={loadData}
       />
       <WaitingOnSection
         tasks={categoryTasks}
         programsById={programsById}
         projectsById={projectsById}
+        onDataChanged={loadData}
       />
       <AttentionSection
         tasks={categoryTasks}
         projects={categoryProjects}
         programsById={programsById}
         projectsById={projectsById}
+        onDataChanged={loadData}
       />
-      <WinsSection tasks={categoryTasks} projectsById={projectsById} />
+      <WinsSection
+        tasks={categoryTasks}
+        programsById={programsById}
+        projectsById={projectsById}
+        onDataChanged={loadData}
+      />
     </div>
   )
 }
