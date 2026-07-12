@@ -30,6 +30,7 @@ const emptyProject = {
   goalDollars: '',
   raisedDollars: '',
   metricsNotes: '',
+  notes: '',
 }
 
 export default function ProgramPage() {
@@ -116,6 +117,7 @@ export default function ProgramPage() {
         metricsNotes: newProject.metricType
           ? newProject.metricsNotes.trim()
           : '',
+        notes: newProject.notes.trim(),
         lmsCourseId: '',
         programId,
         createdAt: serverTimestamp(),
@@ -284,6 +286,13 @@ export default function ProgramPage() {
               />
             </>
           ) : null}
+          <textarea
+            placeholder="Notes"
+            rows={3}
+            value={newProject.notes}
+            onChange={(e) => setNewProject({ ...newProject, notes: e.target.value })}
+            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+          />
         </form>
       </Modal>
 

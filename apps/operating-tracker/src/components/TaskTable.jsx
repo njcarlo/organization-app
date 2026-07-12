@@ -29,6 +29,7 @@ const emptyNew = {
   waitingOn: '',
   leadershipAttention: 'None',
   nextAction: '',
+  notes: '',
 }
 
 const fieldClass =
@@ -38,7 +39,7 @@ function isComplete(task) {
   return String(task.status || '').toLowerCase() === 'complete'
 }
 
-const emptySubtask = { name: '', status: 'Not Started', dueDate: '' }
+const emptySubtask = { name: '', status: 'Not Started', dueDate: '', notes: '' }
 
 function makeSubtaskId() {
   return typeof crypto !== 'undefined' && crypto.randomUUID
@@ -124,6 +125,13 @@ function SubtaskForm({ draft, setDraft, onSave, onCancel, saving }) {
           {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
+      <textarea
+        className={`${fieldClass} sm:col-span-4`}
+        rows={2}
+        placeholder="Notes"
+        value={draft.notes}
+        onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+      />
     </div>
   )
 }
@@ -180,29 +188,36 @@ function SubtaskList({
           ) : (
             <li
               key={sub.id}
-              className="flex flex-wrap items-center gap-2 rounded-md border border-hae-line/50 bg-white px-2 py-1.5"
+              className="rounded-md border border-hae-line/50 bg-white px-2 py-1.5"
             >
-              <StatusPill status={sub.status} />
-              <span className="min-w-0 flex-1 text-sm text-hae-ink">{sub.name}</span>
-              <span className="text-xs whitespace-nowrap text-hae-slate">
-                Due {formatDate(sub.dueDate)}
-              </span>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={() => onStartEdit(sub)}
-                  className="text-xs text-hae-slate hover:text-hae-crimson"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(sub.id)}
-                  className="text-xs text-hae-slate hover:text-hae-red"
-                >
-                  Delete
-                </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusPill status={sub.status} />
+                <span className="min-w-0 flex-1 text-sm text-hae-ink">{sub.name}</span>
+                <span className="text-xs whitespace-nowrap text-hae-slate">
+                  Due {formatDate(sub.dueDate)}
+                </span>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onStartEdit(sub)}
+                    className="text-xs text-hae-slate hover:text-hae-crimson"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(sub.id)}
+                    className="text-xs text-hae-slate hover:text-hae-red"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
+              {sub.notes ? (
+                <p className="mt-1 whitespace-pre-wrap text-xs text-hae-slate/90">
+                  {sub.notes}
+                </p>
+              ) : null}
             </li>
           )
         )}
@@ -333,6 +348,14 @@ function TaskEditForm({
             onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
           />
         </Field>
+        <Field label="Notes" className="sm:col-span-2 lg:col-span-3">
+          <textarea
+            className={fieldClass}
+            rows={3}
+            value={draft.notes}
+            onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+          />
+        </Field>
       </div>
     </div>
   )
@@ -407,6 +430,7 @@ const TaskTable = forwardRef(function TaskTable(
         waitingOn: newTask.waitingOn.trim(),
         leadershipAttention: newTask.leadershipAttention,
         nextAction: newTask.nextAction.trim(),
+        notes: newTask.notes.trim(),
         projectId: project.id,
         projectName: project.name,
         programId: program.id,
@@ -434,6 +458,7 @@ const TaskTable = forwardRef(function TaskTable(
       waitingOn: task.waitingOn || '',
       leadershipAttention: task.leadershipAttention || 'None',
       nextAction: task.nextAction || '',
+      notes: task.notes || '',
     })
   }
 
@@ -455,6 +480,7 @@ const TaskTable = forwardRef(function TaskTable(
         waitingOn: draft.waitingOn.trim(),
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
+        notes: draft.notes.trim(),
       })
       setEditingId(null)
       setDraft(null)
@@ -495,6 +521,7 @@ const TaskTable = forwardRef(function TaskTable(
         name: newSubtask.name.trim(),
         status: newSubtask.status,
         dueDate: newSubtask.dueDate || '',
+        notes: newSubtask.notes.trim(),
       }
       await updateDoc(doc(db, 'tasks', task.id), {
         subtasks: [...(task.subtasks || []), subtask],
@@ -514,6 +541,7 @@ const TaskTable = forwardRef(function TaskTable(
       name: sub.name || '',
       status: normalizeTaskStatus(sub.status || 'Not Started'),
       dueDate: sub.dueDate || '',
+      notes: sub.notes || '',
     })
   }
 
@@ -533,6 +561,7 @@ const TaskTable = forwardRef(function TaskTable(
               name: subtaskDraft.name.trim(),
               status: subtaskDraft.status,
               dueDate: subtaskDraft.dueDate || '',
+              notes: subtaskDraft.notes.trim(),
             }
           : s
       )
@@ -681,6 +710,16 @@ const TaskTable = forwardRef(function TaskTable(
                   {expandedId === task.id ? (
                     <tr className="border-b border-hae-line/50 bg-hae-mist/30">
                       <td colSpan={colCount} className="px-3 py-3">
+                        {task.notes ? (
+                          <div className="mb-3">
+                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                              Notes
+                            </div>
+                            <p className="mt-0.5 whitespace-pre-wrap text-xs text-hae-slate">
+                              {task.notes}
+                            </p>
+                          </div>
+                        ) : null}
                         <SubtaskList
                           task={task}
                           editingSubtaskId={editingSubtask}
@@ -813,6 +852,14 @@ const TaskTable = forwardRef(function TaskTable(
                             </div>
                           </div>
                         </div>
+                        {task.notes ? (
+                          <div className="mt-3 border-t border-hae-line/50 pt-3 text-xs text-hae-slate">
+                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                              Notes
+                            </div>
+                            <p className="mt-0.5 whitespace-pre-wrap">{task.notes}</p>
+                          </div>
+                        ) : null}
                         <div className="mt-3 border-t border-hae-line/50 pt-3">
                           <SubtaskList
                             task={task}

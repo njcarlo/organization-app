@@ -83,6 +83,7 @@ export default function ProjectCard({
       currency: project.currency || 'usd',
       metricsNotes: project.metricsNotes || '',
       lmsCourseId: project.lmsCourseId || '',
+      notes: project.notes || '',
     })
     setEditing(true)
   }
@@ -101,6 +102,7 @@ export default function ProjectCard({
       currency: draft.metricType ? draft.currency || 'usd' : 'usd',
       metricsNotes: draft.metricType ? draft.metricsNotes.trim() : '',
       lmsCourseId: draft.lmsCourseId.trim(),
+      notes: draft.notes.trim(),
     })
     setEditing(false)
     setDraft(null)
@@ -166,6 +168,13 @@ export default function ProjectCard({
                 placeholder="Promise / outcome"
                 value={draft.promise}
                 onChange={(e) => setDraft({ ...draft, promise: e.target.value })}
+              />
+              <textarea
+                className={`${inputClass} w-full`}
+                placeholder="Notes"
+                rows={3}
+                value={draft.notes}
+                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               />
               <div className="grid gap-2 border-t border-hae-line/70 pt-2 sm:grid-cols-2">
                 <label className="flex flex-col gap-1 text-xs">
@@ -296,6 +305,11 @@ export default function ProjectCard({
               ) : null}
               {project.promise ? (
                 <p className="mt-1 line-clamp-2 text-sm text-hae-slate/90">{project.promise}</p>
+              ) : null}
+              {project.notes ? (
+                <p className="mt-1 line-clamp-2 text-xs text-hae-slate/80">
+                  Notes: {project.notes}
+                </p>
               ) : null}
             </>
           )}

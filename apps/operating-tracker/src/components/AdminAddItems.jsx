@@ -50,9 +50,9 @@ const fieldClass =
   'rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson'
 const labelClass = 'mb-1 block text-xs font-semibold tracking-wide text-hae-slate uppercase'
 
-function Field({ label, children }) {
+function Field({ label, children, className = '' }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <span className={labelClass}>{label}</span>
       {children}
     </label>
@@ -74,6 +74,7 @@ const emptyForms = {
     promise: '',
     health: 'ongoing',
     targetDate: '',
+    notes: '',
   },
   task: {
     programId: '',
@@ -86,6 +87,7 @@ const emptyForms = {
     waitingOn: '',
     leadershipAttention: 'None',
     nextAction: '',
+    notes: '',
   },
   course: {
     name: '',
@@ -277,6 +279,7 @@ export default function AdminAddItems() {
           promise: form.promise.trim(),
           health: form.health,
           targetDate: form.targetDate || '',
+          notes: form.notes.trim(),
           programId: form.programId,
           createdAt: serverTimestamp(),
         })
@@ -297,6 +300,7 @@ export default function AdminAddItems() {
           waitingOn: form.waitingOn.trim(),
           leadershipAttention: form.leadershipAttention,
           nextAction: form.nextAction.trim(),
+          notes: form.notes.trim(),
           projectId: project.id,
           projectName: project.name,
           programId: program.id,
@@ -594,6 +598,14 @@ export default function AdminAddItems() {
                 onChange={(e) => set('targetDate', e.target.value)}
               />
             </Field>
+            <Field label="Notes" className="sm:col-span-2 lg:col-span-3">
+              <textarea
+                rows={3}
+                className={`w-full ${fieldClass}`}
+                value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
+              />
+            </Field>
           </>
         )}
 
@@ -709,6 +721,14 @@ export default function AdminAddItems() {
                 className={`w-full ${fieldClass}`}
                 value={form.nextAction}
                 onChange={(e) => set('nextAction', e.target.value)}
+              />
+            </Field>
+            <Field label="Notes" className="sm:col-span-2 lg:col-span-3">
+              <textarea
+                rows={3}
+                className={`w-full ${fieldClass}`}
+                value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
               />
             </Field>
           </>

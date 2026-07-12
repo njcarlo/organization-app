@@ -46,5 +46,6 @@ export function taskDetailRows(task, { programsById = {}, projectsById = {} } = 
     { label: 'Waiting on', value: task.waitingOn || '' },
     { label: 'Leadership', value: task.leadershipAttention || '' },
     { label: 'Next action', value: task.nextAction || '' },
+    { label: 'Notes', value: task.notes || '' },
   ]
 }
