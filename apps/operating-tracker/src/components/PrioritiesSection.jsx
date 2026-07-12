@@ -9,7 +9,7 @@ import {
   daysUntil,
 } from '../utils'
 import { useMemo, useState } from 'react'
-import TaskDetailPopup, { taskDetailRows } from './TaskDetailPopup'
+import TaskDetailPopup from './TaskDetailPopup'
 
 function PriorityCell({ task }) {
   const priority = effectivePriority(task)
@@ -58,7 +58,7 @@ function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel, onOpen
   )
 }
 
-function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
+function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel, onOpen }) {
   return (
     <div className="hae-table-scroll">
       <table className="w-full min-w-[640px] text-left lg:min-w-[900px]">
@@ -68,7 +68,7 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
             <th className="hae-col-lg-hide px-3 py-2 font-semibold">Program</th>
             <th className="hae-col-lg-hide px-3 py-2 font-semibold">Project</th>
             <th className="px-3 py-2 font-semibold">Task</th>
-            <th className="hae-col-sm-hide px-3 py-2 font-semibold">Project Owner</th>
+            <th className="hae-col-sm-hide px-3 py-2 font-semibold">Owner</th>
             <th className="px-3 py-2 font-semibold">Due</th>
           </tr>
         </thead>
@@ -81,7 +81,11 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
             </tr>
           ) : (
             tasks.map((task) => (
-              <tr key={task.id} className="border-b border-hae-line/70 last:border-0">
+              <tr
+                key={task.id}
+                className="cursor-pointer border-b border-hae-line/70 last:border-0 hover:bg-hae-mist/50"
+                onClick={() => onOpen?.(task)}
+              >
                 <td className="px-3 py-2">
                   <PriorityCell task={task} />
                 </td>
@@ -93,7 +97,7 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
                 </td>
                 <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
                 <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                  {namesLabel(projectsById[task.projectId]?.lead) || '—'}
+                  {namesLabel(task.owner) || '—'}
                 </td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
                   {formatDate(task.dueDate)}
@@ -107,7 +111,7 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
   )
 }
 
-export default function PrioritiesSection({ tasks, programsById, projectsById }) {
+export default function PrioritiesSection({ tasks, programsById, projectsById, onDataChanged }) {
   const [upcomingOpen, setUpcomingOpen] = useState(false)
   const [selected, setSelected] = useState(null)
 
@@ -155,6 +159,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
             programsById={programsById}
             projectsById={projectsById}
             emptyLabel="No priorities this week"
+            onOpen={setSelected}
           />
         </div>
       </div>
@@ -190,6 +195,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
                 programsById={programsById}
                 projectsById={projectsById}
                 emptyLabel="No upcoming tasks"
+                onOpen={setSelected}
               />
             </div>
           </>
@@ -200,16 +206,11 @@ export default function PrioritiesSection({ tasks, programsById, projectsById })
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
         title={selected?.name || 'Task'}
-        rows={taskDetailRows(selected, { programsById, projectsById })}
-        footer={
-          <button
-            type="button"
-            className="hae-btn-secondary"
-            onClick={() => setSelected(null)}
-          >
-            Close
-          </button>
-        }
+        task={selected}
+        programsById={programsById}
+        projectsById={projectsById}
+        editable
+        onSaved={onDataChanged}
       />
     </section>
   )

@@ -1,7 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { projectNameOf } from '../utils'
+import TaskDetailPopup from './TaskDetailPopup'
 
-export default function WinsSection({ tasks, projectsById }) {
+export default function WinsSection({ tasks, programsById, projectsById, onDataChanged }) {
+  const [selected, setSelected] = useState(null)
+
   const wins = useMemo(
     () => tasks.filter((t) => t.status === 'Complete').slice(0, 12),
     [tasks]
@@ -18,15 +21,31 @@ export default function WinsSection({ tasks, projectsById }) {
       ) : (
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
           {wins.map((task) => (
-            <div key={task.id} className="border-l-2 border-hae-green pl-3">
+            <button
+              key={task.id}
+              type="button"
+              className="border-l-2 border-hae-green pl-3 text-left"
+              onClick={() => setSelected(task)}
+            >
               <div className="text-sm font-medium text-hae-ink">{task.name}</div>
               <div className="text-xs text-hae-slate">
                 {projectNameOf(task, projectsById)}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
+
+      <TaskDetailPopup
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title={selected?.name || 'Task'}
+        task={selected}
+        programsById={programsById}
+        projectsById={projectsById}
+        editable
+        onSaved={onDataChanged}
+      />
     </section>
   )
 }
