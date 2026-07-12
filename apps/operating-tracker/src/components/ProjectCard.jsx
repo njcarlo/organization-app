@@ -2,8 +2,16 @@ import { useMemo, useRef, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { HEALTH_OPTIONS } from '../constants'
-import { formatDate, healthBadgeClass, healthLabel, normalizeHealth } from '../utils'
+import {
+  formatDate,
+  healthBadgeClass,
+  healthLabel,
+  namesLabel,
+  normalizeHealth,
+  toNameList,
+} from '../utils'
 import TaskTable from './TaskTable'
+import LeadSelect from './LeadSelect'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -41,7 +49,7 @@ export default function ProjectCard({
   const startEdit = () => {
     setDraft({
       name: project.name || '',
-      lead: project.lead || '',
+      lead: toNameList(project.lead),
       promise: project.promise || '',
       health: normalizeHealth(project.health || 'ongoing'),
       targetDate: project.targetDate || '',
@@ -54,7 +62,7 @@ export default function ProjectCard({
     if (!draft?.name.trim()) return
     await updateDoc(doc(db, 'projects', project.id), {
       name: draft.name.trim(),
-      lead: draft.lead.trim(),
+      lead: draft.lead,
       promise: draft.promise.trim(),
       health: draft.health,
       targetDate: draft.targetDate || '',
@@ -92,11 +100,11 @@ export default function ProjectCard({
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
               <div className="flex flex-wrap gap-2">
-                <input
+                <LeadSelect
                   className={inputClass}
                   placeholder="Lead"
                   value={draft.lead}
-                  onChange={(e) => setDraft({ ...draft, lead: e.target.value })}
+                  onChange={(lead) => setDraft({ ...draft, lead })}
                 />
                 <label className="flex items-center gap-1">
                   <span className="text-xs font-medium text-hae-slate">Status</span>
@@ -173,7 +181,9 @@ export default function ProjectCard({
                 ) : (
                   <span> · No upcoming due dates</span>
                 )}
-                {project.lead ? <span> · Lead {project.lead}</span> : null}
+                {namesLabel(project.lead) ? (
+                  <span> · Lead {namesLabel(project.lead)}</span>
+                ) : null}
               </p>
               {project.promise ? (
                 <p className="mt-1 line-clamp-2 text-sm text-hae-slate/90">{project.promise}</p>

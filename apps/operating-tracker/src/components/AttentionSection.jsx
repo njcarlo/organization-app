@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   formatDate,
   healthLabel,
+  namesLabel,
   programNameOf,
   projectNameOf,
 } from '../utils'
@@ -37,7 +38,7 @@ export default function AttentionSection({
           issue: healthLabel(project.health),
           waitingOn: '',
           leadershipAction: '—',
-          owner: project.lead || '—',
+          owner: namesLabel(project.lead) || '—',
           dueDate: project.targetDate || '',
         })
       }
@@ -58,7 +59,7 @@ export default function AttentionSection({
           issue: task.leadershipAttention,
           waitingOn: task.waitingOn || '—',
           leadershipAction: task.leadershipAttention,
-          owner: task.owner || '—',
+          owner: namesLabel(task.owner) || '—',
           dueDate: task.dueDate || '',
         })
       }

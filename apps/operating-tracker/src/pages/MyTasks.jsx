@@ -9,17 +9,20 @@ import {
 import { downloadIcs, FEATURES, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import LeadSelect from '../components/LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import {
   effectivePriority,
   formatDate,
   isWaitingOn,
+  namesLabel,
   normalizeTaskStatus,
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
   sortByPriorityThenDue,
   statusBadgeClass,
+  toNameList,
   WAITING_ON_BADGE_CLASS,
 } from '../utils'
 
@@ -88,7 +91,9 @@ export default function MyTasks() {
     let list = [...tasks]
     if (!(isStaff && viewAll)) {
       const myName = (userProfile?.name || '').toLowerCase()
-      list = list.filter((t) => (t.owner || '').toLowerCase() === myName)
+      list = list.filter((t) =>
+        toNameList(t.owner).some((n) => n.toLowerCase() === myName)
+      )
     }
     if (statusFilter === 'Active') {
       list = list.filter((t) => normalizeTaskStatus(t.status) !== 'Complete')
@@ -117,7 +122,7 @@ export default function MyTasks() {
     setEditSurface(surface)
     setDraft({
       name: task.name || '',
-      owner: task.owner || '',
+      owner: toNameList(task.owner),
       dueDate: task.dueDate || '',
       status: normalizeTaskStatus(task.status || 'Not Started'),
       priority: task.priority || '',
@@ -140,7 +145,7 @@ export default function MyTasks() {
     try {
       await updateDoc(doc(db, 'tasks', editingId), {
         name: draft.name.trim(),
-        owner: draft.owner.trim(),
+        owner: draft.owner,
         dueDate: draft.dueDate || '',
         status: draft.status,
         priority: draft.priority,
@@ -178,7 +183,7 @@ export default function MyTasks() {
         date: t.dueDate,
         description: [
           t.status ? `Status: ${t.status}` : '',
-          t.owner ? `Owner: ${t.owner}` : '',
+          namesLabel(t.owner) ? `Owner: ${namesLabel(t.owner)}` : '',
           t.nextAction ? `Next: ${t.nextAction}` : '',
           programNameOf(t, programsById)
             ? `Program: ${programNameOf(t, programsById)}`
@@ -289,7 +294,9 @@ export default function MyTasks() {
                   </span>
                 ) : null}
                 <span>Due {formatDate(task.dueDate)}</span>
-                {isStaff && viewAll ? <span>{task.owner || 'Unassigned'}</span> : null}
+                {isStaff && viewAll ? (
+                  <span>{namesLabel(task.owner) || 'Unassigned'}</span>
+                ) : null}
                 <span className="line-clamp-1">
                   {programNameOf(task, programsById)}
                   {projectNameOf(task, projectsById)
@@ -358,10 +365,10 @@ export default function MyTasks() {
               />
             </Field>
             <Field label="Owner">
-              <input
+              <LeadSelect
                 className={fieldClass}
                 value={draft.owner}
-                onChange={(e) => setDraft({ ...draft, owner: e.target.value })}
+                onChange={(owner) => setDraft({ ...draft, owner })}
               />
             </Field>
             <Field label="Priority">
@@ -510,10 +517,10 @@ export default function MyTasks() {
                             />
                           </Field>
                           <Field label="Owner">
-                            <input
+                            <LeadSelect
                               className={fieldClass}
                               value={draft.owner}
-                              onChange={(e) => setDraft({ ...draft, owner: e.target.value })}
+                              onChange={(owner) => setDraft({ ...draft, owner })}
                             />
                           </Field>
                           <Field label="Priority">
@@ -606,7 +613,7 @@ export default function MyTasks() {
                       </td>
                       {isStaff && viewAll ? (
                         <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                          {task.owner || '—'}
+                          {namesLabel(task.owner) || '—'}
                         </td>
                       ) : null}
                       <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">

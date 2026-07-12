@@ -1,5 +1,11 @@
 import { Modal } from '@hae/ui'
-import { effectivePriority, formatDate, programNameOf, projectNameOf } from '../utils'
+import {
+  effectivePriority,
+  formatDate,
+  namesLabel,
+  programNameOf,
+  projectNameOf,
+} from '../utils'
 
 function Row({ label, value }) {
   if (value == null || value === '') return null
@@ -39,7 +45,7 @@ export function taskDetailRows(task, { programsById = {}, projectsById = {} } = 
   return [
     { label: 'Status', value: task.status || '—' },
     { label: 'Due', value: formatDate(task.dueDate) },
-    { label: 'Owner', value: task.owner || '' },
+    { label: 'Owner', value: namesLabel(task.owner) },
     { label: 'Program', value: programNameOf(task, programsById) },
     { label: 'Project', value: projectNameOf(task, projectsById) },
     { label: 'Priority', value: effectivePriority(task) },

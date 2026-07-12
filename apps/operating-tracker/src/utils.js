@@ -116,6 +116,20 @@ export function isWaitingOn(task) {
   return Boolean(task?.waitingOn && String(task.waitingOn).trim())
 }
 
+/** Normalizes a lead/owner field (array, comma string, or legacy single name) to a name array. */
+export function toNameList(value) {
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  return []
+}
+
+/** Formats a lead/owner field as a comma-separated display string. */
+export function namesLabel(value) {
+  return toNameList(value).join(', ')
+}
+
 export function healthLabel(health) {
   const h = normalizeHealth(health)
   if (h === 'time-sensitive') return 'Time Sensitive'

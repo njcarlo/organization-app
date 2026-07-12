@@ -9,9 +9,11 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import LeadSelect from './LeadSelect'
+import { namesLabel, toNameList } from '../utils'
 
 const emptyCourseFields = {
-  haeLead: '',
+  haeLead: [],
   startDate: '',
   durationWeeks: '',
   instructor: '',
@@ -31,7 +33,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
   const [error, setError] = useState('')
   const [newItem, setNewItem] = useState({
     name: '',
-    lead: '',
+    lead: [],
     ...(showCourseFields ? emptyCourseFields : {}),
   })
   const [editingId, setEditingId] = useState(null)
@@ -64,12 +66,12 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
       const maxOrder = items.reduce((m, p) => Math.max(m, p.order ?? 0), 0)
       await addDoc(collection(db, collectionName), {
         name: newItem.name.trim(),
-        lead: newItem.lead.trim(),
+        lead: newItem.lead,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
         ...(showCourseFields
           ? {
-              haeLead: newItem.haeLead.trim(),
+              haeLead: newItem.haeLead,
               startDate: newItem.startDate,
               durationWeeks: newItem.durationWeeks ? Number(newItem.durationWeeks) : null,
               instructor: newItem.instructor.trim(),
@@ -77,7 +79,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
             }
           : {}),
       })
-      setNewItem({ name: '', lead: '', ...(showCourseFields ? emptyCourseFields : {}) })
+      setNewItem({ name: '', lead: [], ...(showCourseFields ? emptyCourseFields : {}) })
       await load()
     } catch (err) {
       setError(err.message || 'Failed to add item')
@@ -90,10 +92,10 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
     try {
       await updateDoc(doc(db, collectionName, editingId), {
         name: draft.name.trim(),
-        lead: draft.lead.trim(),
+        lead: draft.lead,
         ...(showCourseFields
           ? {
-              haeLead: draft.haeLead.trim(),
+              haeLead: draft.haeLead,
               startDate: draft.startDate,
               durationWeeks: draft.durationWeeks ? Number(draft.durationWeeks) : null,
               instructor: draft.instructor.trim(),
@@ -142,19 +144,17 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
           onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
           className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
         />
-        <input
-          placeholder="Overall lead"
+        <LeadSelect
           value={newItem.lead}
-          onChange={(e) => setNewItem({ ...newItem, lead: e.target.value })}
-          className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          onChange={(lead) => setNewItem({ ...newItem, lead })}
+          placeholder="Overall lead"
         />
         {showCourseFields ? (
           <>
-            <input
-              placeholder="HAE Lead"
+            <LeadSelect
               value={newItem.haeLead}
-              onChange={(e) => setNewItem({ ...newItem, haeLead: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              onChange={(haeLead) => setNewItem({ ...newItem, haeLead })}
+              placeholder="HAE Lead"
             />
             <input
               type="date"
@@ -215,11 +215,11 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                     />
                     {showCourseFields ? (
                       <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-                        <input
-                          placeholder="HAE Lead"
+                        <LeadSelect
                           className="w-full rounded border border-hae-line px-2 py-1 text-xs"
+                          placeholder="HAE Lead"
                           value={draft.haeLead}
-                          onChange={(e) => setDraft({ ...draft, haeLead: e.target.value })}
+                          onChange={(haeLead) => setDraft({ ...draft, haeLead })}
                         />
                         <input
                           type="date"
@@ -251,10 +251,10 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                     ) : null}
                   </td>
                   <td className="px-3 py-2">
-                    <input
+                    <LeadSelect
                       className="w-full rounded border border-hae-line px-2 py-1 text-sm"
                       value={draft.lead}
-                      onChange={(e) => setDraft({ ...draft, lead: e.target.value })}
+                      onChange={(lead) => setDraft({ ...draft, lead })}
                     />
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
@@ -275,7 +275,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                     {showCourseFields ? (
                       <div className="mt-0.5 text-xs font-normal text-hae-slate">
                         {[
-                          p.haeLead && `HAE Lead: ${p.haeLead}`,
+                          namesLabel(p.haeLead) && `HAE Lead: ${namesLabel(p.haeLead)}`,
                           p.startDate && `Start: ${p.startDate}`,
                           p.durationWeeks && `${p.durationWeeks} weeks`,
                           p.instructor && `Instructor: ${p.instructor}`,
@@ -286,7 +286,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                       </div>
                     ) : null}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{p.lead || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{namesLabel(p.lead) || '—'}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
@@ -296,10 +296,10 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                           setEditingId(p.id)
                           setDraft({
                             name: p.name,
-                            lead: p.lead || '',
+                            lead: toNameList(p.lead),
                             ...(showCourseFields
                               ? {
-                                  haeLead: p.haeLead || '',
+                                  haeLead: toNameList(p.haeLead),
                                   startDate: p.startDate || '',
                                   durationWeeks: p.durationWeeks ?? '',
                                   instructor: p.instructor || '',
