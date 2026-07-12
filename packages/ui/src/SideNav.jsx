@@ -200,39 +200,41 @@ export default function SideNav({
             const sectionAction = Array.isArray(section.actions) ? section.actions[0] : undefined
 
             return (
-              <div key={section.id} className="group/section relative rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => toggle(section.id)}
-                  aria-expanded={isOpen}
-                  className={`flex w-full items-center justify-between gap-2 rounded-lg py-2.5 pl-3 text-left text-sm font-semibold transition-colors ${
-                    sectionAction ? 'pr-9' : 'pr-3'
-                  } ${
-                    groupActive || isOpen
-                      ? 'text-hae-crimson'
-                      : 'text-hae-ink hover:bg-hae-mist'
-                  }`}
-                >
-                  <span className="min-w-0 flex-1 truncate">{section.label}</span>
-                  <span
-                    className={
-                      groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'
-                    }
-                  >
-                    <Chevron open={isOpen} />
-                  </span>
-                </button>
-                {sectionAction ? (
+              <div key={section.id} className="group/section rounded-lg">
+                <div className="relative">
                   <button
                     type="button"
-                    onClick={sectionAction.onClick}
-                    aria-label={sectionAction.label}
-                    title={sectionAction.label}
-                    className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md bg-white text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover/section:opacity-100"
+                    onClick={() => toggle(section.id)}
+                    aria-expanded={isOpen}
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg py-2.5 pl-3 text-left text-sm font-semibold transition-colors ${
+                      sectionAction ? 'pr-9' : 'pr-3'
+                    } ${
+                      groupActive || isOpen
+                        ? 'text-hae-crimson'
+                        : 'text-hae-ink hover:bg-hae-mist'
+                    }`}
                   >
-                    <NavIcon name="plus" className="[&>svg]:h-4 [&>svg]:w-4" />
+                    <span className="min-w-0 flex-1 truncate">{section.label}</span>
+                    <span
+                      className={
+                        groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'
+                      }
+                    >
+                      <Chevron open={isOpen} />
+                    </span>
                   </button>
-                ) : null}
+                  {sectionAction ? (
+                    <button
+                      type="button"
+                      onClick={sectionAction.onClick}
+                      aria-label={sectionAction.label}
+                      title={sectionAction.label}
+                      className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md bg-white text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover/section:opacity-100"
+                    >
+                      <NavIcon name="plus" className="[&>svg]:h-4 [&>svg]:w-4" />
+                    </button>
+                  ) : null}
+                </div>
 
                 {isOpen ? (
                   <div className="mb-2 mt-0.5 space-y-0.5">
