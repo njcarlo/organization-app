@@ -1,4 +1,14 @@
-import { TASK_STATUSES } from './constants'
+import { HEALTH_ALIASES, TASK_STATUSES, TASK_STATUS_ALIASES } from './constants'
+
+/** Maps legacy task status strings onto the current 5-status hierarchy. */
+export function normalizeTaskStatus(status) {
+  return TASK_STATUS_ALIASES[status] || status
+}
+
+/** Maps legacy project health values onto the current 5-status hierarchy. */
+export function normalizeHealth(health) {
+  return HEALTH_ALIASES[health] || health
+}
 
 /** Days until due date (negative if overdue). Returns null if no date. */
 export function daysUntil(dueDate) {
@@ -39,8 +49,8 @@ export function sortByPriorityThenDue(a, b) {
 }
 
 export function sortByStatus(a, b) {
-  const ra = TASK_STATUSES.indexOf(a.status)
-  const rb = TASK_STATUSES.indexOf(b.status)
+  const ra = TASK_STATUSES.indexOf(normalizeTaskStatus(a.status))
+  const rb = TASK_STATUSES.indexOf(normalizeTaskStatus(b.status))
   return (ra === -1 ? TASK_STATUSES.length : ra) - (rb === -1 ? TASK_STATUSES.length : rb)
 }
 
@@ -67,44 +77,51 @@ export function priorityBadgeClass(priority) {
 
 const HEALTH_RANK = {
   'time-sensitive': 0,
-  'at-risk': 1,
-  'needs-attention': 2,
-  'not-started': 3,
-  'on-track': 4,
-  completed: 5,
+  'needs-attention': 1,
+  'not-started': 2,
+  ongoing: 3,
+  completed: 4,
 }
 
 export function sortByHealth(a, b) {
-  const ra = HEALTH_RANK[a.health] ?? 5
-  const rb = HEALTH_RANK[b.health] ?? 5
+  const ra = HEALTH_RANK[normalizeHealth(a.health)] ?? 4
+  const rb = HEALTH_RANK[normalizeHealth(b.health)] ?? 4
   if (ra !== rb) return ra - rb
   return (a.name || '').localeCompare(b.name || '')
 }
 
 export function healthBadgeClass(health) {
-  if (health === 'time-sensitive') return 'bg-hae-crimson text-white'
-  if (health === 'not-started') return 'bg-slate-100 text-hae-slate'
-  if (health === 'on-track') return 'bg-emerald-100 text-hae-green'
-  if (health === 'needs-attention') return 'bg-amber-100 text-hae-yellow'
-  if (health === 'at-risk') return 'bg-red-100 text-hae-red'
-  if (health === 'completed') return 'bg-blue-100 text-blue-700'
-  return 'bg-slate-100 text-hae-slate'
+  const h = normalizeHealth(health)
+  if (h === 'time-sensitive') return 'bg-hae-crimson text-white'
+  if (h === 'not-started') return 'bg-gray-200 text-black'
+  if (h === 'ongoing') return 'bg-orange-200 text-amber-900'
+  if (h === 'needs-attention') return 'bg-yellow-200 text-black'
+  if (h === 'completed') return 'bg-green-900 text-green-400'
+  return 'bg-gray-200 text-black'
 }
 
 export function statusBadgeClass(status) {
-  if (status === 'Time Sensitive') return 'bg-hae-crimson text-white'
-  if (status === 'Complete') return 'bg-emerald-50 text-hae-green'
-  if (status === 'Waiting' || status === 'Review') return 'bg-amber-50 text-hae-yellow'
-  if (status === 'In Progress') return 'bg-sky-50 text-sky-800'
-  return 'bg-hae-mist text-hae-slate'
+  const s = normalizeTaskStatus(status)
+  if (s === 'Time Sensitive') return 'bg-hae-crimson text-white'
+  if (s === 'Complete') return 'bg-green-900 text-green-400'
+  if (s === 'Needs Attention') return 'bg-yellow-200 text-black'
+  if (s === 'Ongoing') return 'bg-orange-200 text-amber-900'
+  return 'bg-gray-200 text-black'
+}
+
+/** Derived status shown alongside the actual task status — not selectable in the dropdown. */
+export const WAITING_ON_BADGE_CLASS = 'bg-purple-600 text-white'
+
+export function isWaitingOn(task) {
+  return Boolean(task?.waitingOn && String(task.waitingOn).trim())
 }
 
 export function healthLabel(health) {
-  if (health === 'time-sensitive') return 'Time Sensitive'
-  if (health === 'not-started') return 'Not Started'
-  if (health === 'on-track') return 'On Track'
-  if (health === 'needs-attention') return 'Needs Attention'
-  if (health === 'at-risk') return 'At Risk'
-  if (health === 'completed') return 'Completed'
+  const h = normalizeHealth(health)
+  if (h === 'time-sensitive') return 'Time Sensitive'
+  if (h === 'not-started') return 'Not Started'
+  if (h === 'ongoing') return 'Ongoing'
+  if (h === 'needs-attention') return 'Needs Attention'
+  if (h === 'completed') return 'Complete'
   return health || '—'
 }

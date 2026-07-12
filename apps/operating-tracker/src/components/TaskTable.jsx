@@ -9,7 +9,16 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
-import { effectivePriority, formatDate, priorityBadgeClass, sortByStatus, statusBadgeClass } from '../utils'
+import {
+  effectivePriority,
+  formatDate,
+  isWaitingOn,
+  normalizeTaskStatus,
+  priorityBadgeClass,
+  sortByStatus,
+  statusBadgeClass,
+  WAITING_ON_BADGE_CLASS,
+} from '../utils'
 
 const emptyNew = {
   name: '',
@@ -48,16 +57,25 @@ function Field({ label, children, className = '' }) {
   )
 }
 
-function StatusPill({ status }) {
-  const s = status || '—'
+function StatusPill({ status, waitingOn = false }) {
+  const s = status ? normalizeTaskStatus(status) : '—'
   return (
-    <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(
-        status
-      )}`}
-    >
-      {s}
-    </span>
+    <>
+      <span
+        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${statusBadgeClass(
+          status
+        )}`}
+      >
+        {s}
+      </span>
+      {waitingOn ? (
+        <span
+          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${WAITING_ON_BADGE_CLASS}`}
+        >
+          Waiting On
+        </span>
+      ) : null}
+    </>
   )
 }
 
@@ -411,7 +429,7 @@ const TaskTable = forwardRef(function TaskTable(
       name: task.name || '',
       owner: task.owner || '',
       dueDate: task.dueDate || '',
-      status: task.status || 'Not Started',
+      status: normalizeTaskStatus(task.status || 'Not Started'),
       priority: task.priority || '',
       waitingOn: task.waitingOn || '',
       leadershipAttention: task.leadershipAttention || 'None',
@@ -494,7 +512,7 @@ const TaskTable = forwardRef(function TaskTable(
     setEditingSubtask(sub.id)
     setSubtaskDraft({
       name: sub.name || '',
-      status: sub.status || 'Not Started',
+      status: normalizeTaskStatus(sub.status || 'Not Started'),
       dueDate: sub.dueDate || '',
     })
   }
@@ -617,7 +635,9 @@ const TaskTable = forwardRef(function TaskTable(
                       {formatDate(task.dueDate)}
                     </td>
                     <td className="px-3 py-2.5">
-                      <StatusPill status={task.status} />
+                      <div className="flex flex-wrap gap-1">
+                        <StatusPill status={task.status} waitingOn={isWaitingOn(task)} />
+                      </div>
                     </td>
                     <td className="hae-col-sm-hide px-3 py-2.5">
                       <span
@@ -730,7 +750,7 @@ const TaskTable = forwardRef(function TaskTable(
                           <span className="text-sm font-medium text-hae-ink">
                             {task.name}
                           </span>
-                          <StatusPill status={task.status} />
+                          <StatusPill status={task.status} waitingOn={isWaitingOn(task)} />
                         </div>
                         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-hae-slate">
                           {showOwner ? <span>{task.owner || 'Unassigned'}</span> : null}

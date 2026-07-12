@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { HEALTH_OPTIONS } from '../constants'
-import { daysUntil, formatDate, healthBadgeClass, healthLabel } from '../utils'
+import { daysUntil, formatDate, healthBadgeClass, healthLabel, normalizeHealth } from '../utils'
 import {
   METRIC_TYPES,
   centsToDollarsInput,
@@ -75,7 +75,7 @@ export default function ProjectCard({
       name: project.name || '',
       lead: project.lead || '',
       promise: project.promise || '',
-      health: project.health || 'on-track',
+      health: normalizeHealth(project.health || 'ongoing'),
       targetDate: project.targetDate || '',
       metricType: project.metricType || '',
       goalDollars: centsToDollarsInput(project.goalCents),
