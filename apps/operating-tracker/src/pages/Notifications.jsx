@@ -4,7 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 import { moduleUrl } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import { formatDate, sortByPriorityThenDue } from '../utils'
+import { formatDate, sortByPriorityThenDue, toNameList } from '../utils'
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10)
@@ -56,7 +56,9 @@ export default function Notifications() {
 
   const digest = useMemo(() => {
     let myTasks = tasks.filter(
-      (t) => (t.owner || '').toLowerCase() === myName && t.status !== 'Complete'
+      (t) =>
+        toNameList(t.owner).some((n) => n.toLowerCase() === myName) &&
+        t.status !== 'Complete'
     )
     if (isStaff && !myName) {
       myTasks = tasks.filter((t) => t.status !== 'Complete')

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase'
+import LeadSelect from './LeadSelect'
 import {
   HEALTH_OPTIONS,
   LEADERSHIP_ATTENTION,
@@ -70,7 +71,7 @@ const emptyForms = {
   project: {
     programId: '',
     name: '',
-    lead: '',
+    lead: [],
     promise: '',
     health: 'ongoing',
     targetDate: '',
@@ -80,7 +81,7 @@ const emptyForms = {
     programId: '',
     projectId: '',
     name: '',
-    owner: '',
+    owner: [],
     dueDate: '',
     status: 'Not Started',
     priority: '',
@@ -275,7 +276,7 @@ export default function AdminAddItems() {
         }
         await addDoc(collection(db, 'projects'), {
           name: form.name.trim(),
-          lead: form.lead.trim(),
+          lead: form.lead,
           promise: form.promise.trim(),
           health: form.health,
           targetDate: form.targetDate || '',
@@ -293,7 +294,7 @@ export default function AdminAddItems() {
         }
         await addDoc(collection(db, 'tasks'), {
           name: form.name.trim(),
-          owner: form.owner.trim(),
+          owner: form.owner,
           dueDate: form.dueDate || '',
           status: form.status,
           priority: form.priority,
@@ -564,10 +565,10 @@ export default function AdminAddItems() {
               />
             </Field>
             <Field label="Lead">
-              <input
+              <LeadSelect
                 className={`w-full ${fieldClass}`}
                 value={form.lead}
-                onChange={(e) => set('lead', e.target.value)}
+                onChange={(lead) => set('lead', lead)}
               />
             </Field>
             <Field label="Promise">
@@ -656,10 +657,10 @@ export default function AdminAddItems() {
               />
             </Field>
             <Field label="Owner">
-              <input
+              <LeadSelect
                 className={`w-full ${fieldClass}`}
                 value={form.owner}
-                onChange={(e) => set('owner', e.target.value)}
+                onChange={(owner) => set('owner', owner)}
               />
             </Field>
             <Field label="Due date">

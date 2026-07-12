@@ -8,10 +8,12 @@ import {
   daysUntil,
   effectivePriority,
   formatDate,
+  namesLabel,
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
   sortByPriorityThenDue,
+  toNameList,
 } from '../utils'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -93,7 +95,9 @@ export default function Calendar() {
     let list = [...tasks]
     if (!(isStaff && viewAll)) {
       const myName = (userProfile?.name || '').toLowerCase()
-      list = list.filter((t) => (t.owner || '').toLowerCase() === myName)
+      list = list.filter((t) =>
+        toNameList(t.owner).some((n) => n.toLowerCase() === myName)
+      )
     }
     if (statusFilter === 'Active') {
       list = list.filter((t) => t.status !== 'Complete')
@@ -156,7 +160,7 @@ export default function Calendar() {
         date: t.dueDate,
         description: [
           t.status ? `Status: ${t.status}` : '',
-          t.owner ? `Owner: ${t.owner}` : '',
+          namesLabel(t.owner) ? `Owner: ${namesLabel(t.owner)}` : '',
           t.nextAction ? `Next: ${t.nextAction}` : '',
           `Program: ${programNameOf(t, programsById)}`,
         ]
@@ -372,7 +376,7 @@ export default function Calendar() {
                     </div>
                     <div className="text-xs text-hae-slate">
                       {t.status || '—'}
-                      {t.owner ? ` · ${t.owner}` : ''}
+                      {namesLabel(t.owner) ? ` · ${namesLabel(t.owner)}` : ''}
                       {` · ${programNameOf(t, programsById)}`}
                       {` · ${projectNameOf(t, projectsById)}`}
                     </div>

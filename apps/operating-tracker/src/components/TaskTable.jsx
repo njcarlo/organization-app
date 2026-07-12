@@ -8,21 +8,24 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import {
   effectivePriority,
   formatDate,
   isWaitingOn,
+  namesLabel,
   normalizeTaskStatus,
   priorityBadgeClass,
   sortByStatus,
   statusBadgeClass,
+  toNameList,
   WAITING_ON_BADGE_CLASS,
 } from '../utils'
 
 const emptyNew = {
   name: '',
-  owner: '',
+  owner: [],
   dueDate: '',
   status: 'Not Started',
   priority: '',
@@ -280,10 +283,10 @@ function TaskEditForm({
           />
         </Field>
         <Field label="Owner">
-          <input
+          <LeadSelect
             className={fieldClass}
             value={draft.owner}
-            onChange={(e) => setDraft({ ...draft, owner: e.target.value })}
+            onChange={(owner) => setDraft({ ...draft, owner })}
           />
         </Field>
         <Field label="Priority">
@@ -403,7 +406,7 @@ const TaskTable = forwardRef(function TaskTable(
     setAdding(true)
     setNewTask({
       ...emptyNew,
-      owner: project?.lead || '',
+      owner: toNameList(project?.lead),
     })
     setEditingId(null)
     setDraft(null)
@@ -423,7 +426,7 @@ const TaskTable = forwardRef(function TaskTable(
     try {
       await addDoc(collection(db, 'tasks'), {
         name: newTask.name.trim(),
-        owner: newTask.owner.trim(),
+        owner: newTask.owner,
         dueDate: newTask.dueDate || '',
         status: newTask.status,
         priority: newTask.priority,
@@ -451,7 +454,7 @@ const TaskTable = forwardRef(function TaskTable(
     setExpandedId(task.id)
     setDraft({
       name: task.name || '',
-      owner: task.owner || '',
+      owner: toNameList(task.owner),
       dueDate: task.dueDate || '',
       status: normalizeTaskStatus(task.status || 'Not Started'),
       priority: task.priority || '',
@@ -473,7 +476,7 @@ const TaskTable = forwardRef(function TaskTable(
     try {
       await updateDoc(doc(db, 'tasks', editingId), {
         name: draft.name.trim(),
-        owner: draft.owner.trim(),
+        owner: draft.owner,
         dueDate: draft.dueDate || '',
         status: draft.status,
         priority: draft.priority,
@@ -657,7 +660,7 @@ const TaskTable = forwardRef(function TaskTable(
                     </td>
                     {showOwner ? (
                       <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
-                        {task.owner || '—'}
+                        {namesLabel(task.owner) || '—'}
                       </td>
                     ) : null}
                     <td className="whitespace-nowrap px-3 py-2.5 text-sm text-hae-slate">
@@ -792,7 +795,9 @@ const TaskTable = forwardRef(function TaskTable(
                           <StatusPill status={task.status} waitingOn={isWaitingOn(task)} />
                         </div>
                         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-hae-slate">
-                          {showOwner ? <span>{task.owner || 'Unassigned'}</span> : null}
+                          {showOwner ? (
+                            <span>{namesLabel(task.owner) || 'Unassigned'}</span>
+                          ) : null}
                           <span>Due {formatDate(task.dueDate)}</span>
                           {task.nextAction ? (
                             <span className="line-clamp-1 text-hae-ink/70">

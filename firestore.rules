@@ -60,7 +60,7 @@ service cloud.firestore {
 
     // —— Users ——
     match /users/{userId} {
-      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow read: if signedIn() && (request.auth.uid == userId || isStaff());
       // Admins create others; Setup / self-bootstrap may create own admin profile
       allow create: if signedIn() && (
         isAdmin()

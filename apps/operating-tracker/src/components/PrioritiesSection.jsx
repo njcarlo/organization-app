@@ -1,6 +1,7 @@
 import {
   effectivePriority,
   formatDate,
+  namesLabel,
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
@@ -92,7 +93,7 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel }) {
                 </td>
                 <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
                 <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                  {projectsById[task.projectId]?.lead || '—'}
+                  {namesLabel(projectsById[task.projectId]?.lead) || '—'}
                 </td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
                   {formatDate(task.dueDate)}

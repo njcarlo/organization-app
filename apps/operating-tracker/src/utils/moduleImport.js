@@ -3,6 +3,8 @@
  * Admins can upload CSV/JSON or paste a table; AI agents can follow the same format.
  */
 
+import { toNameList } from '../utils'
+
 export const MODULE_IMPORT_SPECS = {
   surveys: {
     id: 'surveys',
@@ -362,7 +364,7 @@ Follow-up judges,Jeffrey,Startup World Cup 2026,Judge Recruitment,2026-07-11,Wai
       return {
         _id: row._id || row.id || undefined,
         name,
-        owner: String(row.owner || '').trim(),
+        owner: toNameList(row.owner),
         programName,
         projectName,
         programId: String(row.programId || '').trim(),

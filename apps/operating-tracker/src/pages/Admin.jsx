@@ -26,6 +26,8 @@ import AdminAddItems from '../components/AdminAddItems'
 import CategoryItemsAdmin from '../components/CategoryItemsAdmin'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 import AdminFeatureToggles from '../components/AdminFeatureToggles'
+import LeadSelect from '../components/LeadSelect'
+import { namesLabel, toNameList } from '../utils'
 import { useAuth } from '../context/AuthContext'
 import { FEATURES, useFeatures } from '@hae/ui'
 
@@ -145,7 +147,7 @@ export default function Admin() {
   const [editingUserId, setEditingUserId] = useState(null)
   const [userDraft, setUserDraft] = useState(null)
 
-  const [newProgram, setNewProgram] = useState({ name: '', lead: '' })
+  const [newProgram, setNewProgram] = useState({ name: '', lead: [] })
   const [editingProgramId, setEditingProgramId] = useState(null)
   const [programDraft, setProgramDraft] = useState(null)
 
@@ -313,11 +315,11 @@ export default function Admin() {
     const maxOrder = programs.reduce((m, p) => Math.max(m, p.order ?? 0), 0)
     await addDoc(collection(db, 'programs'), {
       name: newProgram.name.trim(),
-      lead: newProgram.lead.trim(),
+      lead: newProgram.lead,
       order: maxOrder + 1,
       createdAt: serverTimestamp(),
     })
-    setNewProgram({ name: '', lead: '' })
+    setNewProgram({ name: '', lead: [] })
     await load()
   }
 
@@ -325,7 +327,7 @@ export default function Admin() {
     if (!programDraft?.name.trim()) return
     await updateDoc(doc(db, 'programs', editingProgramId), {
       name: programDraft.name.trim(),
-      lead: programDraft.lead.trim(),
+      lead: programDraft.lead,
     })
     setEditingProgramId(null)
     setProgramDraft(null)
@@ -554,13 +556,10 @@ export default function Admin() {
               }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
-            <input
-              placeholder="Overall lead"
+            <LeadSelect
               value={newProgram.lead}
-              onChange={(e) =>
-                setNewProgram({ ...newProgram, lead: e.target.value })
-              }
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              onChange={(lead) => setNewProgram({ ...newProgram, lead })}
+              placeholder="Overall lead"
             />
             <button
               type="submit"
@@ -597,14 +596,11 @@ export default function Admin() {
                         />
                       </td>
                       <td className="px-3 py-2">
-                        <input
+                        <LeadSelect
                           className="w-full rounded border border-hae-line px-2 py-1 text-sm"
                           value={programDraft.lead}
-                          onChange={(e) =>
-                            setProgramDraft({
-                              ...programDraft,
-                              lead: e.target.value,
-                            })
+                          onChange={(lead) =>
+                            setProgramDraft({ ...programDraft, lead })
                           }
                         />
                       </td>
@@ -623,7 +619,7 @@ export default function Admin() {
                     <tr key={p.id} className="group border-b border-hae-line/70">
                       <td className="px-3 py-2 text-sm font-medium">{p.name}</td>
                       <td className="px-3 py-2 text-sm text-hae-slate">
-                        {p.lead || '—'}
+                        {namesLabel(p.lead) || '—'}
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                       <td className="px-3 py-2 text-right">
@@ -634,7 +630,7 @@ export default function Admin() {
                               setEditingProgramId(p.id)
                               setProgramDraft({
                                 name: p.name,
-                                lead: p.lead || '',
+                                lead: toNameList(p.lead),
                               })
                             }}
                             className="text-xs text-hae-slate hover:text-hae-crimson"

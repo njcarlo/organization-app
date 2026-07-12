@@ -11,8 +11,10 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import LeadSelect from './LeadSelect'
 import { FEATURES, Modal, SideNav, useFeatures } from '@hae/ui'
 import { EXEC_INBOX_EMAILS, HEALTH_OPTIONS } from '../constants'
+import { namesLabel, toNameList } from '../utils'
 
 const CATEGORY_META = {
   programs: { label: 'Program', pathPrefix: '/programs' },
@@ -22,7 +24,7 @@ const CATEGORY_META = {
 
 const emptyProject = {
   name: '',
-  lead: '',
+  lead: [],
   promise: '',
   health: 'ongoing',
   targetDate: '',
@@ -95,7 +97,7 @@ export default function Sidebar({ open = false, onClose }) {
     try {
       await addDoc(collection(db, 'projects'), {
         name: form.name.trim(),
-        lead: form.lead.trim(),
+        lead: form.lead,
         promise: form.promise.trim(),
         health: form.health,
         targetDate: form.targetDate || '',
@@ -113,9 +115,9 @@ export default function Sidebar({ open = false, onClose }) {
 
   const emptyCategoryForm = (showCourseFields) => ({
     name: '',
-    lead: '',
+    lead: [],
     ...(showCourseFields
-      ? { haeLead: '', startDate: '', durationWeeks: '', instructor: '', guestSpeaker: '' }
+      ? { haeLead: [], startDate: '', durationWeeks: '', instructor: '', guestSpeaker: '' }
       : {}),
   })
 
@@ -135,10 +137,10 @@ export default function Sidebar({ open = false, onClose }) {
       id: category.id,
       form: {
         name: category.name || '',
-        lead: category.lead || '',
+        lead: toNameList(category.lead),
         ...(showCourseFields
           ? {
-              haeLead: category.haeLead || '',
+              haeLead: toNameList(category.haeLead),
               startDate: category.startDate || '',
               durationWeeks: category.durationWeeks ?? '',
               instructor: category.instructor || '',
@@ -161,10 +163,10 @@ export default function Sidebar({ open = false, onClose }) {
     const showCourseFields = CATEGORY_META[collectionName].showCourseFields
     const data = {
       name: form.name.trim(),
-      lead: form.lead.trim(),
+      lead: form.lead,
       ...(showCourseFields
         ? {
-            haeLead: form.haeLead.trim(),
+            haeLead: form.haeLead,
             startDate: form.startDate,
             durationWeeks: form.durationWeeks ? Number(form.durationWeeks) : null,
             instructor: form.instructor.trim(),
@@ -261,7 +263,7 @@ export default function Sidebar({ open = false, onClose }) {
         to: `/programs/${p.id}`,
         label: p.name,
         icon: 'folder',
-        description: p.lead || undefined,
+        description: namesLabel(p.lead) || undefined,
         actions: categoryActions('programs', p),
       })),
       emptyLabel: programs.length === 0 ? 'No programs yet' : undefined,
@@ -277,7 +279,7 @@ export default function Sidebar({ open = false, onClose }) {
           to: `/academy/${p.id}`,
           label: p.name,
           icon: 'folder',
-          description: p.lead || undefined,
+          description: namesLabel(p.lead) || undefined,
           actions: categoryActions('academyPrograms', p),
         })),
       ],
@@ -291,7 +293,7 @@ export default function Sidebar({ open = false, onClose }) {
         to: `/custom-programs/${p.id}`,
         label: p.name,
         icon: 'folder',
-        description: p.lead || undefined,
+        description: namesLabel(p.lead) || undefined,
         actions: categoryActions('customPrograms', p),
       })),
       emptyLabel: customPrograms.length === 0 ? 'No Custom Programs yet' : undefined,
@@ -347,16 +349,15 @@ export default function Sidebar({ open = false, onClose }) {
               }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
-            <input
+            <LeadSelect
               placeholder="Lead"
               value={addProjectModal.form.lead}
-              onChange={(e) =>
+              onChange={(lead) =>
                 setAddProjectModal({
                   ...addProjectModal,
-                  form: { ...addProjectModal.form, lead: e.target.value },
+                  form: { ...addProjectModal.form, lead },
                 })
               }
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             <input
               placeholder="Promise / outcome"
@@ -453,29 +454,27 @@ export default function Sidebar({ open = false, onClose }) {
               }
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
-            <input
+            <LeadSelect
               placeholder="Overall lead"
               value={editCategoryModal.form.lead}
-              onChange={(e) =>
+              onChange={(lead) =>
                 setEditCategoryModal({
                   ...editCategoryModal,
-                  form: { ...editCategoryModal.form, lead: e.target.value },
+                  form: { ...editCategoryModal.form, lead },
                 })
               }
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             {CATEGORY_META[editCategoryModal.collectionName].showCourseFields ? (
               <>
-                <input
+                <LeadSelect
                   placeholder="HAE Lead"
                   value={editCategoryModal.form.haeLead}
-                  onChange={(e) =>
+                  onChange={(haeLead) =>
                     setEditCategoryModal({
                       ...editCategoryModal,
-                      form: { ...editCategoryModal.form, haeLead: e.target.value },
+                      form: { ...editCategoryModal.form, haeLead },
                     })
                   }
-                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
                 />
                 <input
                   type="date"

@@ -11,12 +11,13 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
+import LeadSelect from '../components/LeadSelect'
 import { HEALTH_OPTIONS } from '../constants'
-import { normalizeHealth, sortByHealth } from '../utils'
+import { namesLabel, normalizeHealth, sortByHealth } from '../utils'
 
 const emptyProject = {
   name: '',
-  lead: '',
+  lead: [],
   promise: '',
   health: 'ongoing',
   targetDate: '',
@@ -103,7 +104,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     try {
       await addDoc(collection(db, 'projects'), {
         name: newProject.name.trim(),
-        lead: newProject.lead.trim(),
+        lead: newProject.lead,
         promise: newProject.promise.trim(),
         health: newProject.health,
         targetDate: newProject.targetDate || '',
@@ -139,7 +140,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
             {program.name}
           </h1>
           <p className="mt-1 text-sm text-hae-slate">
-            Overall lead: {program.lead || '—'}
+            Overall lead: {namesLabel(program.lead) || '—'}
             {projects.length ? ` · ${projects.length} projects` : ''}
           </p>
 
@@ -149,7 +150,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   HAE Lead
                 </dt>
-                <dd className="text-hae-ink">{program.haeLead || '—'}</dd>
+                <dd className="text-hae-ink">{namesLabel(program.haeLead) || '—'}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
@@ -230,11 +231,10 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
             onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
             className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
           />
-          <input
+          <LeadSelect
             placeholder="Lead"
             value={newProject.lead}
-            onChange={(e) => setNewProject({ ...newProject, lead: e.target.value })}
-            className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            onChange={(lead) => setNewProject({ ...newProject, lead })}
           />
           <input
             placeholder="Promise / outcome"
