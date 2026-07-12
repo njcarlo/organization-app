@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
 
@@ -9,7 +9,7 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
  * Crimson accents mark the active route and open groups.
  *
  * sections: [
- *   { id, label, to?, end?, icon?, emptyLabel?, items?: [{ to, label, end?, icon?, description? }] }
+ *   { id, label, to?, end?, icon?, emptyLabel?, items?: [{ to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }] }
  * ]
  */
 export default function SideNav({
@@ -61,6 +61,25 @@ export default function SideNav({
   }
 
   const close = () => onClose?.()
+
+  const [openMenuKey, setOpenMenuKey] = useState(null)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!openMenuKey) return
+    const handlePointer = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuKey(null)
+    }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpenMenuKey(null)
+    }
+    document.addEventListener('mousedown', handlePointer)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handlePointer)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openMenuKey])
 
   return (
     <aside
@@ -184,41 +203,86 @@ export default function SideNav({
                           item.to,
                           item.end
                         )
+                        const hasActions = Array.isArray(item.actions) && item.actions.length > 0
+                        const menuKey = item.to
+                        const menuOpen = openMenuKey === menuKey
                         return (
-                          <NavLink
-                            key={item.to}
-                            to={item.to}
-                            end={item.end}
-                            onClick={close}
-                            title={item.description || item.label}
-                            className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              active
-                                ? 'bg-hae-crimson/10 font-semibold text-hae-crimson'
-                                : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
-                            }`}
-                          >
-                            {active ? (
-                              <span
-                                aria-hidden
-                                className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-r bg-hae-crimson"
-                              />
-                            ) : null}
-                            <span
-                              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                          <div key={item.to} className="group relative flex items-center gap-1">
+                            <NavLink
+                              to={item.to}
+                              end={item.end}
+                              onClick={close}
+                              title={item.description || item.label}
+                              className={`relative flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                                 active
-                                  ? 'bg-hae-crimson/15 text-hae-crimson'
-                                  : 'bg-hae-mist/80 text-hae-slate'
+                                  ? 'bg-hae-crimson/10 font-semibold text-hae-crimson'
+                                  : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
                               }`}
                             >
-                              <NavIcon
-                                name={icon}
-                                className="[&>svg]:h-4 [&>svg]:w-4"
-                              />
-                            </span>
-                            <span className="min-w-0 flex-1 truncate leading-snug">
-                              {item.label}
-                            </span>
-                          </NavLink>
+                              {active ? (
+                                <span
+                                  aria-hidden
+                                  className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-r bg-hae-crimson"
+                                />
+                              ) : null}
+                              <span
+                                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  active
+                                    ? 'bg-hae-crimson/15 text-hae-crimson'
+                                    : 'bg-hae-mist/80 text-hae-slate'
+                                }`}
+                              >
+                                <NavIcon
+                                  name={icon}
+                                  className="[&>svg]:h-4 [&>svg]:w-4"
+                                />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate leading-snug">
+                                {item.label}
+                              </span>
+                            </NavLink>
+                            {hasActions ? (
+                              <div
+                                className="relative shrink-0"
+                                ref={menuOpen ? menuRef : undefined}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenMenuKey(menuOpen ? null : menuKey)}
+                                  aria-label={`${item.label} actions`}
+                                  aria-haspopup="menu"
+                                  aria-expanded={menuOpen}
+                                  data-open={menuOpen}
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover:opacity-100 data-[open=true]:bg-hae-mist data-[open=true]:opacity-100"
+                                >
+                                  <NavIcon name="kebab" className="[&>svg]:h-4 [&>svg]:w-4" />
+                                </button>
+                                {menuOpen ? (
+                                  <div
+                                    role="menu"
+                                    className="absolute right-0 top-full z-10 mt-1 w-44 overflow-hidden rounded-lg border border-hae-line bg-white py-1 shadow-lg"
+                                  >
+                                    {item.actions.map((action) => (
+                                      <button
+                                        key={action.key}
+                                        type="button"
+                                        role="menuitem"
+                                        onClick={() => {
+                                          setOpenMenuKey(null)
+                                          action.onClick()
+                                        }}
+                                        className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
+                                          action.danger ? 'text-hae-red' : 'text-hae-ink'
+                                        }`}
+                                      >
+                                        {action.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
                         )
                       })
                     )}

@@ -140,6 +140,13 @@ const ICONS = {
       <path d="M12 8v4l2.5 2.5" />
     </Svg>
   ),
+  kebab: (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden fill="currentColor">
+      <circle cx="12" cy="5" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="12" cy="19" r="1.75" />
+    </svg>
+  ),
 }
 
 export function NavIcon({ name, className }) {
