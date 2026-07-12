@@ -51,24 +51,24 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title || 'Dialog'}
-        className={`relative z-[81] w-full ${width} rounded-xl border border-hae-line bg-white shadow-xl`}
+        className={`relative z-[81] w-full ${width} rounded-3xl border border-transparent bg-white shadow-2xl`}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-hae-line px-4 py-3 sm:px-5">
+        <div className="flex items-start justify-between gap-3 px-5 py-4 sm:px-6">
           <h2 className="text-base font-semibold text-hae-ink">{title}</h2>
           <button
             type="button"
             onClick={() => {
               if (!busy) onClose?.()
             }}
-            className="rounded-md px-2 py-1 text-sm text-hae-slate hover:bg-hae-mist"
+            className="rounded-full px-2 py-1 text-sm text-hae-slate hover:bg-hae-mist"
             aria-label="Close"
           >
             ✕
           </button>
         </div>
-        <div className="px-4 py-4 sm:px-5">{children}</div>
+        <div className="px-5 py-4 sm:px-6">{children}</div>
         {footer ? (
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hae-line bg-hae-mist/40 px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-center justify-end gap-2 rounded-b-3xl bg-hae-mist/60 px-5 py-4 sm:px-6">
             {footer}
           </div>
         ) : null}
