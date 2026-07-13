@@ -86,6 +86,9 @@ service cloud.firestore {
     match /trackerDocuments/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerDocumentFiles/{id} {
+      allow read, write: if isStaff();
+    }
     match /trackerEvents/{id} {
       allow read, write: if isStaff();
     }
