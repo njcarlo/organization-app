@@ -50,3 +50,5 @@ export const HEALTH_ALIASES = {
   'on-track': 'ongoing',
   'at-risk': 'needs-attention',
 }
+
+export const EVENT_FORMAT_OPTIONS = ['Online', 'In-Person']

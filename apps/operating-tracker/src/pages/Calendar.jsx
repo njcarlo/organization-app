@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
@@ -50,6 +51,7 @@ export default function Calendar() {
   const { userProfile, isStaff } = useAuth()
   const { isEnabled } = useFeatures()
   const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
+  const navigate = useNavigate()
 
   const now = new Date()
   const [viewYear, setViewYear] = useState(now.getFullYear())
@@ -57,6 +59,7 @@ export default function Calendar() {
   const [tasks, setTasks] = useState([])
   const [programs, setPrograms] = useState([])
   const [projects, setProjects] = useState([])
+  const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewAll, setViewAll] = useState(false)
   const [statusFilter, setStatusFilter] = useState('Active')
@@ -64,14 +67,16 @@ export default function Calendar() {
   const [detailTask, setDetailTask] = useState(null)
 
   const load = useCallback(async () => {
-    const [taskSnap, programSnap, projectSnap] = await Promise.all([
+    const [taskSnap, programSnap, projectSnap, eventSnap] = await Promise.all([
       getDocs(collection(db, 'tasks')),
       getDocs(collection(db, 'programs')),
       getDocs(collection(db, 'projects')),
+      getDocs(collection(db, 'trackerEvents')),
     ])
     setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     setPrograms(programSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    setEvents(eventSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     setLoading(false)
   }, [])
 
@@ -119,6 +124,18 @@ export default function Calendar() {
     return map
   }, [filtered])
 
+  const byEventDate = useMemo(() => {
+    const map = new Map()
+    for (const event of events) {
+      if (!event.eventDate) continue
+      const list = map.get(event.eventDate) || []
+      list.push(event)
+      map.set(event.eventDate, list)
+    }
+    for (const list of map.values()) list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    return map
+  }, [events])
+
   const cells = useMemo(
     () => buildMonthCells(viewYear, viewMonth),
     [viewYear, viewMonth]
@@ -130,6 +147,11 @@ export default function Calendar() {
     if (!selectedDay) return []
     return byDueDate.get(selectedDay) || []
   }, [byDueDate, selectedDay])
+
+  const selectedEvents = useMemo(() => {
+    if (!selectedDay) return []
+    return byEventDate.get(selectedDay) || []
+  }, [byEventDate, selectedDay])
 
   const datedInView = useMemo(() => {
     const prefix = `${viewYear}-${pad2(viewMonth + 1)}-`
@@ -292,14 +314,18 @@ export default function Calendar() {
               )
             }
             const dayTasks = byDueDate.get(cell.iso) || []
+            const dayEvents = byEventDate.get(cell.iso) || []
             const isToday = cell.iso === todayIso
             const isSelected = cell.iso === selectedDay
             const overdue = dayTasks.some((t) => {
               const d = daysUntil(t.dueDate)
               return d !== null && d < 0 && t.status !== 'Complete'
             })
-            const visible = dayTasks.slice(0, MAX_CHIPS)
-            const more = dayTasks.length - visible.length
+            const visibleEvents = dayEvents.slice(0, MAX_CHIPS)
+            const remainingChipSlots = Math.max(0, MAX_CHIPS - visibleEvents.length)
+            const visible = dayTasks.slice(0, remainingChipSlots)
+            const more =
+              dayTasks.length - visible.length + (dayEvents.length - visibleEvents.length)
 
             return (
               <button
@@ -324,6 +350,15 @@ export default function Calendar() {
                   {cell.day}
                 </div>
                 <div className="space-y-0.5">
+                  {visibleEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="truncate rounded bg-hae-crimson px-1 py-0.5 text-[10px] font-semibold leading-tight text-white"
+                      title={event.name}
+                    >
+                      {event.name}
+                    </div>
+                  ))}
                   {visible.map((t) => (
                     <div
                       key={t.id}
@@ -346,6 +381,36 @@ export default function Calendar() {
           })}
         </div>
       </div>
+
+      {selectedDay && selectedEvents.length > 0 ? (
+        <section className="border border-hae-line bg-white">
+          <div className="border-b border-hae-line px-4 py-3">
+            <h2 className="text-sm font-semibold text-hae-ink">
+              Events on {formatDate(selectedDay)}
+            </h2>
+          </div>
+          <ul className="divide-y divide-hae-line">
+            {selectedEvents.map((event) => (
+              <li key={event.id}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/events/${event.id}`)}
+                  className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left hover:bg-hae-mist/40"
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-hae-ink">{event.name}</div>
+                    <div className="text-xs text-hae-slate">
+                      {event.venue || 'No venue set'}
+                      {namesLabel(event.lead) ? ` · HAE Lead: ${namesLabel(event.lead)}` : ''}
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold text-hae-crimson">View event →</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="border border-hae-line bg-white">
         <div className="border-b border-hae-line px-4 py-3">

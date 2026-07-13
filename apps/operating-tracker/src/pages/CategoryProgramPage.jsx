@@ -1,20 +1,35 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
 import DocumentFilesTable from '../components/DocumentFilesTable'
+import EventChecklist from '../components/EventChecklist'
 import LeadSelect from '../components/LeadSelect'
-import { HEALTH_OPTIONS } from '../constants'
-import { customProgramStatusBadgeClass, namesLabel, normalizeHealth, sortByHealth } from '../utils'
+import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import {
+  customProgramStatusBadgeClass,
+  formatDate,
+  formatLongDate,
+  healthBadgeClass,
+  healthLabel,
+  namesLabel,
+  normalizeHealth,
+  sortByHealth,
+  toNameList,
+} from '../utils'
+
+const NO_PROJECTS_COLLECTIONS = ['trackerDocuments', 'trackerEvents']
 
 const emptyProject = {
   name: '',
@@ -32,6 +47,7 @@ const emptyProject = {
  */
 export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const { itemId } = useParams()
+  const navigate = useNavigate()
   const [program, setProgram] = useState(null)
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
@@ -42,6 +58,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [dense, setDense] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
+  const [editEventOpen, setEditEventOpen] = useState(false)
+  const [eventSaving, setEventSaving] = useState(false)
+  const [eventForm, setEventForm] = useState(null)
 
   const load = useCallback(async () => {
     setError('')
@@ -121,6 +140,55 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     }
   }
 
+  const startEditEvent = () => {
+    setEventForm({
+      name: program.name || '',
+      eventDate: program.eventDate || '',
+      eventTime: program.eventTime || '',
+      marketingDate: program.marketingDate || '',
+      venue: program.venue || '',
+      format: program.format || '',
+      lead: toNameList(program.lead),
+      health: program.health || 'not-started',
+    })
+    setEditEventOpen(true)
+  }
+
+  const closeEditEvent = () => {
+    if (eventSaving) return
+    setEditEventOpen(false)
+    setEventForm(null)
+  }
+
+  const saveEditEvent = async (e) => {
+    e.preventDefault()
+    if (!eventForm?.name.trim() || eventSaving) return
+    setEventSaving(true)
+    try {
+      await updateDoc(doc(db, collectionName, itemId), {
+        name: eventForm.name.trim(),
+        eventDate: eventForm.eventDate,
+        eventTime: eventForm.eventTime.trim(),
+        marketingDate: eventForm.marketingDate,
+        venue: eventForm.venue.trim(),
+        format: eventForm.format,
+        lead: eventForm.lead,
+        health: eventForm.health,
+      })
+      setEditEventOpen(false)
+      setEventForm(null)
+      load()
+    } finally {
+      setEventSaving(false)
+    }
+  }
+
+  const deleteEvent = async () => {
+    if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted.`)) return
+    await deleteDoc(doc(db, collectionName, itemId))
+    navigate('/events-dashboard')
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
   if (error) return <p className="text-sm text-hae-red">{error}</p>
   if (!program)
@@ -140,10 +208,67 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hae-ink sm:text-3xl">
             {program.name}
           </h1>
-          <p className="mt-1 text-sm text-hae-slate">
-            Overall lead: {namesLabel(program.lead) || '—'}
-            {projects.length ? ` · ${projects.length} projects` : ''}
-          </p>
+          {collectionName === 'trackerEvents' ? null : (
+            <p className="mt-1 text-sm text-hae-slate">
+              Overall lead: {namesLabel(program.lead) || '—'}
+              {projects.length ? ` · ${projects.length} projects` : ''}
+            </p>
+          )}
+
+          {collectionName === 'trackerEvents' ? (
+            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Date of Event
+                </dt>
+                <dd className="text-hae-ink">{formatLongDate(program.eventDate)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Time of Event
+                </dt>
+                <dd className="text-hae-ink">{program.eventTime || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Date of Marketing
+                </dt>
+                <dd className="text-hae-ink">
+                  {program.marketingDate ? formatDate(program.marketingDate) : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Online or In-Person
+                </dt>
+                <dd className="text-hae-ink">{program.format || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Venue
+                </dt>
+                <dd className="text-hae-ink">{program.venue || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  HAE Lead
+                </dt>
+                <dd className="text-hae-ink">{namesLabel(program.lead) || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Status
+                </dt>
+                <dd>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${healthBadgeClass(program.health)}`}
+                  >
+                    {healthLabel(program.health)}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          ) : null}
 
           {collectionName === 'academyPrograms' ? (
             <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -221,7 +346,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          {collectionName !== 'trackerDocuments' ? (
+          {!NO_PROJECTS_COLLECTIONS.includes(collectionName) ? (
             <>
               <button
                 type="button"
@@ -236,8 +361,132 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               </button>
             </>
           ) : null}
+          {collectionName === 'trackerEvents' ? (
+            <>
+              <button type="button" onClick={startEditEvent} className="hae-btn-secondary">
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={deleteEvent}
+                className="text-xs text-hae-slate hover:text-hae-red"
+              >
+                Delete
+              </button>
+            </>
+          ) : null}
         </div>
       </header>
+
+      {collectionName === 'trackerEvents' ? (
+        <Modal
+          open={editEventOpen}
+          onClose={closeEditEvent}
+          title="Update event"
+          busy={eventSaving}
+          footer={
+            <>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEditEvent}
+                disabled={eventSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-event-form"
+                className="hae-btn"
+                disabled={eventSaving}
+              >
+                {eventSaving ? 'Saving…' : 'Update event'}
+              </button>
+            </>
+          }
+        >
+          {eventForm ? (
+            <form id="edit-event-form" onSubmit={saveEditEvent} className="grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                <span className="text-xs font-medium text-hae-slate">Event Title</span>
+                <input
+                  required
+                  value={eventForm.name}
+                  onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Date of Event</span>
+                <input
+                  type="date"
+                  value={eventForm.eventDate}
+                  onChange={(e) => setEventForm({ ...eventForm, eventDate: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Time of Event (with timezone)</span>
+                <input
+                  value={eventForm.eventTime}
+                  onChange={(e) => setEventForm({ ...eventForm, eventTime: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
+                <input
+                  type="date"
+                  value={eventForm.marketingDate}
+                  onChange={(e) => setEventForm({ ...eventForm, marketingDate: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Online or In-Person</span>
+                <select
+                  value={eventForm.format}
+                  onChange={(e) => setEventForm({ ...eventForm, format: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                >
+                  <option value="">Select format</option>
+                  {EVENT_FORMAT_OPTIONS.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Venue</span>
+                <input
+                  value={eventForm.venue}
+                  onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">HAE Lead</span>
+                <LeadSelect value={eventForm.lead} onChange={(lead) => setEventForm({ ...eventForm, lead })} />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Status</span>
+                <select
+                  value={eventForm.health}
+                  onChange={(e) => setEventForm({ ...eventForm, health: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                >
+                  {HEALTH_OPTIONS.map((h) => (
+                    <option key={h.value} value={h.value}>
+                      {h.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </form>
+          ) : null}
+        </Modal>
+      ) : null}
 
       {collectionName === 'trackerDocuments' ? (
         <section className="space-y-2">
@@ -245,6 +494,15 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
             Documents
           </h2>
           <DocumentFilesTable programId={itemId} />
+        </section>
+      ) : null}
+
+      {collectionName === 'trackerEvents' ? (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+            Checklist
+          </h2>
+          <EventChecklist eventId={itemId} />
         </section>
       ) : null}
 
@@ -313,7 +571,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </form>
       </Modal>
 
-      {collectionName !== 'trackerDocuments' ? (
+      {!NO_PROJECTS_COLLECTIONS.includes(collectionName) ? (
         <div className="space-y-3">
           {projects.length === 0 ? (
             <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
