@@ -13,8 +13,8 @@ import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
 import { FEATURES, Modal, SideNav, useFeatures } from '@hae/ui'
-import { EXEC_INBOX_EMAILS, HEALTH_OPTIONS } from '../constants'
-import { namesLabel, toNameList } from '../utils'
+import { EVENT_FORMAT_OPTIONS, EXEC_INBOX_EMAILS, HEALTH_OPTIONS } from '../constants'
+import { formatDate, namesLabel, toNameList } from '../utils'
 
 const CUSTOM_PROGRAM_STATUS_OPTIONS = ['Prospect', 'Approved']
 
@@ -23,7 +23,7 @@ const CATEGORY_META = {
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
   customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs', showCustomProgramFields: true },
   trackerDocuments: { label: 'Document', pathPrefix: '/documents' },
-  trackerEvents: { label: 'Event', pathPrefix: '/events' },
+  trackerEvents: { label: 'Event', pathPrefix: '/events', showEventFields: true },
   trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
 }
 
@@ -138,6 +138,16 @@ export default function Sidebar({ open = false, onClose }) {
       ? { haeLead: [], startDate: '', durationWeeks: '', instructor: '', guestSpeaker: '' }
       : {}),
     ...(meta.showCustomProgramFields ? { startDate: '', status: '' } : {}),
+    ...(meta.showEventFields
+      ? {
+          eventDate: '',
+          eventTime: '',
+          marketingDate: '',
+          venue: '',
+          format: '',
+          health: 'not-started',
+        }
+      : {}),
   })
 
   const openAddCategory = (collectionName) => {
@@ -168,6 +178,16 @@ export default function Sidebar({ open = false, onClose }) {
         ...(meta.showCustomProgramFields
           ? { startDate: category.startDate || '', status: category.status || '' }
           : {}),
+        ...(meta.showEventFields
+          ? {
+              eventDate: category.eventDate || '',
+              eventTime: category.eventTime || '',
+              marketingDate: category.marketingDate || '',
+              venue: category.venue || '',
+              format: category.format || '',
+              health: category.health || 'not-started',
+            }
+          : {}),
       },
     })
   }
@@ -195,6 +215,16 @@ export default function Sidebar({ open = false, onClose }) {
           }
         : {}),
       ...(meta.showCustomProgramFields ? { startDate: form.startDate, status: form.status } : {}),
+      ...(meta.showEventFields
+        ? {
+            eventDate: form.eventDate,
+            eventTime: form.eventTime.trim(),
+            marketingDate: form.marketingDate,
+            venue: form.venue.trim(),
+            format: form.format,
+            health: form.health,
+          }
+        : {}),
     }
     setSaving(true)
     try {
@@ -234,11 +264,15 @@ export default function Sidebar({ open = false, onClose }) {
   ]
 
   const categoryActions = (collectionName, category) => [
-    {
-      key: 'add-project',
-      label: 'Add project',
-      onClick: () => openAddProject(collectionName, category),
-    },
+    ...(collectionName === 'trackerEvents'
+      ? []
+      : [
+          {
+            key: 'add-project',
+            label: 'Add project',
+            onClick: () => openAddProject(collectionName, category),
+          },
+        ]),
     {
       key: 'edit-category',
       label: `Edit ${CATEGORY_META[collectionName].label.toLowerCase()}`,
@@ -341,16 +375,21 @@ export default function Sidebar({ open = false, onClose }) {
 
     next.push({
       id: 'events',
-      label: 'Events',
+      label: 'Events & Programs',
       actions: sectionActions('trackerEvents'),
-      items: trackerEvents.map((p) => ({
-        to: `/events/${p.id}`,
-        label: p.name,
-        icon: 'folder',
-        description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('trackerEvents', p),
-      })),
-      emptyLabel: trackerEvents.length === 0 ? 'No Events yet' : undefined,
+      items: [
+        { to: '/events-dashboard', label: 'Events & Programs Dashboard', icon: 'chart' },
+        ...trackerEvents.map((p) => ({
+          to: `/events/${p.id}`,
+          label: p.name,
+          icon: 'calendar',
+          description:
+            [p.eventDate ? formatDate(p.eventDate) : '', namesLabel(p.lead)]
+              .filter(Boolean)
+              .join(' · ') || undefined,
+          actions: categoryActions('trackerEvents', p),
+        })),
+      ],
     })
 
     next.push({
@@ -520,28 +559,139 @@ export default function Sidebar({ open = false, onClose }) {
             onSubmit={submitEditCategory}
             className="grid gap-3 sm:grid-cols-2"
           >
-            <input
-              required
-              placeholder="Name"
-              value={editCategoryModal.form.name}
-              onChange={(e) =>
-                setEditCategoryModal({
-                  ...editCategoryModal,
-                  form: { ...editCategoryModal.form, name: e.target.value },
-                })
-              }
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
-            <LeadSelect
-              placeholder="Overall lead"
-              value={editCategoryModal.form.lead}
-              onChange={(lead) =>
-                setEditCategoryModal({
-                  ...editCategoryModal,
-                  form: { ...editCategoryModal.form, lead },
-                })
-              }
-            />
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs font-medium text-hae-slate">
+                {CATEGORY_META[editCategoryModal.collectionName].showEventFields
+                  ? 'Event Title'
+                  : 'Name'}
+              </span>
+              <input
+                required
+                value={editCategoryModal.form.name}
+                onChange={(e) =>
+                  setEditCategoryModal({
+                    ...editCategoryModal,
+                    form: { ...editCategoryModal.form, name: e.target.value },
+                  })
+                }
+                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs font-medium text-hae-slate">
+                {CATEGORY_META[editCategoryModal.collectionName].showEventFields
+                  ? 'HAE Lead'
+                  : 'Overall lead'}
+              </span>
+              <LeadSelect
+                value={editCategoryModal.form.lead}
+                onChange={(lead) =>
+                  setEditCategoryModal({
+                    ...editCategoryModal,
+                    form: { ...editCategoryModal.form, lead },
+                  })
+                }
+              />
+            </label>
+            {CATEGORY_META[editCategoryModal.collectionName].showEventFields ? (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Date of Event</span>
+                  <input
+                    type="date"
+                    value={editCategoryModal.form.eventDate}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, eventDate: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">
+                    Time of Event (with timezone)
+                  </span>
+                  <input
+                    value={editCategoryModal.form.eventTime}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, eventTime: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Venue</span>
+                  <input
+                    value={editCategoryModal.form.venue}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, venue: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
+                  <input
+                    type="date"
+                    value={editCategoryModal.form.marketingDate}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, marketingDate: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Online or In-Person</span>
+                  <select
+                    value={editCategoryModal.form.format}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, format: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                  >
+                    <option value="">Select format</option>
+                    {EVENT_FORMAT_OPTIONS.map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Status</span>
+                  <select
+                    value={editCategoryModal.form.health}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, health: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                  >
+                    {HEALTH_OPTIONS.map((h) => (
+                      <option key={h.value} value={h.value}>
+                        {h.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : null}
             {CATEGORY_META[editCategoryModal.collectionName].showCourseFields ? (
               <>
                 <LeadSelect

@@ -62,6 +62,20 @@ export function formatDate(dateStr) {
   return `${m}/${d}/${y.slice(2)}`
 }
 
+/** Long-form date with weekday, e.g. "Monday, July 13, 2026". */
+export function formatLongDate(dateStr) {
+  if (!dateStr) return '—'
+  const [y, m, d] = dateStr.split('-')
+  if (!y || !m || !d) return dateStr
+  const date = new Date(Number(y), Number(m) - 1, Number(d))
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
 export function programNameOf(task, programsById) {
   return task.programName || programsById[task.programId]?.name || '—'
 }
