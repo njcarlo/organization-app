@@ -69,3 +69,4 @@ export {
   buildIcsCalendar,
   downloadIcs,
 } from './ics.js'
+export { timeOfDayGreeting } from './greeting.js'

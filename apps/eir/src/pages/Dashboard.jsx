@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { useAuth, PERMISSIONS } from '@hae/ui'
+import { useAuth, PERMISSIONS, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Dashboard() {
-  const { hasPermission } = useAuth()
+  const { hasPermission, userProfile } = useAuth()
   const canManage = hasPermission(PERMISSIONS.EIR_MANAGE)
   const [experts, setExperts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -49,7 +49,12 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
+        {userProfile?.name && (
+          <p className="font-display text-xl text-hae-ink">
+            {timeOfDayGreeting()}, {userProfile.name}
+          </p>
+        )}
+        <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           EiR · Expert Office Hours
         </p>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">

@@ -9,7 +9,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { useAuth } from '@hae/ui'
+import { useAuth, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 import { formatMoney, needsPayment } from '../constants'
 import {
@@ -107,7 +107,12 @@ export default function MemberHome() {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
+        {userProfile?.name && (
+          <p className="font-display text-xl text-hae-ink">
+            {timeOfDayGreeting()}, {userProfile.name}
+          </p>
+        )}
+        <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Member · AMS
         </p>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">
