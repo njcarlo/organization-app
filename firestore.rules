@@ -98,6 +98,18 @@ service cloud.firestore {
     match /trackerGraphics/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerGraphicsRequests/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerGraphicsRequests/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /trackerGraphicsRequests/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /courseRegistrations/{id} {
       allow read, write: if isStaff();
     }

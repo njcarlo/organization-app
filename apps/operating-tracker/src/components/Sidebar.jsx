@@ -406,14 +406,16 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'graphics',
       label: 'Graphics',
       actions: sectionActions('trackerGraphics'),
-      items: trackerGraphics.map((p) => ({
-        to: `/graphics/${p.id}`,
-        label: p.name,
-        icon: 'folder',
-        description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('trackerGraphics', p),
-      })),
-      emptyLabel: trackerGraphics.length === 0 ? 'No Graphics yet' : undefined,
+      items: [
+        { to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' },
+        ...trackerGraphics.map((p) => ({
+          to: `/graphics/${p.id}`,
+          label: p.name,
+          icon: 'folder',
+          description: namesLabel(p.lead) || undefined,
+          actions: categoryActions('trackerGraphics', p),
+        })),
+      ],
     })
 
     return next
