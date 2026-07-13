@@ -85,6 +85,9 @@ const TABS = [
   { id: 'programs', label: 'Programs' },
   { id: 'academy', label: 'Academy' },
   { id: 'customPrograms', label: 'Custom Programs' },
+  { id: 'documents', label: 'Documents' },
+  { id: 'events', label: 'Events' },
+  { id: 'graphics', label: 'Graphics' },
   { id: 'features', label: 'Features', superadminOnly: true },
   { id: 'data', label: 'Import / Export' },
   { id: 'guide', label: 'Where to create' },
@@ -661,6 +664,18 @@ export default function Admin() {
 
       {tab === 'customPrograms' && (
         <CategoryItemsAdmin collectionName="customPrograms" itemLabel="Custom program" />
+      )}
+
+      {tab === 'documents' && (
+        <CategoryItemsAdmin collectionName="trackerDocuments" itemLabel="Document" />
+      )}
+
+      {tab === 'events' && (
+        <CategoryItemsAdmin collectionName="trackerEvents" itemLabel="Event" />
+      )}
+
+      {tab === 'graphics' && (
+        <CategoryItemsAdmin collectionName="trackerGraphics" itemLabel="Graphic" />
       )}
 
       {tab === 'data' && (
