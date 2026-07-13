@@ -59,7 +59,8 @@ Cross-app improvements for feedback, awareness, calendar handoff, person linking
 | Feature | Where | Notes |
 |---------|--------|--------|
 | Survey analytics + CSV export | Tracker → Surveys → editor | Choice/rating breakdowns, text samples, CSV download |
-| Notifications digest | Tracker → Notifications | Overdue / due-soon tasks + LMS check-ins; optional mailto digest |
+| Notifications digest | Tracker → Notifications | Mentions + overdue / due-soon + LMS check-ins; mailto digest |
+| @mention email | Comments on tasks/projects | In-app always (PR #75/#77). Auto email: Blaze + `RESEND_API_KEY`; else Open email draft |
 | ICS calendar export | Tracker My Tasks, LMS Office Hours, AMS Events | Download `.ics` for Google/Apple/Outlook |
 | CRM ↔ AMS/LMS person linking | CRM → Contacts → Edit | Match by email; show members, memberships, enrollments, certificates |
 | URL attachments | CRM contacts & interactions | Paste Drive/Dropbox/SharePoint links (no Storage required) |
@@ -68,7 +69,7 @@ Cross-app improvements for feedback, awareness, calendar handoff, person linking
 **Superadmins** (always full access + Feature toggles): `njcarlo@gmail.com`, `inahmarchadesch@gmail.com`  
 Tracker → Admin → **Features** — turn apps/features on or off for everyone else.
 
-Deferred (needs Blaze / custom domain): automated push email via Cloud Functions, nested `app.hae.web.app` DNS.
+Deferred (needs Blaze / custom domain): fully automated mention email without mailto draft (`RESEND_API_KEY` on Functions), nested `app.hae.web.app` DNS.
 
 ---
 
@@ -175,6 +176,19 @@ https://tracker-hae.web.app/auth/action?mode=%MODE%&oobCode=%OOB_CODE%&apiKey=%A
 **Immediate workaround for an already-open broken link (after this handler is deployed):** in the address bar, change `/__/auth/action` → `/auth/action` (keep the same query string) and reload. The custom page ignores an empty `apiKey`. Alternately, paste the web API key after `apiKey=` (Project settings → Your apps).
 
 **Project-level fix (often restores default `/__/auth/action` links):** Authentication → Sign-in method → delete **Email/Password** → re-enable it (does not delete existing users).
+
+### @mention email (builds on PR #75 / #77)
+
+Tagging someone in a task/project comment always writes an in-app `notifications` doc (bell + Mentions list).
+
+**Automatic email** (optional):
+
+1. Blaze plan + Functions deploy (`onMentionNotificationCreated`)
+2. Create a [Resend](https://resend.com) API key and set function env `RESEND_API_KEY`
+3. Optionally set `MENTION_EMAIL_FROM` to a verified sender (defaults to Resend’s onboarding address for tests)
+4. Mention someone with **Email mentioned people** checked — Function emails them with a deep link
+
+**Without Blaze/Resend:** after posting, use **Open email draft** (mailto) to notify from your own mail app.
 
 ### Executive Inbox (PR #39)
 

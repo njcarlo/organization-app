@@ -88,9 +88,10 @@ export const HELP_SECTIONS = [
       {
         heading: 'Notifications',
         steps: [
-          'Shows an in-app digest: overdue tasks, tasks due in 7 days, waiting-on items, and LMS check-ins.',
-          'Use Email me this digest to open a mailto draft you can send to yourself or a teammate.',
-          'This is not automated push email — it stays in your inbox reputation (Spark-safe).',
+          'Shows Mentions (when someone @tags you in a task/project comment), plus overdue / due-soon / waiting / LMS check-ins.',
+          'Bell badge counts unread mention notifications; click a mention to open the task or project.',
+          'Commenting with @ can also request email — automatic send needs Blaze + RESEND_API_KEY; otherwise use Open email draft after posting.',
+          'Email me this digest opens a mailto draft of the task digest (Spark-safe).',
         ],
       },
       {
