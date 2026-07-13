@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import { useAuth } from '../context/AuthContext'
+import ActivityLog from './ActivityLog'
 import CommentsPanel from './CommentsPanel'
 import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
+import { diffTaskFields, logHistory } from '../utils/activityLog'
 import {
   effectivePriority,
   formatDate,
@@ -73,6 +76,7 @@ export default function TaskDetailPopup({
   onSaved,
   footer = null,
 }) {
+  const { user, userProfile } = useAuth()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -124,6 +128,18 @@ export default function TaskDetailPopup({
         notes: draft.notes.trim(),
       }
       await updateDoc(doc(db, 'tasks', task.id), payload)
+      const changes = diffTaskFields(effectiveTask, payload)
+      if (changes.length) {
+        logHistory({
+          parentType: 'tasks',
+          parentId: task.id,
+          parentName: payload.name,
+          action: 'updated',
+          changes,
+          byId: user?.uid,
+          byName: userProfile?.name || user?.email || 'Someone',
+        })
+      }
       setSaved(payload)
       setEditing(false)
       setDraft(null)
@@ -144,7 +160,7 @@ export default function TaskDetailPopup({
       open={open}
       onClose={handleClose}
       title={editing ? `Editing · ${task?.name || title}` : title}
-      size="md"
+      size={!editing && task?.id ? 'xl' : 'md'}
       footer={
         editing ? (
           <>
@@ -269,7 +285,7 @@ export default function TaskDetailPopup({
           </Field>
         </div>
       ) : (
-        <>
+        <div className={task?.id ? 'grid gap-6 lg:grid-cols-[1fr_20rem]' : ''}>
           <dl className="-my-1">
             {displayRows.map((row) =>
               row.label === 'Status' ? (
@@ -292,11 +308,14 @@ export default function TaskDetailPopup({
             )}
           </dl>
           {task?.id ? (
-            <div className="mt-4 border-t border-hae-line/60 pt-4">
+            <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
               <CommentsPanel parentType="tasks" parentId={task.id} parentName={task.name} />
+              <div className="border-t border-hae-line/60 pt-4">
+                <ActivityLog parentType="tasks" parentId={task.id} />
+              </div>
             </div>
           ) : null}
-        </>
+        </div>
       )}
     </Modal>
   )

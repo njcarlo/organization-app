@@ -8,8 +8,10 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
+import { diffTaskFields, logHistory } from '../utils/activityLog'
 import {
   effectivePriority,
   formatDate,
@@ -375,6 +377,9 @@ const TaskTable = forwardRef(function TaskTable(
   },
   ref
 ) {
+  const { user, userProfile } = useAuth()
+  const byId = user?.uid
+  const byName = userProfile?.name || user?.email || 'Someone'
   const [adding, setAdding] = useState(false)
   const [newTask, setNewTask] = useState(emptyNew)
   const [editingId, setEditingId] = useState(null)
@@ -474,7 +479,8 @@ const TaskTable = forwardRef(function TaskTable(
     if (!draft?.name.trim() || saving) return
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'tasks', editingId), {
+      const before = tasks.find((t) => t.id === editingId)
+      const payload = {
         name: draft.name.trim(),
         owner: draft.owner,
         dueDate: draft.dueDate || '',
@@ -484,7 +490,20 @@ const TaskTable = forwardRef(function TaskTable(
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
         notes: draft.notes.trim(),
-      })
+      }
+      await updateDoc(doc(db, 'tasks', editingId), payload)
+      const changes = diffTaskFields(before, payload)
+      if (changes.length) {
+        logHistory({
+          parentType: 'tasks',
+          parentId: editingId,
+          parentName: payload.name,
+          action: 'updated',
+          changes,
+          byId,
+          byName,
+        })
+      }
       setEditingId(null)
       setDraft(null)
       onChanged?.()
@@ -495,7 +514,17 @@ const TaskTable = forwardRef(function TaskTable(
 
   const removeTask = async (id) => {
     if (!confirm('Delete this task?')) return
+    const before = tasks.find((t) => t.id === id)
     await deleteDoc(doc(db, 'tasks', id))
+    logHistory({
+      parentType: 'tasks',
+      parentId: id,
+      parentName: before?.name,
+      action: 'deleted',
+      snapshot: before || null,
+      byId,
+      byName,
+    })
     onChanged?.()
   }
 
@@ -528,6 +557,15 @@ const TaskTable = forwardRef(function TaskTable(
       }
       await updateDoc(doc(db, 'tasks', task.id), {
         subtasks: [...(task.subtasks || []), subtask],
+      })
+      logHistory({
+        parentType: 'tasks',
+        parentId: task.id,
+        parentName: task.name,
+        action: 'updated',
+        changes: [{ field: 'subtasks', label: 'Subtasks', before: `${(task.subtasks || []).length} item(s)`, after: `${(task.subtasks || []).length + 1} item(s)` }],
+        byId,
+        byName,
       })
       setAddingSubtaskFor(null)
       setNewSubtask(emptySubtask)
@@ -569,6 +607,15 @@ const TaskTable = forwardRef(function TaskTable(
           : s
       )
       await updateDoc(doc(db, 'tasks', task.id), { subtasks: updated })
+      logHistory({
+        parentType: 'tasks',
+        parentId: task.id,
+        parentName: task.name,
+        action: 'updated',
+        changes: [{ field: 'subtasks', label: 'Subtasks', before: 'edited', after: subtaskDraft.name }],
+        byId,
+        byName,
+      })
       setEditingSubtask(null)
       setSubtaskDraft(null)
       onChanged?.()
@@ -579,8 +626,18 @@ const TaskTable = forwardRef(function TaskTable(
 
   const removeSubtask = async (task, subtaskId) => {
     if (!confirm('Delete this subtask?')) return
+    const removed = (task.subtasks || []).find((s) => s.id === subtaskId)
     const updated = (task.subtasks || []).filter((s) => s.id !== subtaskId)
     await updateDoc(doc(db, 'tasks', task.id), { subtasks: updated })
+    logHistory({
+      parentType: 'tasks',
+      parentId: task.id,
+      parentName: task.name,
+      action: 'updated',
+      changes: [{ field: 'subtasks', label: 'Subtasks', before: removed?.name || 'a subtask', after: 'removed' }],
+      byId,
+      byName,
+    })
     onChanged?.()
   }
 

@@ -7,6 +7,7 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
+import Activity from './pages/Activity'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
 import CourseRegistrations from './pages/CourseRegistrations'
@@ -69,6 +70,7 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
                 <Route path="/calendar" element={<Calendar />} />
+                <Route path="/activity" element={<Activity />} />
                 <Route
                   path="/executive-inbox"
                   element={

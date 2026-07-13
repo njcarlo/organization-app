@@ -2,14 +2,18 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { useStaffUsers } from '../hooks/useStaffUsers'
+import { logHistory } from '../utils/activityLog'
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
@@ -53,7 +57,11 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
   const [mentionQuery, setMentionQuery] = useState(null)
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState(null)
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
   const textareaRef = useRef(null)
+  const authorName = userProfile?.name || user?.email || 'Someone'
 
   useEffect(() => {
     if (!parentId) return
@@ -90,11 +98,18 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
     const caret = textareaRef.current?.selectionStart ?? text.length
     const upToCaret = text.slice(0, caret)
     const rest = text.slice(caret)
-    const nextText = upToCaret.replace(/@([^\s@]*)$/, `@${u.name} `) + rest
+    const insertedUpToCaret = upToCaret.replace(/@([^\s@]*)$/, `@${u.name} `)
+    const nextText = insertedUpToCaret + rest
+    const nextCaret = insertedUpToCaret.length
     setText(nextText)
     setMentioned((prev) => (prev.some((m) => m.id === u.id) ? prev : [...prev, { id: u.id, name: u.name }]))
     setMentionQuery(null)
-    requestAnimationFrame(() => textareaRef.current?.focus())
+    requestAnimationFrame(() => {
+      const el = textareaRef.current
+      if (!el) return
+      el.focus()
+      el.setSelectionRange(nextCaret, nextCaret)
+    })
   }
 
   const post = async () => {
@@ -103,7 +118,6 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
     setPosting(true)
     setError(null)
     try {
-      const authorName = userProfile?.name || user?.email || 'Someone'
       const mentionedIds = mentioned
         .filter((m) => trimmed.includes(`@${m.name}`))
         .map((m) => m.id)
@@ -139,12 +153,77 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
         query(collection(db, parentType, parentId, 'comments'), orderBy('createdAt', 'asc'))
       )
       setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      logHistory({
+        parentType,
+        parentId,
+        parentName,
+        programId,
+        action: 'comment_added',
+        commentText: trimmed,
+        byId: user?.uid,
+        byName: authorName,
+      })
     } catch (err) {
       setError(err?.code === 'permission-denied' ? 'Not allowed to post here.' : 'Failed to post comment.')
       console.error('Comment post failed', err)
     } finally {
       setPosting(false)
     }
+  }
+
+  const startEditComment = (c) => {
+    setEditingCommentId(c.id)
+    setEditText(c.text)
+  }
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null)
+    setEditText('')
+  }
+
+  const saveEditComment = async (c) => {
+    const trimmed = editText.trim()
+    if (!trimmed || editSaving) return
+    setEditSaving(true)
+    try {
+      await updateDoc(doc(db, parentType, parentId, 'comments', c.id), {
+        text: trimmed,
+        editedAt: serverTimestamp(),
+      })
+      setComments((prev) =>
+        prev.map((x) => (x.id === c.id ? { ...x, text: trimmed, editedAt: true } : x))
+      )
+      setEditingCommentId(null)
+      setEditText('')
+      logHistory({
+        parentType,
+        parentId,
+        parentName,
+        programId,
+        action: 'comment_edited',
+        commentText: trimmed,
+        byId: user?.uid,
+        byName: authorName,
+      })
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const deleteComment = async (c) => {
+    if (!confirm('Delete this comment?')) return
+    await deleteDoc(doc(db, parentType, parentId, 'comments', c.id))
+    setComments((prev) => prev.filter((x) => x.id !== c.id))
+    logHistory({
+      parentType,
+      parentId,
+      parentName,
+      programId,
+      action: 'comment_deleted',
+      commentText: c.text,
+      byId: user?.uid,
+      byName: authorName,
+    })
   }
 
   return (
@@ -156,40 +235,109 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
         <p className="text-xs text-hae-slate">Loading…</p>
       ) : comments.length ? (
         <ul className="max-h-64 space-y-2 overflow-y-auto">
-          {comments.map((c) => (
-            <li key={c.id} className="rounded-md border border-hae-line/60 bg-hae-mist/20 p-2">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-xs font-semibold text-hae-ink">
-                  {c.authorName || 'Someone'}
-                </span>
-                <span className="text-[10px] text-hae-slate/70">
-                  {formatTimestamp(c.createdAt)}
-                </span>
-              </div>
-              <p className="mt-1 text-sm whitespace-pre-wrap text-hae-ink">
-                {renderTextWithMentions(c.text, users)}
-              </p>
-            </li>
-          ))}
+          {comments.map((c) => {
+            const isOwn = Boolean(c.authorId) && c.authorId === user?.uid
+            const isEditing = editingCommentId === c.id
+            return (
+              <li key={c.id} className="rounded-md border border-hae-line/60 bg-hae-mist/20 p-2">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs font-semibold text-hae-ink">
+                    {c.authorName || 'Someone'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-hae-slate/70">
+                      {formatTimestamp(c.createdAt)}
+                    </span>
+                    {isOwn && !isEditing ? (
+                      <span className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          className="text-[10px] font-medium text-hae-slate hover:text-hae-crimson"
+                          onClick={() => startEditComment(c)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-[10px] font-medium text-hae-slate hover:text-hae-red"
+                          onClick={() => deleteComment(c)}
+                        >
+                          Delete
+                        </button>
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                {isEditing ? (
+                  <div className="mt-1">
+                    <textarea
+                      autoFocus
+                      className="w-full rounded-md border border-hae-line bg-white px-2 py-1.5 text-sm outline-none focus:border-hae-crimson"
+                      rows={2}
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') cancelEditComment()
+                      }}
+                    />
+                    <div className="mt-1 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        className="text-xs text-hae-slate hover:text-hae-ink"
+                        onClick={cancelEditComment}
+                        disabled={editSaving}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-hae-crimson disabled:opacity-60"
+                        onClick={() => saveEditComment(c)}
+                        disabled={editSaving || !editText.trim()}
+                      >
+                        {editSaving ? 'Saving…' : 'Save'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm whitespace-pre-wrap text-hae-ink">
+                    {renderTextWithMentions(c.text, users)}
+                    {c.editedAt ? (
+                      <span className="ml-1 text-[10px] text-hae-slate/60">(edited)</span>
+                    ) : null}
+                  </p>
+                )}
+              </li>
+            )
+          })}
         </ul>
       ) : (
         <p className="text-xs text-hae-slate">No comments yet.</p>
       )}
       <div className="relative">
-        <textarea
-          ref={textareaRef}
-          className="w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-          rows={2}
-          placeholder="Leave a comment… use @ to tag someone"
-          value={text}
-          onChange={handleChange}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && mentionMatches.length === 0) {
-              e.preventDefault()
-              post()
-            }
-          }}
-        />
+        <div className="relative rounded-md border border-hae-line bg-white focus-within:border-hae-crimson">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words px-3 py-2 text-sm text-hae-ink"
+          >
+            {renderTextWithMentions(text, users)}
+            {text.endsWith('\n') ? '​' : null}
+          </div>
+          <textarea
+            ref={textareaRef}
+            className="relative w-full resize-none bg-transparent px-3 py-2 text-sm text-transparent caret-hae-ink outline-none placeholder:text-hae-slate"
+            rows={2}
+            placeholder="Leave a comment… use @ to tag someone"
+            value={text}
+            onChange={handleChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && mentionMatches.length === 0) {
+                e.preventDefault()
+                post()
+              }
+            }}
+          />
+        </div>
         {mentionQuery != null && mentionMatches.length > 0 ? (
           <ul className="absolute z-10 mt-1 w-full max-w-xs rounded-md border border-hae-line bg-white shadow-lg">
             {mentionMatches.map((u) => (

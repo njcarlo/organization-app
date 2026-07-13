@@ -90,13 +90,26 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
     match /projects/{id}/comments/{commentId} {
-      allow read, write: if isStaff();
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    // Append-only edit/delete audit trail — no update or delete once written.
+    match /projects/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
     match /tasks/{id} {
       allow read, write: if isStaff();
     }
     match /tasks/{id}/comments/{commentId} {
-      allow read, write: if isStaff();
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /tasks/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
 
     // Mention notifications written when a user is tagged in a task/project comment.
