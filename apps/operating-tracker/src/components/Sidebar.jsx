@@ -232,7 +232,6 @@ export default function Sidebar({ open = false, onClose }) {
       { to: '/', label: 'Dashboard', end: true, icon: 'home' },
       { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
       { to: '/calendar', label: 'Calendar', icon: 'calendar' },
-      { to: '/activity', label: 'Activity', icon: 'history' },
     ]
     if (isExecInboxUser) {
       workspaceItems.push({

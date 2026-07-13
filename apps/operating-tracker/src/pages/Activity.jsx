@@ -51,13 +51,10 @@ export default function Activity() {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Activity</h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          Recent edits, deletes, and comments across tasks and projects.
-        </p>
-      </header>
+    <div className="space-y-4">
+      <p className="text-sm text-hae-slate">
+        Recent edits, deletes, and comments across tasks and projects.
+      </p>
 
       {loading ? (
         <p className="text-sm text-hae-slate">Loading…</p>

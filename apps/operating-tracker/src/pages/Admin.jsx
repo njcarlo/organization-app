@@ -22,6 +22,7 @@ import {
   exportCollections,
   importCollections,
 } from '../utils/dataTransfer'
+import Activity from './Activity'
 import AdminAddItems from '../components/AdminAddItems'
 import CategoryItemsAdmin from '../components/CategoryItemsAdmin'
 import ModuleImportPanel from '../components/ModuleImportPanel'
@@ -83,6 +84,7 @@ const TABS = [
   { id: 'bulk', label: 'Bulk import', feature: 'bulk_import' },
   { id: 'users', label: 'Users' },
   { id: 'programs', label: 'Programs' },
+  { id: 'activity', label: 'Activity' },
   { id: 'academy', label: 'Academy' },
   { id: 'customPrograms', label: 'Custom Programs' },
   { id: 'features', label: 'Features', superadminOnly: true },
@@ -654,6 +656,8 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {tab === 'activity' && <Activity />}
 
       {tab === 'academy' && (
         <CategoryItemsAdmin collectionName="academyPrograms" itemLabel="Academy item" showCourseFields />
