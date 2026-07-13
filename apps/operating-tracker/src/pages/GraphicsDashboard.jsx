@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import LeadSelect from '../components/LeadSelect'
 import GraphicDetailCard from '../components/GraphicDetailCard'
 import { GRAPHICS_STATUS_OPTIONS } from '../constants'
-import { formatDate, graphicsStatusBadgeClass, namesLabel, toNameList } from '../utils'
+import { formatDate, graphicsStatusBadgeClass, namesLabel } from '../utils'
 
 const emptyForm = {
   eventOrProgram: '',
@@ -18,15 +18,15 @@ const emptyForm = {
 
 /**
  * Graphics dashboard — Event/Program, Graphic Title, Link, HAE Lead, Date Needed,
- * Status at a glance. Add via modal; Edit/Delete per row. Click a row to expand
- * where-to-post, caption, tagging, and comments.
+ * Status at a glance. Add via modal. Click a row to expand its floating card,
+ * which owns Edit/Save/Delete plus where-to-post, caption, tagging, and comments.
  */
 export default function GraphicsDashboard() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedId, setExpandedId] = useState(null)
-  const [modal, setModal] = useState(null) // { mode: 'add' | 'edit', id?, form }
+  const [modal, setModal] = useState(null) // { form }
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
@@ -47,21 +47,7 @@ export default function GraphicsDashboard() {
     load()
   }, [load])
 
-  const openAdd = () => setModal({ mode: 'add', form: emptyForm })
-
-  const openEdit = (row) =>
-    setModal({
-      mode: 'edit',
-      id: row.id,
-      form: {
-        eventOrProgram: row.eventOrProgram || '',
-        title: row.title || '',
-        url: row.url || '',
-        lead: toNameList(row.lead),
-        dateNeeded: row.dateNeeded || '',
-        status: row.status || GRAPHICS_STATUS_OPTIONS[0],
-      },
-    })
+  const openAdd = () => setModal({ form: emptyForm })
 
   const closeModal = () => {
     if (saving) return
@@ -83,34 +69,18 @@ export default function GraphicsDashboard() {
         dateNeeded: form.dateNeeded,
         status: form.status,
       }
-      if (modal.mode === 'edit') {
-        await updateDoc(doc(db, 'trackerGraphicsRequests', modal.id), data)
-      } else {
-        const maxOrder = rows.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
-        await addDoc(collection(db, 'trackerGraphicsRequests'), {
-          ...data,
-          order: maxOrder + 1,
-          createdAt: serverTimestamp(),
-        })
-      }
+      const maxOrder = rows.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
+      await addDoc(collection(db, 'trackerGraphicsRequests'), {
+        ...data,
+        order: maxOrder + 1,
+        createdAt: serverTimestamp(),
+      })
       setModal(null)
       await load()
     } catch (err) {
       setError(err.message || 'Failed to save graphic')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const removeRow = async (id) => {
-    if (!confirm('Delete this graphic row?')) return
-    setError('')
-    try {
-      await deleteDoc(doc(db, 'trackerGraphicsRequests', id))
-      if (expandedId === id) setExpandedId(null)
-      await load()
-    } catch (err) {
-      setError(err.message || 'Failed to delete graphic')
     }
   }
 
@@ -147,7 +117,7 @@ export default function GraphicsDashboard() {
       <Modal
         open={!!modal}
         onClose={closeModal}
-        title={modal?.mode === 'edit' ? 'Edit graphic' : 'Add graphic'}
+        title="Add graphic"
         busy={saving}
         footer={
           <>
@@ -155,13 +125,14 @@ export default function GraphicsDashboard() {
               Cancel
             </button>
             <button type="submit" form="graphic-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : modal?.mode === 'edit' ? 'Save changes' : 'Create graphic'}
+              {saving ? 'Saving…' : 'Create graphic'}
             </button>
           </>
         }
       >
         {modal ? (
           <form id="graphic-form" onSubmit={submitModal} className="grid gap-3 sm:grid-cols-2">
+            {error && <p className="text-sm text-hae-red sm:col-span-2">{error}</p>}
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium text-hae-slate">Event or Program</span>
               <input
@@ -228,13 +199,12 @@ export default function GraphicsDashboard() {
               <th className="px-3 py-2 font-semibold">HAE Lead</th>
               <th className="px-3 py-2 font-semibold">Date Needed</th>
               <th className="px-3 py-2 font-semibold">Status</th>
-              <th className="px-3 py-2 font-semibold w-28" />
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-hae-slate">
                   No graphics yet.
                 </td>
               </tr>
@@ -275,29 +245,6 @@ export default function GraphicsDashboard() {
                       {row.status || GRAPHICS_STATUS_OPTIONS[0]}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-right text-xs whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openEdit(row)
-                      }}
-                      className="font-medium text-hae-slate hover:text-hae-ink"
-                    >
-                      Edit
-                    </button>
-                    <span className="mx-1.5 text-hae-line">|</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeRow(row.id)
-                      }}
-                      className="font-medium text-hae-slate hover:text-hae-red"
-                    >
-                      Delete
-                    </button>
-                  </td>
                 </tr>
               ))
             )}
@@ -305,7 +252,17 @@ export default function GraphicsDashboard() {
         </table>
       </div>
 
-      {expandedRow ? <GraphicDetailCard graphic={expandedRow} onChanged={load} /> : null}
+      {expandedRow ? (
+        <GraphicDetailCard
+          graphic={expandedRow}
+          onClose={() => setExpandedId(null)}
+          onChanged={load}
+          onDeleted={() => {
+            setExpandedId(null)
+            load()
+          }}
+        />
+      ) : null}
     </div>
   )
 }
