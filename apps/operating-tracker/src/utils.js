@@ -110,6 +110,12 @@ export function statusBadgeClass(status) {
   return 'bg-gray-200 text-black'
 }
 
+export function customProgramStatusBadgeClass(status) {
+  if (status === 'Prospect') return 'bg-blue-900 text-white'
+  if (status === 'Approved') return 'bg-green-900 text-white'
+  return 'bg-gray-200 text-black'
+}
+
 /** Derived status shown alongside the actual task status — not selectable in the dropdown. */
 export const WAITING_ON_BADGE_CLASS = 'bg-purple-600 text-white'
 

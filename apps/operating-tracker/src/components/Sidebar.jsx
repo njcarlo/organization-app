@@ -16,10 +16,12 @@ import { FEATURES, Modal, SideNav, useFeatures } from '@hae/ui'
 import { EXEC_INBOX_EMAILS, HEALTH_OPTIONS } from '../constants'
 import { namesLabel, toNameList } from '../utils'
 
+const CUSTOM_PROGRAM_STATUS_OPTIONS = ['Prospect', 'Approved']
+
 const CATEGORY_META = {
   programs: { label: 'Program', pathPrefix: '/programs' },
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
-  customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs' },
+  customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs', showCustomProgramFields: true },
 }
 
 const emptyProject = {
@@ -113,32 +115,32 @@ export default function Sidebar({ open = false, onClose }) {
     }
   }
 
-  const emptyCategoryForm = (showCourseFields) => ({
+  const emptyCategoryForm = (meta) => ({
     name: '',
     lead: [],
-    ...(showCourseFields
+    ...(meta.showCourseFields
       ? { haeLead: [], startDate: '', durationWeeks: '', instructor: '', guestSpeaker: '' }
       : {}),
+    ...(meta.showCustomProgramFields ? { startDate: '', status: '' } : {}),
   })
 
   const openAddCategory = (collectionName) => {
-    const showCourseFields = CATEGORY_META[collectionName].showCourseFields
     setEditCategoryModal({
       collectionName,
       id: null,
-      form: emptyCategoryForm(showCourseFields),
+      form: emptyCategoryForm(CATEGORY_META[collectionName]),
     })
   }
 
   const openEditCategory = (collectionName, category) => {
-    const showCourseFields = CATEGORY_META[collectionName].showCourseFields
+    const meta = CATEGORY_META[collectionName]
     setEditCategoryModal({
       collectionName,
       id: category.id,
       form: {
         name: category.name || '',
         lead: toNameList(category.lead),
-        ...(showCourseFields
+        ...(meta.showCourseFields
           ? {
               haeLead: toNameList(category.haeLead),
               startDate: category.startDate || '',
@@ -146,6 +148,9 @@ export default function Sidebar({ open = false, onClose }) {
               instructor: category.instructor || '',
               guestSpeaker: category.guestSpeaker || '',
             }
+          : {}),
+        ...(meta.showCustomProgramFields
+          ? { startDate: category.startDate || '', status: category.status || '' }
           : {}),
       },
     })
@@ -160,11 +165,11 @@ export default function Sidebar({ open = false, onClose }) {
     e.preventDefault()
     if (!editCategoryModal?.form.name.trim() || saving) return
     const { collectionName, id, form } = editCategoryModal
-    const showCourseFields = CATEGORY_META[collectionName].showCourseFields
+    const meta = CATEGORY_META[collectionName]
     const data = {
       name: form.name.trim(),
       lead: form.lead,
-      ...(showCourseFields
+      ...(meta.showCourseFields
         ? {
             haeLead: form.haeLead,
             startDate: form.startDate,
@@ -173,6 +178,7 @@ export default function Sidebar({ open = false, onClose }) {
             guestSpeaker: form.guestSpeaker.trim(),
           }
         : {}),
+      ...(meta.showCustomProgramFields ? { startDate: form.startDate, status: form.status } : {}),
     }
     setSaving(true)
     try {
@@ -523,6 +529,44 @@ export default function Sidebar({ open = false, onClose }) {
                   }
                   className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
                 />
+              </>
+            ) : null}
+            {CATEGORY_META[editCategoryModal.collectionName].showCustomProgramFields ? (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Start date</span>
+                  <input
+                    type="date"
+                    value={editCategoryModal.form.startDate}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, startDate: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Status</span>
+                  <select
+                    value={editCategoryModal.form.status}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, status: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                  >
+                    <option value="">Select status</option>
+                    {CUSTOM_PROGRAM_STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </>
             ) : null}
           </form>

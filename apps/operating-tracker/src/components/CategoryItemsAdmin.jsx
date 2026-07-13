@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
-import { namesLabel, toNameList } from '../utils'
+import { customProgramStatusBadgeClass, namesLabel, toNameList } from '../utils'
 
 const emptyCourseFields = {
   haeLead: [],
@@ -19,6 +19,8 @@ const emptyCourseFields = {
   instructor: '',
   guestSpeaker: '',
 }
+
+const STATUS_OPTIONS = ['Prospect', 'Approved']
 
 /**
  * Generic add/edit/delete panel for a Program-shaped top-level collection
@@ -34,7 +36,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
   const [newItem, setNewItem] = useState({
     name: '',
     lead: [],
-    ...(showCourseFields ? emptyCourseFields : {}),
+    ...(showCourseFields ? emptyCourseFields : { startDate: '', status: '' }),
   })
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
@@ -77,9 +79,13 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               instructor: newItem.instructor.trim(),
               guestSpeaker: newItem.guestSpeaker.trim(),
             }
-          : {}),
+          : { startDate: newItem.startDate, status: newItem.status }),
       })
-      setNewItem({ name: '', lead: [], ...(showCourseFields ? emptyCourseFields : {}) })
+      setNewItem({
+        name: '',
+        lead: [],
+        ...(showCourseFields ? emptyCourseFields : { startDate: '', status: '' }),
+      })
       await load()
     } catch (err) {
       setError(err.message || 'Failed to add item')
@@ -101,7 +107,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               instructor: draft.instructor.trim(),
               guestSpeaker: draft.guestSpeaker.trim(),
             }
-          : {}),
+          : { startDate: draft.startDate, status: draft.status }),
       })
       setEditingId(null)
       setDraft(null)
@@ -184,7 +190,29 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </>
-        ) : null}
+        ) : (
+          <>
+            <input
+              type="date"
+              placeholder="Start date"
+              value={newItem.startDate}
+              onChange={(e) => setNewItem({ ...newItem, startDate: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+            />
+            <select
+              value={newItem.status}
+              onChange={(e) => setNewItem({ ...newItem, status: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+            >
+              <option value="">Status</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
         <button
           type="submit"
           className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white"
@@ -199,6 +227,12 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
             <tr>
               <th className="px-3 py-2 font-semibold">Name</th>
               <th className="px-3 py-2 font-semibold">Lead</th>
+              {!showCourseFields && (
+                <>
+                  <th className="px-3 py-2 font-semibold">Start Date</th>
+                  <th className="px-3 py-2 font-semibold">Status</th>
+                </>
+              )}
               <th className="px-3 py-2 font-semibold">Order</th>
               <th className="px-3 py-2 font-semibold w-24" />
             </tr>
@@ -257,6 +291,32 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                       onChange={(lead) => setDraft({ ...draft, lead })}
                     />
                   </td>
+                  {!showCourseFields && (
+                    <>
+                      <td className="px-3 py-2">
+                        <input
+                          type="date"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-sm text-hae-slate"
+                          value={draft.startDate}
+                          onChange={(e) => setDraft({ ...draft, startDate: e.target.value })}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          className="w-full rounded border border-hae-line px-2 py-1 text-sm text-hae-slate"
+                          value={draft.status}
+                          onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+                        >
+                          <option value="">—</option>
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </>
+                  )}
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
@@ -287,6 +347,22 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                     ) : null}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{namesLabel(p.lead) || '—'}</td>
+                  {!showCourseFields && (
+                    <>
+                      <td className="px-3 py-2 text-sm text-hae-slate">{p.startDate || '—'}</td>
+                      <td className="px-3 py-2 text-sm">
+                        {p.status ? (
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${customProgramStatusBadgeClass(p.status)}`}
+                          >
+                            {p.status}
+                          </span>
+                        ) : (
+                          <span className="text-hae-slate">—</span>
+                        )}
+                      </td>
+                    </>
+                  )}
                   <td className="px-3 py-2 text-sm text-hae-slate">{p.order}</td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
@@ -305,7 +381,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                                   instructor: p.instructor || '',
                                   guestSpeaker: p.guestSpeaker || '',
                                 }
-                              : {}),
+                              : { startDate: p.startDate || '', status: p.status || '' }),
                           })
                         }}
                         className="text-xs text-hae-slate hover:text-hae-crimson"
