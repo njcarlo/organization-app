@@ -15,6 +15,8 @@ globs: firestore.rules,firebase.json,packages/firebase/**/*,functions/**/*,**/fi
 - Email/password; shared `LoginPage` / `AuthActionPage` from `@hae/ui`.
 - Password-reset custom handler: `/auth/action` (empty `apiKey` workaround).
 - Superadmins: `packages/ui/src/superadmin.js`.
+- Admin user create uses `secondaryAuth` so the admin session is not replaced.
+- Bulk invite: `provisionAuthUsers` callable (Admin SDK) with client `secondaryAuth` fallback — Admin → Users.
 
 ## Firestore
 

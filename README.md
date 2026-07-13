@@ -61,6 +61,7 @@ Cross-app improvements for feedback, awareness, calendar handoff, person linking
 | CRM ↔ AMS/LMS person linking | CRM → Contacts → Edit | Match by email; show members, memberships, enrollments, certificates |
 | URL attachments | CRM contacts & interactions | Paste Drive/Dropbox/SharePoint links (no Storage required) |
 | Password reset | All login pages + Admin → Users | Firebase `sendPasswordResetEmail`; admin can trigger per user |
+| Put emails in Auth | Admin → Users | Bulk paste emails → creates Firebase Auth accounts + sends reset emails |
 
 **Superadmins** (always full access + Feature toggles): `njcarlo@gmail.com`, `inahmarchadesch@gmail.com`  
 Tracker → Admin → **Features** — turn apps/features on or off for everyone else.

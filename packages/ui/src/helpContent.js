@@ -124,6 +124,7 @@ export const HELP_SECTIONS = [
         heading: 'Admin (admins only)',
         steps: [
           'Users — create login accounts and set roles (admin / staff / member / student).',
+          'Users — paste emails under Bulk put emails in Firebase Auth to create Auth logins + send password resets.',
           'Users — Reset pw sends a Firebase password-reset email to that person.',
           'If a reset link shows “page mode is invalid”, open Tracker → /auth/action with the same mode & oobCode (or ask an admin to re-send after templates point at /auth/action).',
           'Features (superadmins only) — toggle which apps and features everyone else can see.',

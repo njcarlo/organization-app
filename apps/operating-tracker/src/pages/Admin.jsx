@@ -30,6 +30,10 @@ import LeadSelect from '../components/LeadSelect'
 import { namesLabel, toNameList } from '../utils'
 import { useAuth } from '../context/AuthContext'
 import { FEATURES, useFeatures } from '@hae/ui'
+import {
+  parseEmailList,
+  provisionAuthUsers,
+} from '../utils/provisionAuthUsers'
 
 const CREATE_GUIDE = [
   {
@@ -144,6 +148,9 @@ export default function Admin() {
     password: '',
     role: 'staff',
   })
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('staff')
+  const [inviteBusy, setInviteBusy] = useState(false)
   const [editingUserId, setEditingUserId] = useState(null)
   const [userDraft, setUserDraft] = useState(null)
 
@@ -251,23 +258,89 @@ export default function Admin() {
   const addUser = async (e) => {
     e.preventDefault()
     setError('')
+    setNotice('')
+    const email = newUser.email.trim().toLowerCase()
+    const name = newUser.name.trim() || email.split('@')[0]
     try {
-      const cred = await createUserWithEmailAndPassword(
-        secondaryAuth,
-        newUser.email.trim(),
-        newUser.password
-      )
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        name: newUser.name.trim(),
-        email: newUser.email.trim().toLowerCase(),
-        role: newUser.role,
-        createdAt: serverTimestamp(),
-      })
-      await signOut(secondaryAuth)
+      if (newUser.password) {
+        const cred = await createUserWithEmailAndPassword(
+          secondaryAuth,
+          email,
+          newUser.password
+        )
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          name,
+          email,
+          role: newUser.role,
+          createdAt: serverTimestamp(),
+        })
+        await signOut(secondaryAuth)
+        setNotice(`Created Auth account for ${email}`)
+      } else {
+        const { results } = await provisionAuthUsers({
+          emails: [email],
+          role: newUser.role,
+          nameByEmail: { [email]: name },
+          sendReset: true,
+        })
+        const row = results[0]
+        if (!row || row.status === 'error') {
+          throw new Error(row?.error || 'Failed to create user')
+        }
+        setNotice(
+          row.status === 'created'
+            ? `Created Auth account for ${email} and sent password reset`
+            : `Auth already exists for ${email}` +
+                (row.resetSent ? ' — password reset sent' : '')
+        )
+      }
       setNewUser({ name: '', email: '', password: '', role: 'staff' })
       await load()
     } catch (err) {
+      try {
+        await signOut(secondaryAuth)
+      } catch {
+        /* ignore */
+      }
       setError(err.message || 'Failed to create user')
+    }
+  }
+
+  const inviteUsers = async (e) => {
+    e.preventDefault()
+    setError('')
+    setNotice('')
+    const emails = parseEmailList(inviteEmails)
+    if (emails.length === 0) {
+      setError('Paste at least one valid email')
+      return
+    }
+    setInviteBusy(true)
+    try {
+      const { results, via } = await provisionAuthUsers({
+        emails,
+        role: inviteRole,
+        sendReset: true,
+      })
+      const created = results.filter((r) => r.status === 'created').length
+      const exists = results.filter((r) => r.status === 'exists').length
+      const failed = results.filter((r) => r.status === 'error')
+      setNotice(
+        `Firebase Auth: ${created} created, ${exists} already existed` +
+          (via === 'client' ? ' (client fallback)' : '') +
+          `. Password reset sent where possible.`
+      )
+      if (failed.length) {
+        setError(
+          failed.map((r) => `${r.email}: ${r.error || 'error'}`).join(' · ')
+        )
+      }
+      setInviteEmails('')
+      await load()
+    } catch (err) {
+      setError(err.message || 'Invite failed')
+    } finally {
+      setInviteBusy(false)
     }
   }
 
@@ -385,6 +458,11 @@ export default function Admin() {
 
       {tab === 'users' && (
         <div className="space-y-4">
+          <p className="text-sm text-hae-slate">
+            Adding a user creates a <strong>Firebase Auth</strong> login for that
+            email (required for sign-in and password reset). Leave password blank
+            to invite via reset email.
+          </p>
           <form
             onSubmit={addUser}
             className="grid gap-3 rounded-xl border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-5"
@@ -405,10 +483,9 @@ export default function Admin() {
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
             <input
-              required
               type="password"
               minLength={6}
-              placeholder="Temp password"
+              placeholder="Temp password (optional)"
               value={newUser.password}
               onChange={(e) =>
                 setNewUser({ ...newUser, password: e.target.value })
@@ -430,8 +507,51 @@ export default function Admin() {
               type="submit"
               className="rounded-md bg-hae-crimson px-3 py-2 text-sm font-semibold text-white"
             >
-              Add user
+              Add to Auth
             </button>
+          </form>
+
+          <form
+            onSubmit={inviteUsers}
+            className="space-y-3 rounded-xl border border-hae-line bg-white p-4"
+          >
+            <div>
+              <h2 className="text-sm font-semibold text-hae-ink">
+                Bulk put emails in Firebase Auth
+              </h2>
+              <p className="mt-1 text-xs text-hae-slate">
+                Paste emails (comma, space, or newline). Creates Auth accounts if
+                missing, upserts directory profiles, and sends password-reset
+                emails so people can set their own password.
+              </p>
+            </div>
+            <textarea
+              rows={4}
+              value={inviteEmails}
+              onChange={(e) => setInviteEmails(e.target.value)}
+              placeholder="name@harvardae.org&#10;another@example.com"
+              className="w-full rounded-md border border-hae-line px-3 py-2 font-mono text-sm outline-none focus:border-hae-crimson"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="rounded-md border border-hae-line px-3 py-2 text-sm"
+              >
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={inviteBusy}
+                className="rounded-md bg-hae-crimson px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {inviteBusy ? 'Provisioning…' : 'Create Auth accounts'}
+              </button>
+            </div>
           </form>
 
           <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
@@ -727,7 +847,8 @@ export default function Admin() {
             <p className="mt-1 text-sm text-hae-slate">
               Upsert documents by <code className="text-xs">_id</code>. User
               import updates profiles only — it does not create Firebase Auth
-              accounts (use Users tab for that). For everyday CSV lists of
+              accounts (use Users tab → <strong>Bulk put emails in Firebase
+              Auth</strong>). For everyday CSV lists of
               contacts, members, surveys, etc., prefer the{' '}
               <strong>Bulk import</strong> tab.
             </p>
