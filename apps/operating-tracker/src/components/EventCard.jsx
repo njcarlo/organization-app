@@ -217,7 +217,7 @@ export default function EventCard({ event, onChanged, onDeleted }) {
               <LeadSelect value={form.lead} onChange={(lead) => setForm({ ...form, lead })} />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Status</span>
+              <span className="text-xs font-medium text-hae-slate">Marketing Status</span>
               <select
                 value={form.health}
                 onChange={(e) => setForm({ ...form, health: e.target.value })}

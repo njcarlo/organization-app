@@ -194,7 +194,7 @@ export default function EventsDashboard() {
             <LeadSelect value={form.lead} onChange={(lead) => setForm({ ...form, lead })} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Status</span>
+            <span className="text-xs font-medium text-hae-slate">Marketing Status</span>
             <select
               value={form.health}
               onChange={(e) => setForm({ ...form, health: e.target.value })}
@@ -211,16 +211,16 @@ export default function EventsDashboard() {
       </Modal>
 
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
-        <table className="w-full min-w-[960px] text-left">
+        <table className="w-full sm:min-w-[960px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">Event Name</th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
-              <th className="px-3 py-2 font-semibold">Time of Event with Timezone</th>
-              <th className="px-3 py-2 font-semibold">Date of Marketing</th>
-              <th className="px-3 py-2 font-semibold">Online or In-Person</th>
-              <th className="px-3 py-2 font-semibold">HAE Lead</th>
-              <th className="px-3 py-2 font-semibold">Status</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Time of Event with Timezone</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Date of Marketing</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Online or In-Person</th>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">HAE Lead</th>
+              <th className="px-3 py-2 font-semibold">Marketing Status</th>
             </tr>
           </thead>
           <tbody>
@@ -243,12 +243,12 @@ export default function EventsDashboard() {
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {event.eventDate ? formatLongDate(event.eventDate) : '—'}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{event.eventTime || '—'}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{event.eventTime || '—'}</td>
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
                     {event.marketingDate ? formatDate(event.marketingDate) : '—'}
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{event.format || '—'}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{namesLabel(event.lead) || '—'}</td>
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{event.format || '—'}</td>
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{namesLabel(event.lead) || '—'}</td>
                   <td className="px-3 py-2 text-sm">
                     <span
                       className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${healthBadgeClass(event.health)}`}
