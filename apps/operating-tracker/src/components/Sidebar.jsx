@@ -6,6 +6,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
@@ -86,11 +87,20 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('academyPrograms', setAcademyPrograms)
     loadInto('customPrograms', setCustomPrograms)
     loadInto('trackerDocuments', setTrackerDocuments)
-    loadInto('trackerEvents', setTrackerEvents)
     loadInto('trackerGraphics', setTrackerGraphics)
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // Live-synced so events added from the Events & Programs Dashboard show up here immediately.
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'trackerEvents'),
+      (snap) => setTrackerEvents(toList(snap).sort(sortByOrder)),
+      (err) => console.error('Failed to load trackerEvents', err)
+    )
+    return unsubscribe
   }, [])
 
   const openAddProject = (collectionName, category) => {
@@ -672,7 +682,7 @@ export default function Sidebar({ open = false, onClose }) {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-xs font-medium text-hae-slate">Status</span>
+                  <span className="text-xs font-medium text-hae-slate">Marketing Status</span>
                   <select
                     value={editCategoryModal.form.health}
                     onChange={(e) =>
