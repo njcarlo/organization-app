@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import CommentsPanel from './CommentsPanel'
 import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import {
@@ -268,27 +269,34 @@ export default function TaskDetailPopup({
           </Field>
         </div>
       ) : (
-        <dl className="-my-1">
-          {displayRows.map((row) =>
-            row.label === 'Status' ? (
-              <BadgeRow
-                key={row.label}
-                label="Status"
-                value={row.value}
-                className={statusBadgeClass(row.value)}
-              />
-            ) : row.label === 'Priority' ? (
-              <BadgeRow
-                key={row.label}
-                label="Priority"
-                value={row.value}
-                className={priorityBadgeClass(row.value)}
-              />
-            ) : (
-              <Row key={row.label} label={row.label} value={row.value} />
-            )
-          )}
-        </dl>
+        <>
+          <dl className="-my-1">
+            {displayRows.map((row) =>
+              row.label === 'Status' ? (
+                <BadgeRow
+                  key={row.label}
+                  label="Status"
+                  value={row.value}
+                  className={statusBadgeClass(row.value)}
+                />
+              ) : row.label === 'Priority' ? (
+                <BadgeRow
+                  key={row.label}
+                  label="Priority"
+                  value={row.value}
+                  className={priorityBadgeClass(row.value)}
+                />
+              ) : (
+                <Row key={row.label} label={row.label} value={row.value} />
+              )
+            )}
+          </dl>
+          {task?.id ? (
+            <div className="mt-4 border-t border-hae-line/60 pt-4">
+              <CommentsPanel parentType="tasks" parentId={task.id} parentName={task.name} />
+            </div>
+          ) : null}
+        </>
       )}
     </Modal>
   )

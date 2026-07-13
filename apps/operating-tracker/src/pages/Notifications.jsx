@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { moduleUrl } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { formatDate, sortByPriorityThenDue, toNameList } from '../utils'
+
+function formatTimestamp(ts) {
+  if (!ts?.toDate) return ''
+  return ts.toDate().toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10)
@@ -20,6 +30,7 @@ export default function Notifications() {
   const { user, userProfile, isStaff } = useAuth()
   const [tasks, setTasks] = useState([])
   const [checkIns, setCheckIns] = useState([])
+  const [mentions, setMentions] = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -34,16 +45,30 @@ export default function Notifications() {
               where('learnerEmail', '==', email)
             )
           : null
-      const [taskSnap, checkSnap] = await Promise.all([
+      const mentionQuery = user?.uid
+        ? query(collection(db, 'notifications'), where('userId', '==', user.uid))
+        : null
+      const [taskSnap, checkSnap, mentionSnap] = await Promise.all([
         getDocs(collection(db, 'tasks')),
         checkQuery ? getDocs(checkQuery) : Promise.resolve({ docs: [] }),
+        mentionQuery ? getDocs(mentionQuery) : Promise.resolve({ docs: [] }),
       ])
       setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setCheckIns(checkSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setMentions(
+        mentionSnap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+      )
     } finally {
       setLoading(false)
     }
-  }, [isStaff, user?.email])
+  }, [isStaff, user?.email, user?.uid])
+
+  const markMentionRead = async (id) => {
+    setMentions((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)))
+    await updateDoc(doc(db, 'notifications', id), { read: true })
+  }
 
   useEffect(() => {
     load()
@@ -165,11 +190,33 @@ export default function Notifications() {
         </button>
       </header>
 
-      {digest.total === 0 ? (
+      {digest.total === 0 && mentions.length === 0 ? (
         <p className="rounded-xl border border-hae-line bg-white p-6 text-sm text-hae-slate">
           You are caught up — no overdue or due-soon items in the next 7 days.
         </p>
       ) : null}
+
+      <DigestSection title="Mentions" count={mentions.length} empty="No one has tagged you yet.">
+        {mentions.map((m) => (
+          <li key={m.id}>
+            <Link
+              to={
+                m.parentType === 'projects' && m.programId
+                  ? `/programs/${m.programId}`
+                  : '/my-tasks'
+              }
+              onClick={() => !m.read && markMentionRead(m.id)}
+              className="flex flex-wrap items-baseline justify-between gap-2 py-2 text-sm"
+            >
+              <span className={m.read ? 'font-medium text-hae-ink' : 'font-semibold text-hae-crimson'}>
+                {m.fromName || 'Someone'} mentioned you in {m.parentName || 'a task'}
+              </span>
+              <span className="text-xs text-hae-slate">{formatTimestamp(m.createdAt)}</span>
+            </Link>
+            <p className="pb-1 text-xs text-hae-slate/90">“{m.commentText}”</p>
+          </li>
+        ))}
+      </DigestSection>
 
       <DigestSection
         title="Overdue tasks"
