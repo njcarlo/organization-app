@@ -89,8 +89,23 @@ service cloud.firestore {
     match /projects/{id} {
       allow read, write: if isStaff();
     }
+    match /projects/{id}/comments/{commentId} {
+      allow read, write: if isStaff();
+    }
     match /tasks/{id} {
       allow read, write: if isStaff();
+    }
+    match /tasks/{id}/comments/{commentId} {
+      allow read, write: if isStaff();
+    }
+
+    // Mention notifications written when a user is tagged in a task/project comment.
+    match /notifications/{id} {
+      allow read, delete: if isStaff() && resource.data.userId == request.auth.uid;
+      allow create: if isStaff();
+      allow update: if isStaff()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
     }
 
     // —— Surveys (public respond link; staff manage) ——

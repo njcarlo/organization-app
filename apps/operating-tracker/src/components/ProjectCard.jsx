@@ -12,6 +12,7 @@ import {
 } from '../utils'
 import TaskTable from './TaskTable'
 import LeadSelect from './LeadSelect'
+import CommentsPanel from './CommentsPanel'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -233,6 +234,14 @@ export default function ProjectCard({
               program={program}
               onChanged={onChanged}
               dense={dense}
+            />
+          </div>
+          <div className="border-t border-hae-line/60 pt-3">
+            <CommentsPanel
+              parentType="projects"
+              parentId={project.id}
+              parentName={project.name}
+              programId={project.programId || program?.id}
             />
           </div>
         </div>
