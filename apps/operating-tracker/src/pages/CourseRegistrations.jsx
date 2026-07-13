@@ -6,6 +6,7 @@ import {
   doc,
   getDocs,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -59,6 +60,8 @@ const COLUMNS = [
 
 export default function CourseRegistrations() {
   const [registrations, setRegistrations] = useState([])
+  const [participantCounts, setParticipantCounts] = useState({})
+  const [participantDrafts, setParticipantDrafts] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [form, setForm] = useState(emptyForm)
@@ -77,6 +80,14 @@ export default function CourseRegistrations() {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       list.sort((a, b) => (a.course || '').localeCompare(b.course || ''))
       setRegistrations(list)
+
+      const countsSnap = await getDocs(collection(db, 'courseParticipantCounts'))
+      const counts = {}
+      countsSnap.docs.forEach((d) => {
+        const data = d.data()
+        if (data.course) counts[data.course] = Number(data.participants) || 0
+      })
+      setParticipantCounts(counts)
     } catch (err) {
       setError(err.message || 'Failed to load registrations')
     } finally {
@@ -201,6 +212,26 @@ export default function CourseRegistrations() {
     }
   }
 
+  const saveParticipantCount = async (course, value) => {
+    const cleaned = Math.max(0, Number(value) || 0)
+    setError('')
+    try {
+      await setDoc(doc(db, 'courseParticipantCounts', encodeURIComponent(course)), {
+        course,
+        participants: cleaned,
+      })
+      setParticipantCounts((prev) => ({ ...prev, [course]: cleaned }))
+    } catch (err) {
+      setError(err.message || 'Failed to save participant count')
+    } finally {
+      setParticipantDrafts((prev) => {
+        const next = { ...prev }
+        delete next[course]
+        return next
+      })
+    }
+  }
+
   const removeRegistration = async (id) => {
     if (!confirm('Delete this registration?')) return
     setError('')
@@ -275,7 +306,8 @@ export default function CourseRegistrations() {
               <tr>
                 <th className="px-3 py-2 font-semibold">Course</th>
                 <th className="px-3 py-2 font-semibold">Program</th>
-                <th className="px-3 py-2 font-semibold">Registrations</th>
+                <th className="px-3 py-2 font-semibold">No. of Participants</th>
+                <th className="px-3 py-2 font-semibold">Paid Individual</th>
                 <th className="px-3 py-2 font-semibold">Total Paid</th>
               </tr>
             </thead>
@@ -284,6 +316,22 @@ export default function CourseRegistrations() {
                 <tr key={t.course} className="border-b border-hae-line/70">
                   <td className="px-3 py-2 text-sm font-medium text-hae-ink">{t.course}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{t.programType}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        t.course in participantDrafts
+                          ? participantDrafts[t.course]
+                          : (participantCounts[t.course] ?? '')
+                      }
+                      onChange={(e) =>
+                        setParticipantDrafts((prev) => ({ ...prev, [t.course]: e.target.value }))
+                      }
+                      onBlur={(e) => saveParticipantCount(t.course, e.target.value)}
+                      className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                    />
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{t.count}</td>
                   <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
                     {formatMoney(t.total)}
@@ -292,7 +340,7 @@ export default function CourseRegistrations() {
               ))}
               {totalsByCourse.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-sm text-hae-slate">
+                  <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
                     No registrations yet.
                   </td>
                 </tr>
