@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   collection,
   deleteDoc,
@@ -9,8 +10,11 @@ import {
 import { downloadIcs, FEATURES, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import ActivityLog from '../components/ActivityLog'
+import CommentsPanel from '../components/CommentsPanel'
 import LeadSelect from '../components/LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
+import { diffTaskFields, logHistory } from '../utils/activityLog'
 import {
   effectivePriority,
   formatDate,
@@ -44,9 +48,10 @@ function Field({ label, children, className = '' }) {
 }
 
 export default function MyTasks() {
-  const { userProfile, isStaff } = useAuth()
+  const { user, userProfile, isStaff } = useAuth()
   const { isEnabled } = useFeatures()
   const canExportCalendar = isEnabled(FEATURES.CALENDAR_EXPORT)
+  const [searchParams, setSearchParams] = useSearchParams()
   const [tasks, setTasks] = useState([])
   const [programs, setPrograms] = useState([])
   const [projects, setProjects] = useState([])
@@ -74,6 +79,22 @@ export default function MyTasks() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    const taskId = searchParams.get('task')
+    if (!taskId || !tasks.length) return
+    const target = tasks.find((t) => t.id === taskId)
+    if (target) startEdit(target, 'popup')
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('task')
+        return next
+      },
+      { replace: true }
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, searchParams])
 
   const programsById = useMemo(() => {
     const map = {}
@@ -143,7 +164,8 @@ export default function MyTasks() {
     if (!draft?.name.trim() || saving) return
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'tasks', editingId), {
+      const before = tasks.find((t) => t.id === editingId)
+      const payload = {
         name: draft.name.trim(),
         owner: draft.owner,
         dueDate: draft.dueDate || '',
@@ -153,7 +175,20 @@ export default function MyTasks() {
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
         notes: draft.notes.trim(),
-      })
+      }
+      await updateDoc(doc(db, 'tasks', editingId), payload)
+      const changes = diffTaskFields(before, payload)
+      if (changes.length) {
+        logHistory({
+          parentType: 'tasks',
+          parentId: editingId,
+          parentName: payload.name,
+          action: 'updated',
+          changes,
+          byId: user?.uid,
+          byName: userProfile?.name || user?.email || 'Someone',
+        })
+      }
       cancelEdit()
       await load()
     } finally {
@@ -163,7 +198,17 @@ export default function MyTasks() {
 
   const removeTask = async (id) => {
     if (!confirm('Delete this task?')) return
+    const before = tasks.find((t) => t.id === id)
     await deleteDoc(doc(db, 'tasks', id))
+    logHistory({
+      parentType: 'tasks',
+      parentId: id,
+      parentName: before?.name,
+      action: 'deleted',
+      snapshot: before || null,
+      byId: user?.uid,
+      byName: userProfile?.name || user?.email || 'Someone',
+    })
     if (editingId === id) cancelEdit()
     await load()
   }
@@ -324,7 +369,7 @@ export default function MyTasks() {
         onClose={cancelEdit}
         title="Edit task"
         busy={saving}
-        size="lg"
+        size="xl"
         footer={
           <>
             <button
@@ -354,95 +399,105 @@ export default function MyTasks() {
           </>
         }
       >
-        {draft ? (
-          <div className="grid gap-3 sm:grid-cols-2" onKeyDown={onEditKeyDown}>
-            <Field label="Task" className="sm:col-span-2">
-              <input
-                autoFocus
-                className={fieldClass}
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              />
-            </Field>
-            <Field label="Owner">
-              <LeadSelect
-                className={fieldClass}
-                value={draft.owner}
-                onChange={(owner) => setDraft({ ...draft, owner })}
-              />
-            </Field>
-            <Field label="Priority">
-              <select
-                className={fieldClass}
-                value={draft.priority}
-                onChange={(e) => setDraft({ ...draft, priority: e.target.value })}
-              >
-                <option value="">Auto</option>
-                <option value="HIGH">HIGH</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="LOW">LOW</option>
-              </select>
-            </Field>
-            <Field label="Status">
-              <select
-                className={fieldClass}
-                value={draft.status}
-                onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-              >
-                {TASK_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Due">
-              <input
-                type="date"
-                className={fieldClass}
-                value={draft.dueDate}
-                onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
-              />
-            </Field>
-            <Field label="Waiting on">
-              <input
-                className={fieldClass}
-                value={draft.waitingOn}
-                onChange={(e) => setDraft({ ...draft, waitingOn: e.target.value })}
-              />
-            </Field>
-            <Field label="Leadership">
-              <select
-                className={fieldClass}
-                value={draft.leadershipAttention}
-                onChange={(e) =>
-                  setDraft({ ...draft, leadershipAttention: e.target.value })
-                }
-              >
-                {LEADERSHIP_ATTENTION.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Next action" className="sm:col-span-2">
-              <input
-                className={fieldClass}
-                value={draft.nextAction}
-                onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
-              />
-            </Field>
-            <Field label="Notes" className="sm:col-span-2">
-              <textarea
-                className={fieldClass}
-                rows={3}
-                value={draft.notes}
-                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              />
-            </Field>
-          </div>
-        ) : null}
+        <div className={editingId ? 'grid gap-6 lg:grid-cols-[1fr_20rem]' : ''}>
+          {draft ? (
+            <div className="grid gap-3 sm:grid-cols-2" onKeyDown={onEditKeyDown}>
+              <Field label="Task" className="sm:col-span-2">
+                <input
+                  autoFocus
+                  className={fieldClass}
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+              </Field>
+              <Field label="Owner">
+                <LeadSelect
+                  className={fieldClass}
+                  value={draft.owner}
+                  onChange={(owner) => setDraft({ ...draft, owner })}
+                />
+              </Field>
+              <Field label="Priority">
+                <select
+                  className={fieldClass}
+                  value={draft.priority}
+                  onChange={(e) => setDraft({ ...draft, priority: e.target.value })}
+                >
+                  <option value="">Auto</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="LOW">LOW</option>
+                </select>
+              </Field>
+              <Field label="Status">
+                <select
+                  className={fieldClass}
+                  value={draft.status}
+                  onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+                >
+                  {TASK_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Due">
+                <input
+                  type="date"
+                  className={fieldClass}
+                  value={draft.dueDate}
+                  onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
+                />
+              </Field>
+              <Field label="Waiting on">
+                <input
+                  className={fieldClass}
+                  value={draft.waitingOn}
+                  onChange={(e) => setDraft({ ...draft, waitingOn: e.target.value })}
+                />
+              </Field>
+              <Field label="Leadership">
+                <select
+                  className={fieldClass}
+                  value={draft.leadershipAttention}
+                  onChange={(e) =>
+                    setDraft({ ...draft, leadershipAttention: e.target.value })
+                  }
+                >
+                  {LEADERSHIP_ATTENTION.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Next action" className="sm:col-span-2">
+                <input
+                  className={fieldClass}
+                  value={draft.nextAction}
+                  onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
+                />
+              </Field>
+              <Field label="Notes" className="sm:col-span-2">
+                <textarea
+                  className={fieldClass}
+                  rows={3}
+                  value={draft.notes}
+                  onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+                />
+              </Field>
+            </div>
+          ) : null}
+          {editingId ? (
+            <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+              <CommentsPanel parentType="tasks" parentId={editingId} parentName={draft?.name} />
+              <div className="border-t border-hae-line/60 pt-4">
+                <ActivityLog parentType="tasks" parentId={editingId} />
+              </div>
+            </div>
+          ) : null}
+        </div>
       </Modal>
 
       {/* Desktop: scrollable table with sticky first columns */}

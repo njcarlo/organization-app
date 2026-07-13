@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import { useAuth } from '../context/AuthContext'
 import { HEALTH_OPTIONS } from '../constants'
 import {
   formatDate,
@@ -10,9 +11,11 @@ import {
   normalizeHealth,
   toNameList,
 } from '../utils'
+import { diffProjectFields, logHistory } from '../utils/activityLog'
 import TaskTable from './TaskTable'
 import LeadSelect from './LeadSelect'
 import CommentsPanel from './CommentsPanel'
+import ActivityLog from './ActivityLog'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -28,6 +31,7 @@ export default function ProjectCard({
   onChanged,
   dense = false,
 }) {
+  const { user, userProfile } = useAuth()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
@@ -61,14 +65,28 @@ export default function ProjectCard({
 
   const saveEdit = async () => {
     if (!draft?.name.trim()) return
-    await updateDoc(doc(db, 'projects', project.id), {
+    const payload = {
       name: draft.name.trim(),
       lead: draft.lead,
       promise: draft.promise.trim(),
       health: draft.health,
       targetDate: draft.targetDate || '',
       notes: draft.notes.trim(),
-    })
+    }
+    await updateDoc(doc(db, 'projects', project.id), payload)
+    const changes = diffProjectFields(project, payload)
+    if (changes.length) {
+      logHistory({
+        parentType: 'projects',
+        parentId: project.id,
+        parentName: payload.name,
+        programId: project.programId || program?.id,
+        action: 'updated',
+        changes,
+        byId: user?.uid,
+        byName: userProfile?.name || user?.email || 'Someone',
+      })
+    }
     setEditing(false)
     setDraft(null)
     onChanged?.()
@@ -77,6 +95,16 @@ export default function ProjectCard({
   const removeProject = async () => {
     if (!confirm(`Delete project "${project.name}"? Tasks are not cascade-deleted.`)) return
     await deleteDoc(doc(db, 'projects', project.id))
+    logHistory({
+      parentType: 'projects',
+      parentId: project.id,
+      parentName: project.name,
+      programId: project.programId || program?.id,
+      action: 'deleted',
+      snapshot: project,
+      byId: user?.uid,
+      byName: userProfile?.name || user?.email || 'Someone',
+    })
     onChanged?.()
   }
 
@@ -243,6 +271,9 @@ export default function ProjectCard({
               parentName={project.name}
               programId={project.programId || program?.id}
             />
+          </div>
+          <div className="border-t border-hae-line/60 pt-3">
+            <ActivityLog parentType="projects" parentId={project.id} />
           </div>
         </div>
       )}

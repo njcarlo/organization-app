@@ -203,7 +203,9 @@ export default function Notifications() {
               to={
                 m.parentType === 'projects' && m.programId
                   ? `/programs/${m.programId}`
-                  : '/my-tasks'
+                  : m.parentId
+                    ? `/my-tasks?task=${m.parentId}`
+                    : '/my-tasks'
               }
               onClick={() => !m.read && markMentionRead(m.id)}
               className="flex flex-wrap items-baseline justify-between gap-2 py-2 text-sm"

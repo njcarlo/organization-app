@@ -35,10 +35,12 @@ export default function Modal({
       ? 'max-w-md'
       : size === 'lg'
         ? 'max-w-2xl'
-        : 'max-w-xl'
+        : size === 'xl'
+          ? 'max-w-4xl'
+          : 'max-w-xl'
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[80] flex items-start justify-center p-4 sm:items-center sm:p-6">
       <button
         type="button"
         aria-label="Close dialog"
@@ -51,9 +53,9 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title || 'Dialog'}
-        className={`relative z-[81] w-full ${width} rounded-3xl border border-transparent bg-white shadow-2xl`}
+        className={`relative z-[81] flex max-h-[90dvh] w-full ${width} flex-col rounded-3xl border border-transparent bg-white shadow-2xl`}
       >
-        <div className="flex items-start justify-between gap-3 px-5 py-4 sm:px-6">
+        <div className="flex shrink-0 items-start justify-between gap-3 px-5 py-4 sm:px-6">
           <h2 className="text-base font-semibold text-hae-ink">{title}</h2>
           <button
             type="button"
@@ -66,9 +68,9 @@ export default function Modal({
             ✕
           </button>
         </div>
-        <div className="px-5 py-4 sm:px-6">{children}</div>
+        <div className="overflow-y-auto px-5 py-4 sm:px-6">{children}</div>
         {footer ? (
-          <div className="flex flex-wrap items-center justify-end gap-2 rounded-b-3xl bg-hae-mist/60 px-5 py-4 sm:px-6">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 rounded-b-3xl bg-hae-mist/60 px-5 py-4 sm:px-6">
             {footer}
           </div>
         ) : null}
