@@ -29,6 +29,38 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+function buildMentionMailto({
+  emails,
+  authorName,
+  parentName,
+  parentType,
+  parentId,
+  programId,
+  commentText,
+}) {
+  const subject = encodeURIComponent(
+    `${authorName} mentioned you on ${parentName || 'HAE Tracker'}`
+  )
+  const link =
+    parentType === 'projects' && programId
+      ? `https://tracker-hae.web.app/programs/${programId}`
+      : parentId
+        ? `https://tracker-hae.web.app/my-tasks?task=${encodeURIComponent(parentId)}`
+        : 'https://tracker-hae.web.app/notifications'
+  const body = encodeURIComponent(
+    [
+      `${authorName} mentioned you in HAE Tracker.`,
+      '',
+      `On: ${parentName || 'a task'}`,
+      `Comment: "${commentText}"`,
+      '',
+      `Open: ${link}`,
+    ].join('\n')
+  )
+  const bcc = emails.map(encodeURIComponent).join(',')
+  return `mailto:?bcc=${bcc}&subject=${subject}&body=${body}`
+}
+
 function renderTextWithMentions(text, users) {
   const names = users.map((u) => u.name).filter(Boolean)
   if (!names.length) return text
@@ -55,6 +87,8 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
   const [text, setText] = useState('')
   const [mentioned, setMentioned] = useState([])
   const [mentionQuery, setMentionQuery] = useState(null)
+  const [emailMentions, setEmailMentions] = useState(true)
+  const [lastMailto, setLastMailto] = useState(null)
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState(null)
   const [editingCommentId, setEditingCommentId] = useState(null)
@@ -118,9 +152,8 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
     setPosting(true)
     setError(null)
     try {
-      const mentionedIds = mentioned
-        .filter((m) => trimmed.includes(`@${m.name}`))
-        .map((m) => m.id)
+      const mentionedPeople = mentioned.filter((m) => trimmed.includes(`@${m.name}`))
+      const mentionedIds = mentionedPeople.map((m) => m.id)
       await addDoc(collection(db, parentType, parentId, 'comments'), {
         text: trimmed,
         authorId: user?.uid || null,
@@ -128,27 +161,51 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
         mentionedUserIds: mentionedIds,
         createdAt: serverTimestamp(),
       })
+      const notifyTargets = mentionedPeople.filter((m) => m.id !== user?.uid)
       await Promise.all(
-        mentionedIds
-          .filter((id) => id !== user?.uid)
-          .map((id) =>
-            addDoc(collection(db, 'notifications'), {
-              userId: id,
-              type: 'mention',
-              parentType,
-              parentId,
-              parentName: parentName || '',
-              programId: programId || null,
-              commentText: trimmed,
-              fromName: authorName,
-              read: false,
-              createdAt: serverTimestamp(),
-            })
-          )
+        notifyTargets.map((m) => {
+          const profile = users.find((u) => u.id === m.id)
+          return addDoc(collection(db, 'notifications'), {
+            userId: m.id,
+            userEmail: (profile?.email || '').toLowerCase() || null,
+            type: 'mention',
+            parentType,
+            parentId,
+            parentName: parentName || '',
+            programId: programId || null,
+            commentText: trimmed,
+            fromName: authorName,
+            read: false,
+            emailRequested: emailMentions,
+            createdAt: serverTimestamp(),
+          })
+        })
       )
+
       setText('')
       setMentioned([])
       setMentionQuery(null)
+      if (emailMentions && notifyTargets.length > 0) {
+        const emails = notifyTargets
+          .map((m) => users.find((u) => u.id === m.id)?.email)
+          .map((e) => String(e || '').trim().toLowerCase())
+          .filter((e) => e.includes('@'))
+        setLastMailto(
+          emails.length
+            ? buildMentionMailto({
+                emails,
+                authorName,
+                parentName,
+                parentType,
+                parentId,
+                programId,
+                commentText: trimmed,
+              })
+            : null
+        )
+      } else {
+        setLastMailto(null)
+      }
       const snap = await getDocs(
         query(collection(db, parentType, parentId, 'comments'), orderBy('createdAt', 'asc'))
       )
@@ -354,6 +411,29 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
           </ul>
         ) : null}
         {error ? <p className="mt-1 text-xs text-hae-red">{error}</p> : null}
+        {mentioned.length > 0 ? (
+          <label className="mt-2 flex items-start gap-2 text-xs text-hae-slate">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={emailMentions}
+              onChange={(e) => setEmailMentions(e.target.checked)}
+            />
+            <span>
+              Email mentioned people (in-app notification always sends; automatic
+              email needs Blaze + Resend — otherwise use the draft link after posting)
+            </span>
+          </label>
+        ) : null}
+        {lastMailto ? (
+          <p className="mt-2 text-xs text-hae-slate">
+            Mention saved.{' '}
+            <a href={lastMailto} className="font-semibold text-hae-crimson hover:underline">
+              Open email draft
+            </a>{' '}
+            to notify them from your mail app.
+          </p>
+        ) : null}
         <div className="mt-2 flex justify-end">
           <button
             type="button"

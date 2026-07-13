@@ -292,8 +292,10 @@ Course tuition / payment fields feed **LMS Dashboard → Earnings & analytics**.
 | `oauthCallback` | HTTP | Store OAuth tokens |
 | `execInboxSyncNow` | Callable | Sync Gmail + Calendar, classify with Anthropic |
 | `execInboxSyncScheduled` | Schedule (15m) | Same sync on a timer |
+| `onMentionNotificationCreated` | Firestore trigger | Emails @mentioned users (needs `RESEND_API_KEY`) |
 
-Secrets: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `ANTHROPIC_API_KEY`.
+Secrets: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `ANTHROPIC_API_KEY`.  
+Mention email env: `RESEND_API_KEY` (optional), `MENTION_EMAIL_FROM` (optional from-address).
 
 Deploy: `npm run deploy:functions` (Blaze). CI attempts functions with **continue-on-error**.
 
@@ -394,9 +396,9 @@ Prioritized work still needed or intentionally deferred. Update this section whe
 
 | Task | Why | Notes |
 |------|-----|-------|
-| Upgrade project to **Blaze** (if Exec Inbox / scheduled sync are required) | Functions will not deploy on Spark | CI already isolates functions |
+| Upgrade project to **Blaze** (if Exec Inbox / scheduled sync / auto mention email are required) | Functions will not deploy on Spark | CI already isolates functions |
 | Finish Executive Inbox secrets + Google Cloud APIs | OAuth + Anthropic | Allowlist ≠ Firebase console owner |
-| Automated notification email (optional) | Today: in-app digest + mailto | Deferred; needs Functions |
+| Set `RESEND_API_KEY` (+ verified from-domain) for automatic @mention email | Without it, mentions stay in-app + optional mailto draft | Function: `onMentionNotificationCreated` |
 
 ### P2 — Product gaps
 
