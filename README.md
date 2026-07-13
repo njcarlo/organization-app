@@ -2,6 +2,8 @@
 
 One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
+**Architecture for developers:** [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md) — system map, data model, deploy, and task backlog.
+
 **Live hub (landing):** https://hae.web.app  
 **Tracker:** https://tracker-hae.web.app  
 **Public brand site:** https://www.harvardae.org/
@@ -12,6 +14,7 @@ Each app shares a **top platform header** (switch Hub / Tracker / LMS / EiR / CR
 
 Shared workflow + coding standards for anyone (or any agent) working in this repo:
 
+- [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md) — how the platform is structured
 - [`AGENTS.md`](./AGENTS.md) — how to work here
 - [`CLAUDE.md`](./CLAUDE.md) — project facts loaded by Claude Code
 - [`.claude/rules/`](./.claude/rules/) — coding, UI, Firebase, git
