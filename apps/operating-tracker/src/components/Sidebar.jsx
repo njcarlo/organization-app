@@ -205,6 +205,9 @@ export default function Sidebar({ open = false, onClose }) {
       }
       setEditCategoryModal(null)
       reload(collectionName)
+    } catch (err) {
+      console.error(`Failed to save ${meta.label.toLowerCase()}`, err)
+      alert(err.message || `Failed to save ${meta.label.toLowerCase()}`)
     } finally {
       setSaving(false)
     }
