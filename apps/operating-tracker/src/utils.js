@@ -130,6 +130,14 @@ export function customProgramStatusBadgeClass(status) {
   return 'bg-gray-200 text-black'
 }
 
+export function graphicsStatusBadgeClass(status) {
+  if (status === 'Ongoing') return 'bg-orange-200 text-amber-900'
+  if (status === 'Ready for posting') return 'bg-blue-900 text-white'
+  if (status === 'For Approval by Regina') return 'bg-hae-crimson text-white'
+  if (status === 'Complete') return 'bg-green-900 text-green-400'
+  return 'bg-gray-200 text-black'
+}
+
 /** Derived status shown alongside the actual task status — not selectable in the dropdown. */
 export const WAITING_ON_BADGE_CLASS = 'bg-purple-600 text-white'
 

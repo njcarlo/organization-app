@@ -52,3 +52,19 @@ export const HEALTH_ALIASES = {
 }
 
 export const EVENT_FORMAT_OPTIONS = ['Online', 'In-Person']
+
+export const GRAPHICS_STATUS_OPTIONS = [
+  'Not Started',
+  'Ongoing',
+  'Ready for posting',
+  'For Approval by Regina',
+  'Complete',
+]
+
+export const WHERE_TO_POST_OPTIONS = [
+  "Regina's LinkedIn",
+  'Instagram',
+  'Facebook',
+  'HAE Network LinkedIn Group',
+  'HAE page',
+]
