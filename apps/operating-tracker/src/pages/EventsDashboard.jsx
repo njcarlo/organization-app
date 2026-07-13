@@ -266,6 +266,7 @@ export default function EventsDashboard() {
       {expandedEvent ? (
         <EventCard
           event={expandedEvent}
+          onClose={() => setExpandedId(null)}
           onChanged={load}
           onDeleted={() => {
             setExpandedId(null)

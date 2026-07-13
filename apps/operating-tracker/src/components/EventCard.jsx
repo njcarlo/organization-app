@@ -7,14 +7,51 @@ import EventChecklist from './EventChecklist'
 import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import { formatDate, formatLongDate, healthBadgeClass, healthLabel, namesLabel, toNameList } from '../utils'
 
-/** Expanded event detail — headline fields + checklist, with inline edit/delete. */
-export default function EventCard({ event, onChanged, onDeleted }) {
-  const [editOpen, setEditOpen] = useState(false)
+const fieldClass =
+  'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
+
+function Field({ label, children, className = '' }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-1 block text-[10px] font-semibold tracking-wide text-hae-slate/80 uppercase">
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
+
+function Row({ label, value }) {
+  if (value == null) return null
+  return (
+    <div className="grid grid-cols-[7rem_1fr] gap-2 border-b border-hae-line/60 py-2 last:border-0 sm:grid-cols-[8.5rem_1fr]">
+      <dt className="text-[11px] font-semibold tracking-wide text-hae-slate uppercase">{label}</dt>
+      <dd className="text-sm text-hae-ink break-words">{value}</dd>
+    </div>
+  )
+}
+
+function BadgeRow({ label, value, className }) {
+  return (
+    <div className="grid grid-cols-[7rem_1fr] gap-2 border-b border-hae-line/60 py-2 last:border-0 sm:grid-cols-[8.5rem_1fr]">
+      <dt className="text-[11px] font-semibold tracking-wide text-hae-slate uppercase">{label}</dt>
+      <dd>
+        <span className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-semibold ${className}`}>
+          {value}
+        </span>
+      </dd>
+    </div>
+  )
+}
+
+/** Floating popup for an event — details + checklist, with inline edit/save/delete. */
+export default function EventCard({ event, onClose, onChanged, onDeleted }) {
+  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(null)
+  const [draft, setDraft] = useState(null)
 
   const startEdit = () => {
-    setForm({
+    setDraft({
       name: event.name || '',
       eventDate: event.eventDate || '',
       eventTime: event.eventTime || '',
@@ -24,32 +61,31 @@ export default function EventCard({ event, onChanged, onDeleted }) {
       lead: toNameList(event.lead),
       health: event.health || 'not-started',
     })
-    setEditOpen(true)
+    setEditing(true)
   }
 
-  const closeEdit = () => {
+  const cancelEdit = () => {
     if (saving) return
-    setEditOpen(false)
-    setForm(null)
+    setEditing(false)
+    setDraft(null)
   }
 
-  const saveEdit = async (e) => {
-    e.preventDefault()
-    if (!form?.name.trim() || saving) return
+  const saveEdit = async () => {
+    if (!draft?.name.trim() || saving) return
     setSaving(true)
     try {
       await updateDoc(doc(db, 'trackerEvents', event.id), {
-        name: form.name.trim(),
-        eventDate: form.eventDate,
-        eventTime: form.eventTime.trim(),
-        marketingDate: form.marketingDate,
-        venue: form.venue.trim(),
-        format: form.format,
-        lead: form.lead,
-        health: form.health,
+        name: draft.name.trim(),
+        eventDate: draft.eventDate,
+        eventTime: draft.eventTime.trim(),
+        marketingDate: draft.marketingDate,
+        venue: draft.venue.trim(),
+        format: draft.format,
+        lead: draft.lead,
+        health: draft.health,
       })
-      setEditOpen(false)
-      setForm(null)
+      setEditing(false)
+      setDraft(null)
       onChanged?.()
     } finally {
       setSaving(false)
@@ -62,177 +98,154 @@ export default function EventCard({ event, onChanged, onDeleted }) {
     onDeleted?.()
   }
 
+  const handleClose = () => {
+    if (saving) return
+    setEditing(false)
+    setDraft(null)
+    onClose?.()
+  }
+
+  const rows = [
+    { label: 'Status', value: healthLabel(event.health), badge: healthBadgeClass(event.health) },
+    { label: 'Date of Event', value: formatLongDate(event.eventDate) },
+    { label: 'Time of Event', value: event.eventTime || '—' },
+    { label: 'Date of Marketing', value: event.marketingDate ? formatDate(event.marketingDate) : '—' },
+    { label: 'Online or In-Person', value: event.format || '—' },
+    { label: 'Venue', value: event.venue || '—' },
+    { label: 'HAE Lead', value: namesLabel(event.lead) || '—' },
+  ]
+
   return (
-    <div className="space-y-4 rounded-xl border border-hae-line bg-white p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-hae-ink">{event.name}</h3>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${healthBadgeClass(event.health)}`}
-            >
-              {healthLabel(event.health)}
-            </span>
-          </div>
-          <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                Date of Event
-              </dt>
-              <dd className="text-hae-ink">{formatLongDate(event.eventDate)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                Time of Event
-              </dt>
-              <dd className="text-hae-ink">{event.eventTime || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                Date of Marketing
-              </dt>
-              <dd className="text-hae-ink">
-                {event.marketingDate ? formatDate(event.marketingDate) : '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                Online or In-Person
-              </dt>
-              <dd className="text-hae-ink">{event.format || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                Venue
-              </dt>
-              <dd className="text-hae-ink">{event.venue || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
-                HAE Lead
-              </dt>
-              <dd className="text-hae-ink">{namesLabel(event.lead) || '—'}</dd>
-            </div>
-          </dl>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={startEdit} className="hae-btn-secondary">
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={removeEvent}
-            className="text-xs text-hae-slate hover:text-hae-red"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t border-hae-line/60 pt-3">
-        <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
-          Checklist
-        </h4>
-        <EventChecklist eventId={event.id} />
-      </div>
-
-      <Modal
-        open={editOpen}
-        onClose={closeEdit}
-        title="Update event"
-        busy={saving}
-        footer={
+    <Modal
+      open
+      onClose={handleClose}
+      title={editing ? `Editing · ${event.name}` : event.name}
+      size={editing ? 'md' : 'xl'}
+      busy={saving}
+      footer={
+        editing ? (
           <>
-            <button type="button" className="hae-btn-secondary" onClick={closeEdit} disabled={saving}>
+            <button type="button" className="hae-btn-secondary" onClick={cancelEdit} disabled={saving}>
               Cancel
             </button>
-            <button type="submit" form="event-card-edit-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Update event'}
+            <button
+              type="button"
+              className="hae-btn disabled:opacity-60"
+              onClick={saveEdit}
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </>
-        }
-      >
-        {form ? (
-          <form id="event-card-edit-form" onSubmit={saveEdit} className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-              <span className="text-xs font-medium text-hae-slate">Event Title</span>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Date of Event</span>
-              <input
-                type="date"
-                value={form.eventDate}
-                onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Time of Event (with timezone)</span>
-              <input
-                value={form.eventTime}
-                onChange={(e) => setForm({ ...form, eventTime: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
-              <input
-                type="date"
-                value={form.marketingDate}
-                onChange={(e) => setForm({ ...form, marketingDate: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Online or In-Person</span>
-              <select
-                value={form.format}
-                onChange={(e) => setForm({ ...form, format: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              >
-                <option value="">Select format</option>
-                {EVENT_FORMAT_OPTIONS.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Venue</span>
-              <input
-                value={form.venue}
-                onChange={(e) => setForm({ ...form, venue: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">HAE Lead</span>
-              <LeadSelect value={form.lead} onChange={(lead) => setForm({ ...form, lead })} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Marketing Status</span>
-              <select
-                value={form.health}
-                onChange={(e) => setForm({ ...form, health: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm"
-              >
-                {HEALTH_OPTIONS.map((h) => (
-                  <option key={h.value} value={h.value}>
-                    {h.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </form>
-        ) : null}
-      </Modal>
-    </div>
+        ) : (
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={removeEvent}>
+              Delete
+            </button>
+            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
+              Edit
+            </button>
+            <button type="button" className="hae-btn-secondary" onClick={handleClose}>
+              Close
+            </button>
+          </>
+        )
+      }
+    >
+      {editing && draft ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Event Title" className="sm:col-span-2">
+            <input
+              autoFocus
+              className={fieldClass}
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            />
+          </Field>
+          <Field label="Date of Event">
+            <input
+              type="date"
+              className={fieldClass}
+              value={draft.eventDate}
+              onChange={(e) => setDraft({ ...draft, eventDate: e.target.value })}
+            />
+          </Field>
+          <Field label="Time of Event">
+            <input
+              className={fieldClass}
+              value={draft.eventTime}
+              onChange={(e) => setDraft({ ...draft, eventTime: e.target.value })}
+            />
+          </Field>
+          <Field label="Date of Marketing">
+            <input
+              type="date"
+              className={fieldClass}
+              value={draft.marketingDate}
+              onChange={(e) => setDraft({ ...draft, marketingDate: e.target.value })}
+            />
+          </Field>
+          <Field label="Online or In-Person">
+            <select
+              className={fieldClass}
+              value={draft.format}
+              onChange={(e) => setDraft({ ...draft, format: e.target.value })}
+            >
+              <option value="">Select format</option>
+              {EVENT_FORMAT_OPTIONS.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Venue">
+            <input
+              className={fieldClass}
+              value={draft.venue}
+              onChange={(e) => setDraft({ ...draft, venue: e.target.value })}
+            />
+          </Field>
+          <Field label="HAE Lead">
+            <LeadSelect
+              className={fieldClass}
+              value={draft.lead}
+              onChange={(lead) => setDraft({ ...draft, lead })}
+            />
+          </Field>
+          <Field label="Marketing Status">
+            <select
+              className={fieldClass}
+              value={draft.health}
+              onChange={(e) => setDraft({ ...draft, health: e.target.value })}
+            >
+              {HEALTH_OPTIONS.map((h) => (
+                <option key={h.value} value={h.value}>
+                  {h.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+          <dl className="-my-1">
+            {rows.map((row) =>
+              row.badge ? (
+                <BadgeRow key={row.label} label={row.label} value={row.value} className={row.badge} />
+              ) : (
+                <Row key={row.label} label={row.label} value={row.value} />
+              )
+            )}
+          </dl>
+          <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+            <h4 className="text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
+              Checklist
+            </h4>
+            <EventChecklist eventId={event.id} />
+          </div>
+        </div>
+      )}
+    </Modal>
   )
 }
