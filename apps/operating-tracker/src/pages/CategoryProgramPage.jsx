@@ -11,6 +11,7 @@ import {
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
+import DocumentFilesTable from '../components/DocumentFilesTable'
 import LeadSelect from '../components/LeadSelect'
 import { HEALTH_OPTIONS } from '../constants'
 import { customProgramStatusBadgeClass, namesLabel, normalizeHealth, sortByHealth } from '../utils'
@@ -220,19 +221,32 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setDense((v) => !v)}
-            className="hae-btn-secondary"
-            title={dense ? 'Switch to compact list' : 'Show full table'}
-          >
-            {dense ? 'Compact list' : 'Dense table'}
-          </button>
-          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-            + Add Project
-          </button>
+          {collectionName !== 'trackerDocuments' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setDense((v) => !v)}
+                className="hae-btn-secondary"
+                title={dense ? 'Switch to compact list' : 'Show full table'}
+              >
+                {dense ? 'Compact list' : 'Dense table'}
+              </button>
+              <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+                + Add Project
+              </button>
+            </>
+          ) : null}
         </div>
       </header>
+
+      {collectionName === 'trackerDocuments' ? (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+            Documents
+          </h2>
+          <DocumentFilesTable programId={itemId} />
+        </section>
+      ) : null}
 
       <Modal
         open={open}
@@ -299,28 +313,30 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </form>
       </Modal>
 
-      <div className="space-y-3">
-        {projects.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
-            No projects yet. Add one to get started.
-          </div>
-        ) : visibleProjects.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
-            All projects are complete — show completed above if needed.
-          </div>
-        ) : (
-          visibleProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              program={program}
-              tasks={tasksByProject[project.id] || []}
-              onChanged={load}
-              dense={dense}
-            />
-          ))
-        )}
-      </div>
+      {collectionName !== 'trackerDocuments' ? (
+        <div className="space-y-3">
+          {projects.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
+              No projects yet. Add one to get started.
+            </div>
+          ) : visibleProjects.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
+              All projects are complete — show completed above if needed.
+            </div>
+          ) : (
+            visibleProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                program={program}
+                tasks={tasksByProject[project.id] || []}
+                onChanged={load}
+                dense={dense}
+              />
+            ))
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }
