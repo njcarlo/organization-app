@@ -162,6 +162,7 @@ export default function GraphicsDashboard() {
       >
         {modal ? (
           <form id="graphic-form" onSubmit={submitModal} className="grid gap-3 sm:grid-cols-2">
+            {error && <p className="text-sm text-hae-red sm:col-span-2">{error}</p>}
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium text-hae-slate">Event or Program</span>
               <input
