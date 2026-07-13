@@ -111,6 +111,33 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/documents/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="trackerDocuments"
+                      categoryLabel="Document"
+                    />
+                  }
+                />
+                <Route
+                  path="/events/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="trackerEvents"
+                      categoryLabel="Event"
+                    />
+                  }
+                />
+                <Route
+                  path="/graphics/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="trackerGraphics"
+                      categoryLabel="Graphic"
+                    />
+                  }
+                />
+                <Route
                   element={
                     <ProtectedRoute
                       anyOf={[PERMISSIONS.TRACKER_WRITE, PERMISSIONS.TRACKER_ADMIN]}

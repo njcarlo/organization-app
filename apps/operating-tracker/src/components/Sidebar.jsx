@@ -22,6 +22,9 @@ const CATEGORY_META = {
   programs: { label: 'Program', pathPrefix: '/programs' },
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
   customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs', showCustomProgramFields: true },
+  trackerDocuments: { label: 'Document', pathPrefix: '/documents' },
+  trackerEvents: { label: 'Event', pathPrefix: '/events' },
+  trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
 }
 
 const emptyProject = {
@@ -45,11 +48,21 @@ export default function Sidebar({ open = false, onClose }) {
   const [programs, setPrograms] = useState([])
   const [academyPrograms, setAcademyPrograms] = useState([])
   const [customPrograms, setCustomPrograms] = useState([])
+  const [trackerDocuments, setTrackerDocuments] = useState([])
+  const [trackerEvents, setTrackerEvents] = useState([])
+  const [trackerGraphics, setTrackerGraphics] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const setters = { programs: setPrograms, academyPrograms: setAcademyPrograms, customPrograms: setCustomPrograms }
+  const setters = {
+    programs: setPrograms,
+    academyPrograms: setAcademyPrograms,
+    customPrograms: setCustomPrograms,
+    trackerDocuments: setTrackerDocuments,
+    trackerEvents: setTrackerEvents,
+    trackerGraphics: setTrackerGraphics,
+  }
 
   const reload = (collectionName) => {
     getDocs(collection(db, collectionName))
@@ -72,6 +85,9 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('programs', setPrograms)
     loadInto('academyPrograms', setAcademyPrograms)
     loadInto('customPrograms', setCustomPrograms)
+    loadInto('trackerDocuments', setTrackerDocuments)
+    loadInto('trackerEvents', setTrackerEvents)
+    loadInto('trackerGraphics', setTrackerGraphics)
     return () => {
       cancelled = true
     }
@@ -189,6 +205,9 @@ export default function Sidebar({ open = false, onClose }) {
       }
       setEditCategoryModal(null)
       reload(collectionName)
+    } catch (err) {
+      console.error(`Failed to save ${meta.label.toLowerCase()}`, err)
+      alert(err.message || `Failed to save ${meta.label.toLowerCase()}`)
     } finally {
       setSaving(false)
     }
@@ -306,8 +325,60 @@ export default function Sidebar({ open = false, onClose }) {
       emptyLabel: customPrograms.length === 0 ? 'No Custom Programs yet' : undefined,
     })
 
+    next.push({
+      id: 'documents',
+      label: 'Documents',
+      actions: sectionActions('trackerDocuments'),
+      items: trackerDocuments.map((p) => ({
+        to: `/documents/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        actions: categoryActions('trackerDocuments', p),
+      })),
+      emptyLabel: trackerDocuments.length === 0 ? 'No Documents yet' : undefined,
+    })
+
+    next.push({
+      id: 'events',
+      label: 'Events',
+      actions: sectionActions('trackerEvents'),
+      items: trackerEvents.map((p) => ({
+        to: `/events/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        actions: categoryActions('trackerEvents', p),
+      })),
+      emptyLabel: trackerEvents.length === 0 ? 'No Events yet' : undefined,
+    })
+
+    next.push({
+      id: 'graphics',
+      label: 'Graphics',
+      actions: sectionActions('trackerGraphics'),
+      items: trackerGraphics.map((p) => ({
+        to: `/graphics/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        actions: categoryActions('trackerGraphics', p),
+      })),
+      emptyLabel: trackerGraphics.length === 0 ? 'No Graphics yet' : undefined,
+    })
+
     return next
-  }, [programs, academyPrograms, customPrograms, isAdmin, isEnabled, isExecInboxUser])
+  }, [
+    programs,
+    academyPrograms,
+    customPrograms,
+    trackerDocuments,
+    trackerEvents,
+    trackerGraphics,
+    isAdmin,
+    isEnabled,
+    isExecInboxUser,
+  ])
 
   return (
     <>

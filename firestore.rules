@@ -83,6 +83,15 @@ service cloud.firestore {
     match /customPrograms/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerDocuments/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerEvents/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerGraphics/{id} {
+      allow read, write: if isStaff();
+    }
     match /courseRegistrations/{id} {
       allow read, write: if isStaff();
     }
