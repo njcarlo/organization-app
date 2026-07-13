@@ -13,7 +13,7 @@ import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
 import LeadSelect from '../components/LeadSelect'
 import { HEALTH_OPTIONS } from '../constants'
-import { namesLabel, normalizeHealth, sortByHealth } from '../utils'
+import { customProgramStatusBadgeClass, namesLabel, normalizeHealth, sortByHealth } from '../utils'
 
 const emptyProject = {
   name: '',
@@ -177,6 +177,33 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   Guest speaker
                 </dt>
                 <dd className="text-hae-ink">{program.guestSpeaker || '—'}</dd>
+              </div>
+            </dl>
+          ) : null}
+
+          {collectionName === 'customPrograms' ? (
+            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Start date
+                </dt>
+                <dd className="text-hae-ink">{program.startDate || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Status
+                </dt>
+                <dd>
+                  {program.status ? (
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${customProgramStatusBadgeClass(program.status)}`}
+                    >
+                      {program.status}
+                    </span>
+                  ) : (
+                    <span className="text-hae-ink">—</span>
+                  )}
+                </dd>
               </div>
             </dl>
           ) : null}
