@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
+import { useAuth, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 import { PIPELINE_STAGES } from '../constants'
 
 export default function Dashboard() {
+  const { userProfile } = useAuth()
   const [contacts, setContacts] = useState([])
   const [interactions, setInteractions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +49,12 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
+        {userProfile?.name && (
+          <p className="font-display text-xl text-hae-ink">
+            {timeOfDayGreeting()}, {userProfile.name}
+          </p>
+        )}
+        <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Milestone 3 · Relationships
         </p>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
+import { timeOfDayGreeting } from '@hae/ui'
+import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
 import PrioritiesSection from '../components/PrioritiesSection'
 import WaitingOnSection from '../components/WaitingOnSection'
@@ -18,6 +20,7 @@ const CATEGORIES = [
 ]
 
 export default function Dashboard() {
+  const { userProfile } = useAuth()
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
@@ -85,7 +88,12 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <header className="border-b border-hae-line pb-6">
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
+        {userProfile?.name && (
+          <p className="font-display text-xl text-hae-ink">
+            {timeOfDayGreeting()}, {userProfile.name}
+          </p>
+        )}
+        <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
           Harvard Alumni Entrepreneurs
         </p>
         <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
