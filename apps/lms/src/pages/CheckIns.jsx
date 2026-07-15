@@ -76,7 +76,7 @@ export default function CheckIns() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete check-in?')) return
+    if (!confirm('Delete check-in? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'checkIns', id))
     load()
   }

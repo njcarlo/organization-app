@@ -255,7 +255,7 @@ export default function Sidebar({ open = false, onClose }) {
 
   const deleteCategory = async (collectionName, category) => {
     const label = CATEGORY_META[collectionName].label
-    if (!confirm(`Delete "${category.name}"? Projects and tasks are not cascade-deleted.`)) return
+    if (!confirm(`Delete "${category.name}"? Projects and tasks are not cascade-deleted. This action cannot be undone.`)) return
     try {
       await deleteDoc(doc(db, collectionName, category.id))
       reload(collectionName)

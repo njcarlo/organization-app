@@ -70,7 +70,7 @@ export default function Sessions() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete session?')) return
+    if (!confirm('Delete session? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'sessions', id))
     load()
   }

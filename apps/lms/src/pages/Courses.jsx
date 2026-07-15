@@ -78,7 +78,7 @@ export default function Courses() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this course?')) return
+    if (!confirm('Delete this course? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'courses', id))
     load()
   }

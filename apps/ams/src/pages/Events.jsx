@@ -62,7 +62,7 @@ export default function Events() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete event?')) return
+    if (!confirm('Delete event? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'events', id))
     load()
   }

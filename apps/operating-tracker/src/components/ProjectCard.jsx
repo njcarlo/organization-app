@@ -93,7 +93,7 @@ export default function ProjectCard({
   }
 
   const removeProject = async () => {
-    if (!confirm(`Delete project "${project.name}"? Tasks are not cascade-deleted.`)) return
+    if (!confirm(`Delete project "${project.name}"? Tasks are not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, 'projects', project.id))
     logHistory({
       parentType: 'projects',

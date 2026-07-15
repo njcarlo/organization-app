@@ -128,7 +128,7 @@ export default function Contacts() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this contact?')) return
+    if (!confirm('Delete this contact? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'contacts', id))
     if (editingId === id) {
       setOpen(false)

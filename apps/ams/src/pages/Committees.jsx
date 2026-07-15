@@ -58,7 +58,7 @@ export default function Committees() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete committee assignment?')) return
+    if (!confirm('Delete committee assignment? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'committees', id))
     load()
   }

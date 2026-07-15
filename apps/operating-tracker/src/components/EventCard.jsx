@@ -93,7 +93,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   }
 
   const removeEvent = async () => {
-    if (!confirm(`Delete "${event.name}"? Its checklist is not cascade-deleted.`)) return
+    if (!confirm(`Delete "${event.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, 'trackerEvents', event.id))
     onDeleted?.()
   }
