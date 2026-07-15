@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { addDoc, collection, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { Modal, timeOfDayGreeting } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
@@ -7,26 +7,57 @@ import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import {
-  eventTypeBadgeClass,
-  eventTypeLabel,
-  formatDate,
-  formatLongDate,
-  healthBadgeClass,
-  healthLabel,
-  namesLabel,
-} from '../utils'
+import { eventTypeBadgeClass, groupEventsByWeek } from '../utils'
 
 const emptyForm = {
   name: '',
   eventDate: '',
-  eventTime: '',
-  marketingDate: '',
-  venue: '',
-  format: '',
   type: '',
   lead: [],
+  instructor: '',
+  moderator: '',
+  zoomCoordinator: '',
+  time: '',
+  timeZone: '',
+  guestSpeaker: '',
+  reginaAvailable: '',
+  venue: '',
+  format: '',
+  marketingDate: '',
   health: 'not-started',
+}
+
+const cellInputClass =
+  'w-full min-w-[7rem] rounded border border-transparent bg-transparent px-1.5 py-1 text-sm text-hae-ink outline-none hover:border-hae-line focus:border-hae-crimson focus:bg-white'
+
+const cellSelectClass =
+  'w-full min-w-[7rem] rounded border border-transparent px-1.5 py-1 text-[11px] font-medium outline-none hover:border-hae-line focus:border-hae-crimson cursor-pointer'
+
+const COLUMN_COUNT = 15
+
+function TextCell({ value, onChange, onCommit, placeholder }) {
+  return (
+    <input
+      value={value || ''}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={(e) => onCommit(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+      className={cellInputClass}
+    />
+  )
+}
+
+function DateCell({ value, onChange }) {
+  return (
+    <input
+      type="date"
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+      className={cellInputClass}
+    />
+  )
 }
 
 export default function EventsDashboard() {
@@ -57,9 +88,27 @@ export default function EventsDashboard() {
     [events]
   )
 
+  const weekGroups = useMemo(() => groupEventsByWeek(sortedEvents), [sortedEvents])
+
   const expandedEvent = useMemo(
     () => sortedEvents.find((event) => event.id === expandedId) || null,
     [sortedEvents, expandedId]
+  )
+
+  const updateField = useCallback((id, field, value) => {
+    setEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, [field]: value } : ev)))
+  }, [])
+
+  const commitField = useCallback((id, field, value) => {
+    updateDoc(doc(db, 'trackerEvents', id), { [field]: value }).catch(() => {})
+  }, [])
+
+  const setAndCommit = useCallback(
+    (id, field, value) => {
+      updateField(id, field, value)
+      commitField(id, field, value)
+    },
+    [updateField, commitField]
   )
 
   const close = () => {
@@ -82,12 +131,18 @@ export default function EventsDashboard() {
       await addDoc(collection(db, 'trackerEvents'), {
         name: form.name.trim(),
         eventDate: form.eventDate,
-        eventTime: form.eventTime.trim(),
-        marketingDate: form.marketingDate,
-        venue: form.venue.trim(),
-        format: form.format,
         type: form.type,
         lead: form.lead,
+        instructor: form.instructor.trim(),
+        moderator: form.moderator.trim(),
+        zoomCoordinator: form.zoomCoordinator.trim(),
+        time: form.time.trim(),
+        timeZone: form.timeZone.trim(),
+        guestSpeaker: form.guestSpeaker.trim(),
+        reginaAvailable: form.reginaAvailable.trim(),
+        venue: form.venue.trim(),
+        format: form.format,
+        marketingDate: form.marketingDate,
         health: form.health,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
@@ -118,7 +173,7 @@ export default function EventsDashboard() {
             Events & Programs Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-            Every HAE event at a glance — click a row to expand its card and checklist.
+            Every HAE event at a glance, grouped by week — click any cell to edit it directly.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -164,7 +219,7 @@ export default function EventsDashboard() {
       >
         <form id="event-dashboard-form" onSubmit={save} className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="text-xs font-medium text-hae-slate">Event Title</span>
+            <span className="text-xs font-medium text-hae-slate">Complete Event Title</span>
             <input
               required
               value={form.name}
@@ -182,20 +237,86 @@ export default function EventsDashboard() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Time of Event (with timezone)</span>
+            <span className="text-xs font-medium text-hae-slate">Type</span>
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            >
+              <option value="">Select type</option>
+              {EVENT_TYPE_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">HAE Lead</span>
+            <LeadSelect value={form.lead} onChange={(lead) => setForm({ ...form, lead })} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Instructor</span>
             <input
-              value={form.eventTime}
-              onChange={(e) => setForm({ ...form, eventTime: e.target.value })}
+              value={form.instructor}
+              onChange={(e) => setForm({ ...form, instructor: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
+            <span className="text-xs font-medium text-hae-slate">Moderator / Discussion Moderator</span>
             <input
-              type="date"
-              value={form.marketingDate}
-              onChange={(e) => setForm({ ...form, marketingDate: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+              value={form.moderator}
+              onChange={(e) => setForm({ ...form, moderator: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Zoom Coordinator</span>
+            <input
+              value={form.zoomCoordinator}
+              onChange={(e) => setForm({ ...form, zoomCoordinator: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Time</span>
+            <input
+              value={form.time}
+              onChange={(e) => setForm({ ...form, time: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Time Zone</span>
+            <input
+              value={form.timeZone}
+              onChange={(e) => setForm({ ...form, timeZone: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Guest Speaker</span>
+            <input
+              value={form.guestSpeaker}
+              onChange={(e) => setForm({ ...form, guestSpeaker: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Is Regina available?</span>
+            <input
+              value={form.reginaAvailable}
+              onChange={(e) => setForm({ ...form, reginaAvailable: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Venue</span>
+            <input
+              value={form.venue}
+              onChange={(e) => setForm({ ...form, venue: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -214,31 +335,13 @@ export default function EventsDashboard() {
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Type</span>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
-            >
-              <option value="">Select type</option>
-              {EVENT_TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Venue</span>
+            <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
             <input
-              value={form.venue}
-              onChange={(e) => setForm({ ...form, venue: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              type="date"
+              value={form.marketingDate}
+              onChange={(e) => setForm({ ...form, marketingDate: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">HAE Lead</span>
-            <LeadSelect value={form.lead} onChange={(lead) => setForm({ ...form, lead })} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-xs font-medium text-hae-slate">Marketing Status</span>
@@ -258,64 +361,182 @@ export default function EventsDashboard() {
       </Modal>
 
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
-        <table className="w-full sm:min-w-[960px] text-left">
+        <table className="w-full min-w-[1600px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Type</th>
-              <th className="px-3 py-2 font-semibold">Event Name</th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Time of Event with Timezone</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Date of Marketing</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Online or In-Person</th>
-              <th className="hae-col-sm-hide px-3 py-2 font-semibold">HAE Lead</th>
+              <th className="px-3 py-2 font-semibold">Type</th>
+              <th className="px-3 py-2 font-semibold">Complete Event Title</th>
+              <th className="px-3 py-2 font-semibold">HAE Lead</th>
+              <th className="px-3 py-2 font-semibold">Instructor</th>
+              <th className="px-3 py-2 font-semibold">Moderator / Discussion Moderator</th>
+              <th className="px-3 py-2 font-semibold">Zoom Coordinator</th>
+              <th className="px-3 py-2 font-semibold">Time</th>
+              <th className="px-3 py-2 font-semibold">Time Zone</th>
+              <th className="px-3 py-2 font-semibold">Guest Speaker</th>
+              <th className="px-3 py-2 font-semibold">Is Regina available?</th>
+              <th className="px-3 py-2 font-semibold">Online or In-Person</th>
+              <th className="px-3 py-2 font-semibold">Date of Marketing</th>
               <th className="px-3 py-2 font-semibold">Marketing Status</th>
+              <th className="px-3 py-2 font-semibold">Checklist</th>
             </tr>
           </thead>
           <tbody>
             {sortedEvents.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td colSpan={COLUMN_COUNT} className="px-3 py-8 text-center text-sm text-hae-slate">
                   No events yet.
                 </td>
               </tr>
             ) : (
-              sortedEvents.map((event) => (
-                <tr
-                  key={event.id}
-                  onClick={() => setExpandedId((id) => (id === event.id ? null : event.id))}
-                  className={`cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40 ${
-                    expandedId === event.id ? 'bg-hae-mist/40' : ''
-                  }`}
-                >
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm">
-                    {event.type ? (
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${eventTypeBadgeClass(event.type)}`}
-                      >
-                        {eventTypeLabel(event.type)}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-sm font-medium text-hae-ink">{event.name}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">
-                    {event.eventDate ? formatLongDate(event.eventDate) : '—'}
-                  </td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{event.eventTime || '—'}</td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
-                    {event.marketingDate ? formatDate(event.marketingDate) : '—'}
-                  </td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{event.format || '—'}</td>
-                  <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">{namesLabel(event.lead) || '—'}</td>
-                  <td className="px-3 py-2 text-sm">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${healthBadgeClass(event.health)}`}
+              weekGroups.map((group) => (
+                <Fragment key={group.key}>
+                  <tr className="bg-hae-mist border-b border-hae-line">
+                    <td
+                      colSpan={COLUMN_COUNT}
+                      className="px-3 py-1.5 text-[11px] font-semibold tracking-wide text-hae-ink uppercase"
                     >
-                      {healthLabel(event.health)}
-                    </span>
-                  </td>
-                </tr>
+                      {group.label}
+                    </td>
+                  </tr>
+                  {group.events.map((event) => (
+                    <tr
+                      key={event.id}
+                      className={`border-b border-hae-line/70 hover:bg-hae-mist/40 ${
+                        expandedId === event.id ? 'bg-hae-mist/40' : ''
+                      }`}
+                    >
+                      <td className="px-1 py-1">
+                        <DateCell
+                          value={event.eventDate}
+                          onChange={(v) => setAndCommit(event.id, 'eventDate', v)}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <select
+                          value={event.type || ''}
+                          onChange={(e) => setAndCommit(event.id, 'type', e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className={`${cellSelectClass} ${eventTypeBadgeClass(event.type)}`}
+                        >
+                          <option value="">—</option>
+                          {EVENT_TYPE_OPTIONS.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.name}
+                          onChange={(v) => updateField(event.id, 'name', v)}
+                          onCommit={(v) => commitField(event.id, 'name', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <LeadSelect
+                          value={event.lead}
+                          onChange={(lead) => setAndCommit(event.id, 'lead', lead)}
+                          className={cellInputClass}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.instructor}
+                          onChange={(v) => updateField(event.id, 'instructor', v)}
+                          onCommit={(v) => commitField(event.id, 'instructor', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.moderator}
+                          onChange={(v) => updateField(event.id, 'moderator', v)}
+                          onCommit={(v) => commitField(event.id, 'moderator', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.zoomCoordinator}
+                          onChange={(v) => updateField(event.id, 'zoomCoordinator', v)}
+                          onCommit={(v) => commitField(event.id, 'zoomCoordinator', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.time}
+                          onChange={(v) => updateField(event.id, 'time', v)}
+                          onCommit={(v) => commitField(event.id, 'time', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.timeZone}
+                          onChange={(v) => updateField(event.id, 'timeZone', v)}
+                          onCommit={(v) => commitField(event.id, 'timeZone', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.guestSpeaker}
+                          onChange={(v) => updateField(event.id, 'guestSpeaker', v)}
+                          onCommit={(v) => commitField(event.id, 'guestSpeaker', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <TextCell
+                          value={event.reginaAvailable}
+                          onChange={(v) => updateField(event.id, 'reginaAvailable', v)}
+                          onCommit={(v) => commitField(event.id, 'reginaAvailable', v.trim())}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <select
+                          value={event.format || ''}
+                          onChange={(e) => setAndCommit(event.id, 'format', e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className={cellSelectClass}
+                        >
+                          <option value="">—</option>
+                          {EVENT_FORMAT_OPTIONS.map((f) => (
+                            <option key={f} value={f}>
+                              {f}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-1 py-1">
+                        <DateCell
+                          value={event.marketingDate}
+                          onChange={(v) => setAndCommit(event.id, 'marketingDate', v)}
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <select
+                          value={event.health || 'not-started'}
+                          onChange={(e) => setAndCommit(event.id, 'health', e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className={cellSelectClass}
+                        >
+                          {HEALTH_OPTIONS.map((h) => (
+                            <option key={h.value} value={h.value}>
+                              {h.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-1 text-center">
+                        <button
+                          type="button"
+                          className="text-xs text-hae-slate underline hover:text-hae-crimson"
+                          onClick={() => setExpandedId(event.id)}
+                        >
+                          Open
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))
             )}
           </tbody>

@@ -63,12 +63,18 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
     setDraft({
       name: event.name || '',
       eventDate: event.eventDate || '',
-      eventTime: event.eventTime || '',
+      time: event.time || '',
+      timeZone: event.timeZone || '',
       marketingDate: event.marketingDate || '',
       venue: event.venue || '',
       format: event.format || '',
       type: event.type || '',
       lead: toNameList(event.lead),
+      instructor: event.instructor || '',
+      moderator: event.moderator || '',
+      zoomCoordinator: event.zoomCoordinator || '',
+      guestSpeaker: event.guestSpeaker || '',
+      reginaAvailable: event.reginaAvailable || '',
       health: event.health || 'not-started',
     })
     setEditing(true)
@@ -87,12 +93,18 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       await updateDoc(doc(db, 'trackerEvents', event.id), {
         name: draft.name.trim(),
         eventDate: draft.eventDate,
-        eventTime: draft.eventTime.trim(),
+        time: draft.time.trim(),
+        timeZone: draft.timeZone.trim(),
         marketingDate: draft.marketingDate,
         venue: draft.venue.trim(),
         format: draft.format,
         type: draft.type,
         lead: draft.lead,
+        instructor: draft.instructor.trim(),
+        moderator: draft.moderator.trim(),
+        zoomCoordinator: draft.zoomCoordinator.trim(),
+        guestSpeaker: draft.guestSpeaker.trim(),
+        reginaAvailable: draft.reginaAvailable.trim(),
         health: draft.health,
       })
       setEditing(false)
@@ -119,7 +131,8 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   const rows = [
     { label: 'Status', value: healthLabel(event.health), badge: healthBadgeClass(event.health) },
     { label: 'Date of Event', value: formatLongDate(event.eventDate) },
-    { label: 'Time of Event', value: event.eventTime || '—' },
+    { label: 'Time', value: event.time || '—' },
+    { label: 'Time Zone', value: event.timeZone || '—' },
     { label: 'Date of Marketing', value: event.marketingDate ? formatDate(event.marketingDate) : '—' },
     { label: 'Online or In-Person', value: event.format || '—' },
     ...(event.type
@@ -127,6 +140,11 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       : []),
     { label: 'Venue', value: event.venue || '—' },
     { label: 'HAE Lead', value: namesLabel(event.lead) || '—' },
+    { label: 'Instructor', value: event.instructor || '—' },
+    { label: 'Moderator / Discussion Moderator', value: event.moderator || '—' },
+    { label: 'Zoom Coordinator', value: event.zoomCoordinator || '—' },
+    { label: 'Guest Speaker', value: event.guestSpeaker || '—' },
+    { label: 'Is Regina available?', value: event.reginaAvailable || '—' },
   ]
 
   return (
@@ -184,11 +202,18 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
               onChange={(e) => setDraft({ ...draft, eventDate: e.target.value })}
             />
           </Field>
-          <Field label="Time of Event">
+          <Field label="Time">
             <input
               className={fieldClass}
-              value={draft.eventTime}
-              onChange={(e) => setDraft({ ...draft, eventTime: e.target.value })}
+              value={draft.time}
+              onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+            />
+          </Field>
+          <Field label="Time Zone">
+            <input
+              className={fieldClass}
+              value={draft.timeZone}
+              onChange={(e) => setDraft({ ...draft, timeZone: e.target.value })}
             />
           </Field>
           <Field label="Date of Marketing">
@@ -239,6 +264,41 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
               className={fieldClass}
               value={draft.lead}
               onChange={(lead) => setDraft({ ...draft, lead })}
+            />
+          </Field>
+          <Field label="Instructor">
+            <input
+              className={fieldClass}
+              value={draft.instructor}
+              onChange={(e) => setDraft({ ...draft, instructor: e.target.value })}
+            />
+          </Field>
+          <Field label="Moderator / Discussion Moderator">
+            <input
+              className={fieldClass}
+              value={draft.moderator}
+              onChange={(e) => setDraft({ ...draft, moderator: e.target.value })}
+            />
+          </Field>
+          <Field label="Zoom Coordinator">
+            <input
+              className={fieldClass}
+              value={draft.zoomCoordinator}
+              onChange={(e) => setDraft({ ...draft, zoomCoordinator: e.target.value })}
+            />
+          </Field>
+          <Field label="Guest Speaker">
+            <input
+              className={fieldClass}
+              value={draft.guestSpeaker}
+              onChange={(e) => setDraft({ ...draft, guestSpeaker: e.target.value })}
+            />
+          </Field>
+          <Field label="Is Regina available?">
+            <input
+              className={fieldClass}
+              value={draft.reginaAvailable}
+              onChange={(e) => setDraft({ ...draft, reginaAvailable: e.target.value })}
             />
           </Field>
           <Field label="Marketing Status">

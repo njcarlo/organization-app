@@ -167,6 +167,63 @@ export function eventTypeLabel(type) {
   return EVENT_TYPE_OPTIONS.find((o) => o.value === type)?.label || type || '—'
 }
 
+function toISODate(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** Monday-start/Sunday-end range containing the given YYYY-MM-DD date. */
+export function getWeekRange(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const diffToMonday = (date.getDay() + 6) % 7
+  const start = new Date(date)
+  start.setDate(date.getDate() - diffToMonday)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  return { start, end }
+}
+
+/** e.g. "Week of Jul 13 – Jul 19, 2026". */
+export function formatWeekRangeLabel(start, end) {
+  const startLabel = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const endLabel = end.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  return `Week of ${startLabel} – ${endLabel}`
+}
+
+/**
+ * Buckets already-date-sorted events into Monday–Sunday week groups.
+ * Events without an eventDate are collected into a trailing "No date set" group.
+ */
+export function groupEventsByWeek(sortedEvents) {
+  const groups = []
+  const undated = []
+  let currentKey = null
+  for (const event of sortedEvents) {
+    if (!event.eventDate) {
+      undated.push(event)
+      continue
+    }
+    const { start, end } = getWeekRange(event.eventDate)
+    const key = toISODate(start)
+    if (key !== currentKey) {
+      groups.push({ key, start, end, label: formatWeekRangeLabel(start, end), events: [] })
+      currentKey = key
+    }
+    groups[groups.length - 1].events.push(event)
+  }
+  if (undated.length) {
+    groups.push({ key: 'no-date', start: null, end: null, label: 'No date set', events: undated })
+  }
+  return groups
+}
+
 export function healthLabel(health) {
   const h = normalizeHealth(health)
   if (h === 'time-sensitive') return 'Time Sensitive'
