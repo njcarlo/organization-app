@@ -127,7 +127,7 @@ export default function Memberships() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete membership record?')) return
+    if (!confirm('Delete membership record? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'memberships', id))
     load()
   }

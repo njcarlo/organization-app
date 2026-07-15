@@ -513,7 +513,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const removeTask = async (id) => {
-    if (!confirm('Delete this task?')) return
+    if (!confirm('Delete this task? This action cannot be undone.')) return
     const before = tasks.find((t) => t.id === id)
     await deleteDoc(doc(db, 'tasks', id))
     logHistory({
@@ -625,7 +625,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const removeSubtask = async (task, subtaskId) => {
-    if (!confirm('Delete this subtask?')) return
+    if (!confirm('Delete this subtask? This action cannot be undone.')) return
     const removed = (task.subtasks || []).find((s) => s.id === subtaskId)
     const updated = (task.subtasks || []).filter((s) => s.id !== subtaskId)
     await updateDoc(doc(db, 'tasks', task.id), { subtasks: updated })

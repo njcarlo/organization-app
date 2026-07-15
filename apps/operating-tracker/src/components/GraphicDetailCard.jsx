@@ -138,7 +138,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   }
 
   const removeGraphic = async () => {
-    if (!confirm('Delete this graphic row?')) return
+    if (!confirm('Delete this graphic row? This action cannot be undone.')) return
     setError('')
     try {
       await deleteDoc(doc(db, 'trackerGraphicsRequests', graphic.id))

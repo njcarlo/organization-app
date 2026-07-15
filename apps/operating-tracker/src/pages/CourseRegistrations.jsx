@@ -245,7 +245,7 @@ export default function CourseRegistrations() {
   }
 
   const removeRegistration = async (id) => {
-    if (!confirm('Delete this registration?')) return
+    if (!confirm('Delete this registration? This action cannot be undone.')) return
     setError('')
     try {
       await deleteDoc(doc(db, 'courseRegistrations', id))

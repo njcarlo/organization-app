@@ -71,7 +71,7 @@ export default function EventChecklist({ eventId }) {
   }
 
   const removeItem = async (id) => {
-    if (!confirm('Delete this checklist item?')) return
+    if (!confirm('Delete this checklist item? This action cannot be undone.')) return
     setError('')
     try {
       await deleteDoc(doc(db, 'trackerEventChecklist', id))

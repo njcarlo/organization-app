@@ -268,7 +268,7 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
   }
 
   const deleteComment = async (c) => {
-    if (!confirm('Delete this comment?')) return
+    if (!confirm('Delete this comment? This action cannot be undone.')) return
     await deleteDoc(doc(db, parentType, parentId, 'comments', c.id))
     setComments((prev) => prev.filter((x) => x.id !== c.id))
     logHistory({

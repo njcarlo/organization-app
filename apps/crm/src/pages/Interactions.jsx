@@ -76,7 +76,7 @@ export default function Interactions() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this interaction?')) return
+    if (!confirm('Delete this interaction? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'interactions', id))
     load()
   }

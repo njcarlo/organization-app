@@ -197,7 +197,7 @@ export default function MyTasks() {
   }
 
   const removeTask = async (id) => {
-    if (!confirm('Delete this task?')) return
+    if (!confirm('Delete this task? This action cannot be undone.')) return
     const before = tasks.find((t) => t.id === id)
     await deleteDoc(doc(db, 'tasks', id))
     logHistory({

@@ -119,7 +119,7 @@ export default function ManageExperts() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this expert profile?')) return
+    if (!confirm('Delete this expert profile? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'experts', id))
     if (editingId === id) {
       setOpen(false)

@@ -104,7 +104,7 @@ export default function Enrollments() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete enrollment?')) return
+    if (!confirm('Delete enrollment? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'enrollments', id))
     load()
   }

@@ -184,7 +184,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   }
 
   const deleteEvent = async () => {
-    if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted.`)) return
+    if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, collectionName, itemId))
     navigate('/events-dashboard')
   }

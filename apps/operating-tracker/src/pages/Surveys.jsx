@@ -54,7 +54,7 @@ export default function Surveys() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this survey? Responses are not cascade-deleted.')) return
+    if (!confirm('Delete this survey? Responses are not cascade-deleted. This action cannot be undone.')) return
     await deleteDoc(doc(db, 'surveys', id))
     load()
   }

@@ -68,7 +68,7 @@ export default function Members() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete member?')) return
+    if (!confirm('Delete member? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'members', id))
     load()
   }

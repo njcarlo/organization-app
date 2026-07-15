@@ -63,7 +63,7 @@ export default function Certificates() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete certificate record?')) return
+    if (!confirm('Delete certificate record? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'certificates', id))
     load()
   }

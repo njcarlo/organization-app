@@ -84,7 +84,7 @@ export default function DocumentFilesTable({ programId }) {
   }
 
   const removeRow = async (id) => {
-    if (!confirm('Delete this document row?')) return
+    if (!confirm('Delete this document row? This action cannot be undone.')) return
     setError('')
     try {
       await deleteDoc(doc(db, 'trackerDocumentFiles', id))
