@@ -8,7 +8,6 @@ import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../con
 import {
   eventTypeBadgeClass,
   eventTypeLabel,
-  formatDate,
   formatLongDate,
   healthBadgeClass,
   healthLabel,
@@ -133,7 +132,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
     { label: 'Date of Event', value: formatLongDate(event.eventDate) },
     { label: 'Time', value: event.time || '—' },
     { label: 'Time Zone', value: event.timeZone || '—' },
-    { label: 'Date of Marketing', value: event.marketingDate ? formatDate(event.marketingDate) : '—' },
+    { label: 'Date of Marketing', value: formatLongDate(event.marketingDate) },
     { label: 'Online or In-Person', value: event.format || '—' },
     ...(event.type
       ? [{ label: 'Type', value: eventTypeLabel(event.type), badge: eventTypeBadgeClass(event.type) }]
