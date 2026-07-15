@@ -19,6 +19,7 @@ export const EXPORT_COLLECTIONS = [
   { id: 'trackerDocumentFiles', label: 'Document Files', app: 'Tracker' },
   { id: 'trackerEvents', label: 'Events', app: 'Tracker' },
   { id: 'trackerGraphics', label: 'Graphics', app: 'Tracker' },
+  { id: 'trackerData', label: 'Data', app: 'Tracker' },
   { id: 'courseRegistrations', label: 'Course Registrations', app: 'Tracker' },
   { id: 'projects', label: 'Projects', app: 'Tracker' },
   { id: 'tasks', label: 'Tasks', app: 'Tracker' },

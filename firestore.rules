@@ -110,6 +110,9 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff();
     }
+    match /trackerData/{id} {
+      allow read, write: if isStaff();
+    }
     match /courseRegistrations/{id} {
       allow read, write: if isStaff();
     }

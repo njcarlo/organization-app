@@ -26,6 +26,7 @@ const CATEGORY_META = {
   trackerDocuments: { label: 'Document', pathPrefix: '/documents' },
   trackerEvents: { label: 'Event', pathPrefix: '/events', showEventFields: true },
   trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
+  trackerData: { label: 'Data', pathPrefix: '/data' },
 }
 
 const emptyProject = {
@@ -52,6 +53,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [trackerDocuments, setTrackerDocuments] = useState([])
   const [trackerEvents, setTrackerEvents] = useState([])
   const [trackerGraphics, setTrackerGraphics] = useState([])
+  const [trackerData, setTrackerData] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -63,6 +65,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerDocuments: setTrackerDocuments,
     trackerEvents: setTrackerEvents,
     trackerGraphics: setTrackerGraphics,
+    trackerData: setTrackerData,
   }
 
   const reload = (collectionName) => {
@@ -88,6 +91,7 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('customPrograms', setCustomPrograms)
     loadInto('trackerDocuments', setTrackerDocuments)
     loadInto('trackerGraphics', setTrackerGraphics)
+    loadInto('trackerData', setTrackerData)
     return () => {
       cancelled = true
     }
@@ -265,10 +269,10 @@ export default function Sidebar({ open = false, onClose }) {
     }
   }
 
-  const sectionActions = (collectionName) => [
+  const sectionActions = (collectionName, labelOverride) => [
     {
       key: 'add-category',
-      label: `Add ${CATEGORY_META[collectionName].label.toLowerCase()}`,
+      label: labelOverride || `Add ${CATEGORY_META[collectionName].label.toLowerCase()}`,
       onClick: () => openAddCategory(collectionName),
     },
   ]
@@ -421,8 +425,15 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'data',
       label: 'Data',
-      items: [],
-      emptyLabel: 'Nothing here yet',
+      actions: sectionActions('trackerData', 'Add Data'),
+      items: trackerData.map((p) => ({
+        to: `/data/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        actions: categoryActions('trackerData', p),
+      })),
+      emptyLabel: trackerData.length === 0 ? 'Nothing here yet' : undefined,
     })
 
     return next
@@ -433,6 +444,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerDocuments,
     trackerEvents,
     trackerGraphics,
+    trackerData,
     isAdmin,
     isEnabled,
     isExecInboxUser,
