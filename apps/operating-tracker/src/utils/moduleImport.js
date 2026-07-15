@@ -4,6 +4,7 @@
  */
 
 import { toNameList } from '../utils'
+import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
 
 export const MODULE_IMPORT_SPECS = {
   surveys: {
@@ -320,6 +321,58 @@ Venture Lab,Academy Flagship,Jordan,Lee,jordan@harvardae.org,500`,
     },
   },
 
+  events: {
+    id: 'events',
+    label: 'Events & Programs',
+    collection: 'trackerEvents',
+    description: 'HAE events and programs shown on the Events & Programs dashboard.',
+    required: ['name'],
+    optional: [
+      'eventDate',
+      'eventTime',
+      'marketingDate',
+      'venue',
+      'format',
+      'lead',
+      'health',
+      '_id',
+    ],
+    defaults: { health: 'not-started' },
+    exampleCsv: `name,eventDate,eventTime,marketingDate,venue,format,lead,health
+Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Jamie Lee,ongoing`,
+    exampleJson: [
+      {
+        name: 'Founders Mixer',
+        eventDate: '2026-08-15',
+        eventTime: '6:00 PM ET',
+        marketingDate: '2026-08-01',
+        venue: 'Boston',
+        format: 'In-Person',
+        lead: ['Jamie Lee'],
+        health: 'ongoing',
+      },
+    ],
+    mapRow(row) {
+      const name = String(row.name || '').trim()
+      if (!name) return null
+      const format = EVENT_FORMAT_OPTIONS.includes(row.format) ? row.format : ''
+      const health = HEALTH_OPTIONS.some((h) => h.value === row.health)
+        ? row.health
+        : 'not-started'
+      return {
+        _id: row._id || row.id || undefined,
+        name,
+        eventDate: row.eventDate || '',
+        eventTime: String(row.eventTime || '').trim(),
+        marketingDate: row.marketingDate || '',
+        venue: String(row.venue || '').trim(),
+        format,
+        lead: toNameList(row.lead),
+        health,
+      }
+    },
+  },
+
   tasks: {
     id: 'tasks',
     label: 'Tracker tasks',
@@ -394,7 +447,7 @@ export const HOW_TO_PROVIDE_DATA = {
     'For Cursor / AI help: paste the CSV or JSON in chat and say which module (e.g. “import these as CRM contacts”).',
   ],
   forAi: [
-    'Say the module name: surveys | contacts | members | experts | courses | enrollments | courseRegistrations | tasks.',
+    'Say the module name: surveys | contacts | members | experts | courses | enrollments | courseRegistrations | tasks | events.',
     'Paste CSV with a header row, or a JSON array of objects.',
     'Mention if rows should update existing records (include _id) or always create new ones.',
   ],
