@@ -407,16 +407,6 @@ export default function Sidebar({ open = false, onClose }) {
       actions: sectionActions('trackerEvents'),
       items: [
         { to: '/events-dashboard', label: 'Events & Programs Dashboard', icon: 'chart' },
-        ...trackerEvents.map((p) => ({
-          to: `/events/${p.id}`,
-          label: p.name,
-          icon: 'calendar',
-          description:
-            [p.eventDate ? formatDate(p.eventDate) : '', namesLabel(p.lead)]
-              .filter(Boolean)
-              .join(' · ') || undefined,
-          actions: categoryActions('trackerEvents', p),
-        })),
       ],
     })
 
