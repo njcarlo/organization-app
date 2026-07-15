@@ -7,6 +7,7 @@ import { resendApiKey } from './secrets.js';
 const TRACKER_URL = 'https://tracker-hae.web.app';
 
 function deepLink(data) {
+  if (data.deepLink) return data.deepLink;
   if (data.parentType === 'projects' && data.programId) {
     return `${TRACKER_URL}/programs/${data.programId}`;
   }
@@ -107,14 +108,14 @@ export const onMentionNotificationCreated = onDocumentCreated(
     const link = deepLink(data);
     const subject = `${fromName} mentioned you on ${parentName}`;
     const text = [
-      `${fromName} mentioned you in HAE Tracker.`,
+      `${fromName} mentioned you on the HAE platform.`,
       '',
       `On: ${parentName}`,
       data.commentText ? `Comment: "${data.commentText}"` : '',
       '',
       `Open: ${link}`,
       '',
-      '— HAE Operating Tracker',
+      '— HAE',
     ]
       .filter((line) => line !== undefined)
       .join('\n');

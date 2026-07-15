@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { ENROLLMENT_STATUSES } from '../constants'
 import {
@@ -23,6 +23,7 @@ export default function Enrollments() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
   const [form, setForm] = useState({
     learnerName: '',
     learnerEmail: '',
@@ -276,6 +277,13 @@ export default function Enrollments() {
                   <td className="px-3 py-2 text-right">
                     <button
                       type="button"
+                      onClick={() => setExpandedId(row.id)}
+                      className="mr-3 text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-crimson"
+                    >
+                      View
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => remove(row.id)}
                       className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
@@ -289,6 +297,58 @@ export default function Enrollments() {
           </tbody>
         </table>
       </div>
+
+      {expandedId ? (
+        (() => {
+          const row = enrollments.find((e) => e.id === expandedId)
+          if (!row) return null
+          return (
+            <Modal
+              open={Boolean(expandedId)}
+              onClose={() => setExpandedId(null)}
+              title={row.learnerName}
+              footer={
+                <button
+                  type="button"
+                  className="hae-btn-secondary"
+                  onClick={() => setExpandedId(null)}
+                >
+                  Close
+                </button>
+              }
+            >
+              <div className="space-y-4">
+                <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                      Learner
+                    </dt>
+                    <dd className="text-hae-ink">{row.learnerName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                      Course
+                    </dt>
+                    <dd className="text-hae-ink">{row.courseName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                      Status
+                    </dt>
+                    <dd className="text-hae-ink">{row.status}</dd>
+                  </div>
+                </dl>
+                <CommentsPanel
+                  parentType="enrollments"
+                  parentId={row.id}
+                  parentName={`${row.learnerName} · ${row.courseName}`}
+                  deepLink="https://lms-hae.web.app"
+                />
+              </div>
+            </Modal>
+          )
+        })()
+      ) : null}
     </div>
   )
 }

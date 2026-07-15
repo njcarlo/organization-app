@@ -174,6 +174,15 @@ service cloud.firestore {
       allow read: if isStaff() || isStudent() || isMember();
       allow write: if isStaff();
     }
+    match /courses/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /courses/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /modules/{id} {
       allow read: if isStaff() || isStudent() || isMember();
       allow write: if isStaff();
@@ -188,6 +197,15 @@ service cloud.firestore {
             && resource.data.learnerEmail is string
             && resource.data.learnerEmail.lower() == emailLower());
       allow write: if isStaff();
+    }
+    match /enrollments/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /enrollments/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
     match /checkIns/{id} {
       allow read: if isStaff()
@@ -215,13 +233,41 @@ service cloud.firestore {
         || (signedIn() && isStaff());
       allow write: if isStaff();
     }
+    // Internal staff notes — never exposed on the public directory.
+    match /experts/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /experts/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
 
     // —— CRM ——
     match /contacts/{id} {
       allow read, write: if isStaff();
     }
+    match /contacts/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /contacts/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /interactions/{id} {
       allow read, write: if isStaff();
+    }
+    match /interactions/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /interactions/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
 
     // —— AMS ——
@@ -232,6 +278,15 @@ service cloud.firestore {
             && resource.data.email.lower() == emailLower());
       allow list: if isStaff();
       allow write: if isStaff();
+    }
+    match /members/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /members/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
     match /memberships/{id} {
       allow read: if isStaff()
@@ -262,6 +317,15 @@ service cloud.firestore {
     }
     match /committees/{id} {
       allow read, write: if isStaff();
+    }
+    match /committees/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /committees/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
 
     // AMS dues + Stripe Payment Link URLs

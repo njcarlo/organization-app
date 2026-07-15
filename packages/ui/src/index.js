@@ -9,6 +9,8 @@ export { NavIcon, iconForNavItem } from './navIcons.jsx'
 export { default as Modal } from './Modal.jsx'
 export { default as Can } from './Can.jsx'
 export { default as HelpGuide } from './HelpGuide.jsx'
+export { default as CommentsPanel } from './CommentsPanel.jsx'
+export { useStaffUsers } from './useStaffUsers.js'
 export { HELP_SECTIONS, sectionsForRole } from './helpContent.js'
 export {
   MODULES,

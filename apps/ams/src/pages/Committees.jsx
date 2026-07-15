@@ -6,8 +6,9 @@ import {
   doc,
   getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COMMITTEE_ROLES } from '../constants'
 
@@ -23,6 +24,7 @@ export default function Committees() {
     role: 'Member',
     notes: '',
   })
+  const [editingId, setEditingId] = useState(null)
 
   const load = useCallback(async () => {
     const [c, m] = await Promise.all([
@@ -40,21 +42,52 @@ export default function Committees() {
     load()
   }, [load])
 
+  const close = () => {
+    if (saving) return
+    setOpen(false)
+    setForm({ name: '', memberId: '', role: 'Member', notes: '' })
+    setEditingId(null)
+  }
+
+  const startEdit = (c) => {
+    setEditingId(c.id)
+    setForm({
+      name: c.name || '',
+      memberId: c.memberId || '',
+      role: c.role || 'Member',
+      notes: c.notes || '',
+    })
+    setOpen(true)
+  }
+
   const create = async (e) => {
     e.preventDefault()
     const member = members.find((x) => x.id === form.memberId)
     if (!form.name.trim()) return
-    await addDoc(collection(db, 'committees'), {
-      name: form.name.trim(),
-      memberId: member?.id || '',
-      memberName: member?.name || '',
-      role: form.role,
-      notes: form.notes.trim(),
-      createdAt: serverTimestamp(),
-    })
-    setForm({ name: '', memberId: '', role: 'Member', notes: '' })
-    setOpen(false)
-    load()
+    setSaving(true)
+    try {
+      const payload = {
+        name: form.name.trim(),
+        memberId: member?.id || '',
+        memberName: member?.name || '',
+        role: form.role,
+        notes: form.notes.trim(),
+      }
+      if (editingId) {
+        await updateDoc(doc(db, 'committees', editingId), payload)
+      } else {
+        await addDoc(collection(db, 'committees'), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        })
+      }
+      setForm({ name: '', memberId: '', role: 'Member', notes: '' })
+      setEditingId(null)
+      setOpen(false)
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const remove = async (id) => {
@@ -74,24 +107,32 @@ export default function Committees() {
             Committee and volunteer assignments
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+        <button
+          type="button"
+          className="hae-btn"
+          onClick={() => {
+            setForm({ name: '', memberId: '', role: 'Member', notes: '' })
+            setEditingId(null)
+            setOpen(true)
+          }}
+        >
           Add assignment
         </button>
       </header>
 
-      
+
       <Modal
         open={open}
-        onClose={() => !saving && setOpen(false)}
-        title="Add assignment"
+        onClose={close}
+        title={editingId ? 'Edit assignment' : 'Add assignment'}
         busy={saving}
         footer={
           <>
-            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
               Cancel
             </button>
             <button type="submit" form="add-committee-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Add assignment'}
+              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add assignment'}
             </button>
           </>
         }
@@ -133,6 +174,16 @@ export default function Committees() {
             className="border border-hae-line px-3 py-2 text-sm"
           />
         </form>
+        {editingId ? (
+          <div className="mt-4 border-t border-hae-line pt-3">
+            <CommentsPanel
+              parentType="committees"
+              parentId={editingId}
+              parentName={form.name}
+              deepLink="https://ams-hae.web.app"
+            />
+          </div>
+        ) : null}
       </Modal>
 
       <div className="hae-table-scroll border border-hae-line bg-white">
@@ -162,11 +213,18 @@ export default function Committees() {
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{c.role}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{c.notes || '—'}</td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 text-right text-xs">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(c)}
+                      className="mr-2 font-semibold text-hae-crimson opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      Edit
+                    </button>
                     <button
                       type="button"
                       onClick={() => remove(c.id)}
-                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
+                      className="text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

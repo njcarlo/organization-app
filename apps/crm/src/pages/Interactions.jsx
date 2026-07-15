@@ -6,13 +6,15 @@ import {
   doc,
   getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
 import {
   AttachmentField,
   AttachmentList,
+  attachmentsToFormLines,
   formLinesToAttachments,
 } from '../components/Attachments'
 
@@ -22,6 +24,7 @@ export default function Interactions() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({
     contactId: '',
     type: 'Email',
@@ -49,20 +52,7 @@ export default function Interactions() {
     load()
   }, [load])
 
-  const create = async (e) => {
-    e.preventDefault()
-    const contact = contacts.find((c) => c.id === form.contactId)
-    if (!contact) return
-    await addDoc(collection(db, 'interactions'), {
-      contactId: contact.id,
-      contactName: contact.name,
-      type: form.type,
-      date: form.date || new Date().toISOString().slice(0, 10),
-      subject: form.subject.trim(),
-      notes: form.notes.trim(),
-      attachments: formLinesToAttachments(form.attachmentLines),
-      createdAt: serverTimestamp(),
-    })
+  const resetForm = () => {
     setForm({
       contactId: '',
       type: 'Email',
@@ -71,13 +61,72 @@ export default function Interactions() {
       notes: '',
       attachmentLines: '',
     })
+    setEditingId(null)
+  }
+
+  const close = () => {
+    if (saving) return
     setOpen(false)
-    load()
+    resetForm()
+  }
+
+  const openAdd = () => {
+    resetForm()
+    setOpen(true)
+  }
+
+  const startEdit = (row) => {
+    setEditingId(row.id)
+    setForm({
+      contactId: row.contactId || '',
+      type: row.type || 'Email',
+      date: row.date || '',
+      subject: row.subject || '',
+      notes: row.notes || '',
+      attachmentLines: attachmentsToFormLines(row.attachments),
+    })
+    setOpen(true)
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    if (saving) return
+    const contact = contacts.find((c) => c.id === form.contactId)
+    if (!contact) return
+    setSaving(true)
+    const payload = {
+      contactId: contact.id,
+      contactName: contact.name,
+      type: form.type,
+      date: form.date || new Date().toISOString().slice(0, 10),
+      subject: form.subject.trim(),
+      notes: form.notes.trim(),
+      attachments: formLinesToAttachments(form.attachmentLines),
+    }
+    try {
+      if (editingId) {
+        await updateDoc(doc(db, 'interactions', editingId), payload)
+      } else {
+        await addDoc(collection(db, 'interactions'), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        })
+      }
+      setOpen(false)
+      resetForm()
+      load()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const remove = async (id) => {
     if (!confirm('Delete this interaction? This action cannot be undone.')) return
     await deleteDoc(doc(db, 'interactions', id))
+    if (editingId === id) {
+      setOpen(false)
+      resetForm()
+    }
     load()
   }
 
@@ -95,27 +144,27 @@ export default function Interactions() {
       
       
       <div className="hae-form-actions">
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+        <button type="button" className="hae-btn" onClick={openAdd}>
           Log interaction
         </button>
       </div>
 <Modal
         open={open}
-        onClose={() => !saving && setOpen(false)}
-        title="Log interaction"
+        onClose={close}
+        title={editingId ? 'Update interaction' : 'Log interaction'}
         busy={saving}
         footer={
           <>
-            <button type="button" className="hae-btn-secondary" onClick={() => setOpen(false)} disabled={saving}>
+            <button type="button" className="hae-btn-secondary" onClick={close} disabled={saving}>
               Cancel
             </button>
             <button type="submit" form="interaction-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Log interaction'}
+              {saving ? 'Saving…' : editingId ? 'Update interaction' : 'Log interaction'}
             </button>
           </>
         }
       >
-        <form id="interaction-form" onSubmit={create} className="grid gap-3 sm:grid-cols-2">
+        <form id="interaction-form" onSubmit={save} className="grid gap-3 sm:grid-cols-2">
 
 <select
           required
@@ -163,6 +212,20 @@ export default function Interactions() {
           onChange={(attachmentLines) => setForm({ ...form, attachmentLines })}
         />
         </form>
+        {editingId ? (
+          <div className="mt-4 border-t border-hae-line pt-3">
+            <CommentsPanel
+              parentType="interactions"
+              parentId={editingId}
+              parentName={
+                form.subject ||
+                contacts.find((c) => c.id === form.contactId)?.name ||
+                'Interaction'
+              }
+              deepLink="https://crm-hae.web.app"
+            />
+          </div>
+        ) : null}
       </Modal>
 
 
@@ -198,11 +261,18 @@ export default function Interactions() {
                     <AttachmentList attachments={row.attachments} />
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 text-right text-xs">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(row)}
+                      className="mr-2 font-semibold text-hae-crimson opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      Edit
+                    </button>
                     <button
                       type="button"
                       onClick={() => remove(row.id)}
-                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
+                      className="text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

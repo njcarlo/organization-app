@@ -6,8 +6,9 @@ import {
   doc,
   getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { MEMBER_STATUSES } from '../constants'
 
@@ -26,6 +27,7 @@ export default function Members() {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const [editingId, setEditingId] = useState(null)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'members'))
@@ -43,6 +45,20 @@ export default function Members() {
     if (saving) return
     setOpen(false)
     setForm(emptyForm)
+    setEditingId(null)
+  }
+
+  const startEdit = (m) => {
+    setEditingId(m.id)
+    setForm({
+      name: m.name || '',
+      email: m.email || '',
+      cohort: m.cohort || '',
+      chapter: m.chapter || '',
+      status: m.status || 'active',
+      joinDate: m.joinDate || '',
+    })
+    setOpen(true)
   }
 
   const create = async (e) => {
@@ -50,16 +66,24 @@ export default function Members() {
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      await addDoc(collection(db, 'members'), {
+      const payload = {
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         cohort: form.cohort.trim(),
         chapter: form.chapter.trim(),
         status: form.status,
         joinDate: form.joinDate || '',
-        createdAt: serverTimestamp(),
-      })
+      }
+      if (editingId) {
+        await updateDoc(doc(db, 'members', editingId), payload)
+      } else {
+        await addDoc(collection(db, 'members'), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        })
+      }
       setForm(emptyForm)
+      setEditingId(null)
       setOpen(false)
       load()
     } finally {
@@ -84,7 +108,15 @@ export default function Members() {
             Directory of HAE members — cohort, chapter, and status
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+        <button
+          type="button"
+          className="hae-btn"
+          onClick={() => {
+            setForm(emptyForm)
+            setEditingId(null)
+            setOpen(true)
+          }}
+        >
           Add member
         </button>
       </header>
@@ -92,7 +124,7 @@ export default function Members() {
       <Modal
         open={open}
         onClose={close}
-        title="Add member"
+        title={editingId ? 'Edit member' : 'Add member'}
         busy={saving}
         footer={
           <>
@@ -100,7 +132,7 @@ export default function Members() {
               Cancel
             </button>
             <button type="submit" form="add-member-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Add member'}
+              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add member'}
             </button>
           </>
         }
@@ -150,6 +182,16 @@ export default function Members() {
             className="border border-hae-line px-3 py-2 text-sm"
           />
         </form>
+        {editingId ? (
+          <div className="mt-4 border-t border-hae-line pt-3">
+            <CommentsPanel
+              parentType="members"
+              parentId={editingId}
+              parentName={form.name}
+              deepLink="https://ams-hae.web.app"
+            />
+          </div>
+        ) : null}
       </Modal>
 
       <div className="hae-table-scroll border border-hae-line bg-white">
@@ -182,11 +224,18 @@ export default function Members() {
                   <td className="px-3 py-2 text-sm text-hae-slate">{m.chapter || '—'}</td>
                   <td className="px-3 py-2 text-sm capitalize text-hae-slate">{m.status}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{m.joinDate || '—'}</td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 text-right text-xs">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(m)}
+                      className="mr-2 font-semibold text-hae-crimson opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      Edit
+                    </button>
                     <button
                       type="button"
                       onClick={() => remove(m.id)}
-                      className="text-xs text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
+                      className="text-hae-slate opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-hae-red"
                     >
                       Delete
                     </button>

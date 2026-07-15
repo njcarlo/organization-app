@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal, useAuth, PERMISSIONS } from '@hae/ui'
+import { CommentsPanel, Modal, useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 import { MODULE_TYPES } from '../constants'
 
@@ -305,6 +305,18 @@ export default function CourseDetail() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+          Comments
+        </h2>
+        <CommentsPanel
+          parentType="courses"
+          parentId={courseId}
+          parentName={course.name}
+          deepLink="https://lms-hae.web.app"
+        />
       </section>
     </div>
   )

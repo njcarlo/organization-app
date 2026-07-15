@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { EXPERT_STATUSES, EXPERTISE_SUGGESTIONS } from '../constants'
 
@@ -253,6 +253,16 @@ export default function ManageExperts() {
             ))}
           </select>
         </form>
+        {editingId ? (
+          <div className="mt-4 border-t border-hae-line pt-3">
+            <CommentsPanel
+              parentType="experts"
+              parentId={editingId}
+              parentName={form.name}
+              deepLink="https://eir-hae.web.app/app"
+            />
+          </div>
+        ) : null}
       </Modal>
 
       <div className="hae-table-scroll border border-hae-line bg-white">

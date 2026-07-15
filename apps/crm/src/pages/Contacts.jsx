@@ -21,7 +21,7 @@ import {
   attachmentsToFormLines,
   formLinesToAttachments,
 } from '../components/Attachments'
-import { FEATURES, Modal, useFeatures } from '@hae/ui'
+import { CommentsPanel, FEATURES, Modal, useFeatures } from '@hae/ui'
 
 const emptyForm = {
   name: '',
@@ -273,6 +273,16 @@ export default function Contacts() {
             </div>
           ) : null}
         </form>
+        {editingId ? (
+          <div className="mt-4 border-t border-hae-line pt-3">
+            <CommentsPanel
+              parentType="contacts"
+              parentId={editingId}
+              parentName={form.name}
+              deepLink="https://crm-hae.web.app"
+            />
+          </div>
+        ) : null}
       </Modal>
 
       <div className="hae-table-scroll border border-hae-line bg-white">
