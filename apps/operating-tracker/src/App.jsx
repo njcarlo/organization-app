@@ -151,6 +151,15 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/chapters/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="chapters"
+                      categoryLabel="Chapter"
+                    />
+                  }
+                />
+                <Route
                   element={
                     <ProtectedRoute
                       anyOf={[PERMISSIONS.TRACKER_WRITE, PERMISSIONS.TRACKER_ADMIN]}
