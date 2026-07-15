@@ -1,19 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
 import EventChecklist from './EventChecklist'
+import CommentsPanel from './CommentsPanel'
 import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import {
-  eventTypeBadgeClass,
-  eventTypeLabel,
-  formatLongDate,
-  healthBadgeClass,
-  healthLabel,
-  namesLabel,
-  toNameList,
-} from '../utils'
+import { toNameList } from '../utils'
 
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
@@ -29,64 +22,37 @@ function Field({ label, children, className = '' }) {
   )
 }
 
-function Row({ label, value }) {
-  if (value == null) return null
-  return (
-    <div className="grid grid-cols-[7rem_1fr] gap-2 border-b border-hae-line/60 py-2 last:border-0 sm:grid-cols-[8.5rem_1fr]">
-      <dt className="text-[11px] font-semibold tracking-wide text-hae-slate uppercase">{label}</dt>
-      <dd className="text-sm text-hae-ink break-words">{value}</dd>
-    </div>
-  )
+function draftFromEvent(event) {
+  return {
+    name: event.name || '',
+    eventDate: event.eventDate || '',
+    time: event.time || '',
+    timeZone: event.timeZone || '',
+    marketingDate: event.marketingDate || '',
+    venue: event.venue || '',
+    format: event.format || '',
+    type: event.type || '',
+    lead: toNameList(event.lead),
+    instructor: event.instructor || '',
+    moderator: event.moderator || '',
+    zoomCoordinator: event.zoomCoordinator || '',
+    guestSpeaker: event.guestSpeaker || '',
+    reginaAvailable: event.reginaAvailable || '',
+    health: event.health || 'not-started',
+  }
 }
 
-function BadgeRow({ label, value, className }) {
-  return (
-    <div className="grid grid-cols-[7rem_1fr] gap-2 border-b border-hae-line/60 py-2 last:border-0 sm:grid-cols-[8.5rem_1fr]">
-      <dt className="text-[11px] font-semibold tracking-wide text-hae-slate uppercase">{label}</dt>
-      <dd>
-        <span className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-semibold ${className}`}>
-          {value}
-        </span>
-      </dd>
-    </div>
-  )
-}
-
-/** Floating popup for an event — details + checklist, with inline edit/save/delete. */
+/** Floating edit modal for an event — form fields + checklist + comments/@mentions. */
 export default function EventCard({ event, onClose, onChanged, onDeleted }) {
-  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [draft, setDraft] = useState(null)
+  const [draft, setDraft] = useState(() => draftFromEvent(event))
 
-  const startEdit = () => {
-    setDraft({
-      name: event.name || '',
-      eventDate: event.eventDate || '',
-      time: event.time || '',
-      timeZone: event.timeZone || '',
-      marketingDate: event.marketingDate || '',
-      venue: event.venue || '',
-      format: event.format || '',
-      type: event.type || '',
-      lead: toNameList(event.lead),
-      instructor: event.instructor || '',
-      moderator: event.moderator || '',
-      zoomCoordinator: event.zoomCoordinator || '',
-      guestSpeaker: event.guestSpeaker || '',
-      reginaAvailable: event.reginaAvailable || '',
-      health: event.health || 'not-started',
-    })
-    setEditing(true)
-  }
+  useEffect(() => {
+    setDraft(draftFromEvent(event))
+  }, [event.id])
 
-  const cancelEdit = () => {
-    if (saving) return
-    setEditing(false)
-    setDraft(null)
-  }
-
-  const saveEdit = async () => {
-    if (!draft?.name.trim() || saving) return
+  const save = async () => {
+    if (!draft.name.trim() || saving) return
     setSaving(true)
     try {
       await updateDoc(doc(db, 'trackerEvents', event.id), {
@@ -106,9 +72,8 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
         reginaAvailable: draft.reginaAvailable.trim(),
         health: draft.health,
       })
-      setEditing(false)
-      setDraft(null)
       onChanged?.()
+      onClose?.()
     } finally {
       setSaving(false)
     }
@@ -122,68 +87,36 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
 
   const handleClose = () => {
     if (saving) return
-    setEditing(false)
-    setDraft(null)
     onClose?.()
   }
-
-  const rows = [
-    { label: 'Status', value: healthLabel(event.health), badge: healthBadgeClass(event.health) },
-    { label: 'Date of Event', value: formatLongDate(event.eventDate) },
-    { label: 'Time', value: event.time || '—' },
-    { label: 'Time Zone', value: event.timeZone || '—' },
-    { label: 'Date of Marketing', value: formatLongDate(event.marketingDate) },
-    { label: 'Online or In-Person', value: event.format || '—' },
-    ...(event.type
-      ? [{ label: 'Type', value: eventTypeLabel(event.type), badge: eventTypeBadgeClass(event.type) }]
-      : []),
-    { label: 'Venue', value: event.venue || '—' },
-    { label: 'HAE Lead', value: namesLabel(event.lead) || '—' },
-    { label: 'Instructor', value: event.instructor || '—' },
-    { label: 'Moderator / Discussion Moderator', value: event.moderator || '—' },
-    { label: 'Zoom Coordinator', value: event.zoomCoordinator || '—' },
-    { label: 'Guest Speaker', value: event.guestSpeaker || '—' },
-    { label: 'Is Regina available?', value: event.reginaAvailable || '—' },
-  ]
 
   return (
     <Modal
       open
       onClose={handleClose}
-      title={editing ? `Editing · ${event.name}` : event.name}
-      size={editing ? 'md' : 'xl'}
+      title={`Editing · ${event.name}`}
+      size="xl"
       busy={saving}
       footer={
-        editing ? (
-          <>
-            <button type="button" className="hae-btn-secondary" onClick={cancelEdit} disabled={saving}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="hae-btn disabled:opacity-60"
-              onClick={saveEdit}
-              disabled={saving}
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="hae-btn-secondary" onClick={removeEvent}>
-              Delete
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-              Edit
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={handleClose}>
-              Close
-            </button>
-          </>
-        )
+        <>
+          <button type="button" className="hae-btn-secondary" onClick={removeEvent} disabled={saving}>
+            Delete
+          </button>
+          <button type="button" className="hae-btn-secondary" onClick={handleClose} disabled={saving}>
+            Close
+          </button>
+          <button
+            type="button"
+            className="hae-btn disabled:opacity-60"
+            onClick={save}
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </>
       }
     >
-      {editing && draft ? (
+      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Event Title" className="sm:col-span-2">
             <input
@@ -314,25 +247,18 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
             </select>
           </Field>
         </div>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-          <dl className="-my-1">
-            {rows.map((row) =>
-              row.badge ? (
-                <BadgeRow key={row.label} label={row.label} value={row.value} className={row.badge} />
-              ) : (
-                <Row key={row.label} label={row.label} value={row.value} />
-              )
-            )}
-          </dl>
-          <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
-            <h4 className="text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
+        <div className="space-y-4 border-t border-hae-line/60 pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+          <div>
+            <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
               Checklist
             </h4>
             <EventChecklist eventId={event.id} />
           </div>
+          <div className="border-t border-hae-line/60 pt-4">
+            <CommentsPanel parentType="trackerEvents" parentId={event.id} parentName={event.name} />
+          </div>
         </div>
-      )}
+      </div>
     </Modal>
   )
 }
