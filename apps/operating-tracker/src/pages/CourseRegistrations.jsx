@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -43,6 +44,14 @@ function formatDate(value) {
     month: 'short',
     day: 'numeric',
   })
+}
+
+function toDateInputValue(value) {
+  const millis = toMillis(value)
+  if (!millis) return ''
+  const d = new Date(millis)
+  const offset = d.getTimezoneOffset()
+  return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 10)
 }
 
 function normalizeProgramType(value) {
@@ -203,6 +212,9 @@ export default function CourseRegistrations() {
         lastName: draft.lastName.trim(),
         email: draft.email.trim().toLowerCase(),
         amountPaid: Number(draft.amountPaid) || 0,
+        ...(draft.createdAt
+          ? { createdAt: Timestamp.fromDate(new Date(`${draft.createdAt}T00:00:00`)) }
+          : {}),
       })
       setEditingId(null)
       setDraft(null)
@@ -428,7 +440,141 @@ export default function CourseRegistrations() {
         </p>
       </div>
 
-      <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
+      {/* Mobile: card stack with inline edit */}
+      <div className="hae-mobile-only hae-mobile-cards">
+        {pagedRegistrations.length === 0 ? (
+          <div className="hae-mobile-card text-center text-sm text-hae-slate">
+            {registrations.length === 0
+              ? 'No registrations yet. Add one above or import a list.'
+              : 'No registrations match your search.'}
+          </div>
+        ) : (
+          pagedRegistrations.map((r) =>
+            editingId === r.id && draft ? (
+              <div key={r.id} className="hae-mobile-card space-y-2 border-amber-200 bg-amber-50">
+                <input
+                  className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                  placeholder="Course"
+                  value={draft.course}
+                  onChange={(e) => setDraft({ ...draft, course: e.target.value })}
+                />
+                <select
+                  className="w-full rounded border border-hae-line px-2 py-1 text-xs"
+                  value={normalizeProgramType(draft.programType)}
+                  onChange={(e) => setDraft({ ...draft, programType: e.target.value })}
+                >
+                  {PROGRAM_TYPES.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <input
+                    className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                    placeholder="First name"
+                    value={draft.firstName}
+                    onChange={(e) => setDraft({ ...draft, firstName: e.target.value })}
+                  />
+                  <input
+                    className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                    placeholder="Last name"
+                    value={draft.lastName}
+                    onChange={(e) => setDraft({ ...draft, lastName: e.target.value })}
+                  />
+                </div>
+                <input
+                  type="email"
+                  className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                  placeholder="Email"
+                  value={draft.email}
+                  onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                    placeholder="Amount paid"
+                    value={draft.amountPaid}
+                    onChange={(e) => setDraft({ ...draft, amountPaid: e.target.value })}
+                  />
+                  <input
+                    type="date"
+                    className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                    value={draft.createdAt}
+                    onChange={(e) => setDraft({ ...draft, createdAt: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(null)
+                      setDraft(null)
+                    }}
+                    className="text-hae-slate hover:text-hae-ink"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveRegistration}
+                    className="font-semibold text-hae-crimson"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div key={r.id} className="hae-mobile-card">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="hae-mobile-card__title min-w-0 flex-1">
+                    {r.firstName} {r.lastName}
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingId(r.id)
+                        setDraft({
+                          course: r.course || '',
+                          programType: normalizeProgramType(r.programType),
+                          firstName: r.firstName || '',
+                          lastName: r.lastName || '',
+                          email: r.email || '',
+                          amountPaid: r.amountPaid ?? '',
+                          createdAt: toDateInputValue(r.createdAt),
+                        })
+                      }}
+                      className="text-hae-slate hover:text-hae-crimson"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeRegistration(r.id)}
+                      className="text-hae-slate hover:text-hae-red"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div className="hae-mobile-card__meta">
+                  <span>{r.course}</span>
+                  <span>{normalizeProgramType(r.programType)}</span>
+                  <span>{r.email || '—'}</span>
+                  <span>{formatMoney(Number(r.amountPaid) || 0)}</span>
+                  <span>Added {formatDate(r.createdAt)}</span>
+                </div>
+              </div>
+            )
+          )
+        )}
+      </div>
+
+      <div className="hae-desktop-only hae-table-scroll rounded-xl border border-hae-line bg-white">
         <table className="w-full text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
@@ -437,7 +583,7 @@ export default function CourseRegistrations() {
                   <button
                     type="button"
                     onClick={() => handleSort(col.key)}
-                    className="flex items-center gap-1 uppercase text-hae-slate hover:text-hae-ink"
+                    className="flex items-center gap-1 whitespace-nowrap uppercase text-hae-slate hover:text-hae-ink"
                   >
                     {col.label}
                     {sortKey === col.key && <span>{sortDir === 'asc' ? '▲' : '▼'}</span>}
@@ -501,7 +647,14 @@ export default function CourseRegistrations() {
                       onChange={(e) => setDraft({ ...draft, amountPaid: e.target.value })}
                     />
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(r.createdAt)}</td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="date"
+                      className="w-full rounded border border-hae-line px-2 py-1 text-sm"
+                      value={draft.createdAt}
+                      onChange={(e) => setDraft({ ...draft, createdAt: e.target.value })}
+                    />
+                  </td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
                       type="button"
@@ -538,6 +691,7 @@ export default function CourseRegistrations() {
                             lastName: r.lastName || '',
                             email: r.email || '',
                             amountPaid: r.amountPaid ?? '',
+                            createdAt: toDateInputValue(r.createdAt),
                           })
                         }}
                         className="text-xs text-hae-slate hover:text-hae-crimson"
