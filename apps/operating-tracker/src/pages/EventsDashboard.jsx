@@ -6,8 +6,16 @@ import { db } from '../firebase'
 import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
-import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import { formatDate, formatLongDate, healthBadgeClass, healthLabel, namesLabel } from '../utils'
+import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import {
+  eventTypeBadgeClass,
+  eventTypeLabel,
+  formatDate,
+  formatLongDate,
+  healthBadgeClass,
+  healthLabel,
+  namesLabel,
+} from '../utils'
 
 const emptyForm = {
   name: '',
@@ -16,6 +24,7 @@ const emptyForm = {
   marketingDate: '',
   venue: '',
   format: '',
+  type: '',
   lead: [],
   health: 'not-started',
 }
@@ -77,6 +86,7 @@ export default function EventsDashboard() {
         marketingDate: form.marketingDate,
         venue: form.venue.trim(),
         format: form.format,
+        type: form.type,
         lead: form.lead,
         health: form.health,
         order: maxOrder + 1,
@@ -204,6 +214,21 @@ export default function EventsDashboard() {
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Type</span>
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            >
+              <option value="">Select type</option>
+              {EVENT_TYPE_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
             <span className="text-xs font-medium text-hae-slate">Venue</span>
             <input
               value={form.venue}
@@ -236,6 +261,7 @@ export default function EventsDashboard() {
         <table className="w-full sm:min-w-[960px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
+              <th className="hae-col-sm-hide px-3 py-2 font-semibold">Type</th>
               <th className="px-3 py-2 font-semibold">Event Name</th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
               <th className="hae-col-sm-hide px-3 py-2 font-semibold">Time of Event with Timezone</th>
@@ -248,7 +274,7 @@ export default function EventsDashboard() {
           <tbody>
             {sortedEvents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-sm text-hae-slate">
+                <td colSpan={8} className="px-3 py-8 text-center text-sm text-hae-slate">
                   No events yet.
                 </td>
               </tr>
@@ -261,6 +287,17 @@ export default function EventsDashboard() {
                     expandedId === event.id ? 'bg-hae-mist/40' : ''
                   }`}
                 >
+                  <td className="hae-col-sm-hide px-3 py-2 text-sm">
+                    {event.type ? (
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${eventTypeBadgeClass(event.type)}`}
+                      >
+                        {eventTypeLabel(event.type)}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-sm font-medium text-hae-ink">{event.name}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {event.eventDate ? formatLongDate(event.eventDate) : '—'}
