@@ -418,6 +418,13 @@ export default function Sidebar({ open = false, onClose }) {
       ],
     })
 
+    next.push({
+      id: 'data',
+      label: 'Data',
+      items: [],
+      emptyLabel: 'Nothing here yet',
+    })
+
     return next
   }, [
     programs,
