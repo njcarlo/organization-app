@@ -27,6 +27,7 @@ const CATEGORY_META = {
   trackerEvents: { label: 'Event', pathPrefix: '/events', showEventFields: true },
   trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
   trackerData: { label: 'Data', pathPrefix: '/data' },
+  chapters: { label: 'Chapter', pathPrefix: '/chapters', showChapterFields: true },
 }
 
 const emptyProject = {
@@ -54,6 +55,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [trackerEvents, setTrackerEvents] = useState([])
   const [trackerGraphics, setTrackerGraphics] = useState([])
   const [trackerData, setTrackerData] = useState([])
+  const [chapters, setChapters] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -66,6 +68,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerEvents: setTrackerEvents,
     trackerGraphics: setTrackerGraphics,
     trackerData: setTrackerData,
+    chapters: setChapters,
   }
 
   const reload = (collectionName) => {
@@ -92,6 +95,7 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('trackerDocuments', setTrackerDocuments)
     loadInto('trackerGraphics', setTrackerGraphics)
     loadInto('trackerData', setTrackerData)
+    loadInto('chapters', setChapters)
     return () => {
       cancelled = true
     }
@@ -162,6 +166,7 @@ export default function Sidebar({ open = false, onClose }) {
           health: 'not-started',
         }
       : {}),
+    ...(meta.showChapterFields ? { chapterLeader: '', coLeaders: '' } : {}),
   })
 
   const openAddCategory = (collectionName) => {
@@ -202,6 +207,12 @@ export default function Sidebar({ open = false, onClose }) {
               health: category.health || 'not-started',
             }
           : {}),
+        ...(meta.showChapterFields
+          ? {
+              chapterLeader: category.chapterLeader || '',
+              coLeaders: category.coLeaders || '',
+            }
+          : {}),
       },
     })
   }
@@ -238,6 +249,9 @@ export default function Sidebar({ open = false, onClose }) {
             format: form.format,
             health: form.health,
           }
+        : {}),
+      ...(meta.showChapterFields
+        ? { chapterLeader: form.chapterLeader.trim(), coLeaders: form.coLeaders.trim() }
         : {}),
     }
     setSaving(true)
@@ -436,6 +450,20 @@ export default function Sidebar({ open = false, onClose }) {
       emptyLabel: trackerData.length === 0 ? 'Nothing here yet' : undefined,
     })
 
+    next.push({
+      id: 'chapters',
+      label: 'Chapters',
+      actions: sectionActions('chapters', 'Add a chapter'),
+      items: chapters.map((p) => ({
+        to: `/chapters/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: [p.chapterLeader, p.coLeaders].filter(Boolean).join(' · ') || undefined,
+        actions: categoryActions('chapters', p),
+      })),
+      emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
+    })
+
     return next
   }, [
     programs,
@@ -445,6 +473,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerEvents,
     trackerGraphics,
     trackerData,
+    chapters,
     isAdmin,
     isEnabled,
     isExecInboxUser,
@@ -592,9 +621,11 @@ export default function Sidebar({ open = false, onClose }) {
           >
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium text-hae-slate">
-                {CATEGORY_META[editCategoryModal.collectionName].showEventFields
-                  ? 'Event Title'
-                  : 'Name'}
+                {CATEGORY_META[editCategoryModal.collectionName].showChapterFields
+                  ? 'Chapter Name'
+                  : CATEGORY_META[editCategoryModal.collectionName].showEventFields
+                    ? 'Event Title'
+                    : 'Name'}
               </span>
               <input
                 required
@@ -608,22 +639,54 @@ export default function Sidebar({ open = false, onClose }) {
                 className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">
-                {CATEGORY_META[editCategoryModal.collectionName].showEventFields
-                  ? 'HAE Lead'
-                  : 'Overall lead'}
-              </span>
-              <LeadSelect
-                value={editCategoryModal.form.lead}
-                onChange={(lead) =>
-                  setEditCategoryModal({
-                    ...editCategoryModal,
-                    form: { ...editCategoryModal.form, lead },
-                  })
-                }
-              />
-            </label>
+            {CATEGORY_META[editCategoryModal.collectionName].showChapterFields ? null : (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">
+                  {CATEGORY_META[editCategoryModal.collectionName].showEventFields
+                    ? 'HAE Lead'
+                    : 'Overall lead'}
+                </span>
+                <LeadSelect
+                  value={editCategoryModal.form.lead}
+                  onChange={(lead) =>
+                    setEditCategoryModal({
+                      ...editCategoryModal,
+                      form: { ...editCategoryModal.form, lead },
+                    })
+                  }
+                />
+              </label>
+            )}
+            {CATEGORY_META[editCategoryModal.collectionName].showChapterFields ? (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Chapter Leader/s</span>
+                  <input
+                    value={editCategoryModal.form.chapterLeader}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, chapterLeader: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-xs font-medium text-hae-slate">Co-Leaders</span>
+                  <input
+                    value={editCategoryModal.form.coLeaders}
+                    onChange={(e) =>
+                      setEditCategoryModal({
+                        ...editCategoryModal,
+                        form: { ...editCategoryModal.form, coLeaders: e.target.value },
+                      })
+                    }
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                </label>
+              </>
+            ) : null}
             {CATEGORY_META[editCategoryModal.collectionName].showEventFields ? (
               <>
                 <label className="flex flex-col gap-1 text-sm">

@@ -208,7 +208,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hae-ink sm:text-3xl">
             {program.name}
           </h1>
-          {collectionName === 'trackerEvents' ? null : (
+          {collectionName === 'trackerEvents' || collectionName === 'chapters' ? null : (
             <p className="mt-1 text-sm text-hae-slate">
               Overall lead: {namesLabel(program.lead) || '—'}
               {projects.length ? ` · ${projects.length} projects` : ''}
@@ -303,6 +303,29 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   Guest speaker
                 </dt>
                 <dd className="text-hae-ink">{program.guestSpeaker || '—'}</dd>
+              </div>
+            </dl>
+          ) : null}
+
+          {collectionName === 'chapters' ? (
+            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Chapter Leader/s
+                </dt>
+                <dd className="text-hae-ink">{program.chapterLeader || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Co-Leaders
+                </dt>
+                <dd className="text-hae-ink">{program.coLeaders || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Projects
+                </dt>
+                <dd className="text-hae-ink">{projects.length || '—'}</dd>
               </div>
             </dl>
           ) : null}
