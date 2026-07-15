@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
 import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
+import ModuleImportPanel from '../components/ModuleImportPanel'
 import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import { formatDate, formatLongDate, healthBadgeClass, healthLabel, namesLabel } from '../utils'
 
@@ -27,6 +28,7 @@ export default function EventsDashboard() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [expandedId, setExpandedId] = useState(null)
+  const [importOpen, setImportOpen] = useState(false)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'trackerEvents'))
@@ -109,10 +111,30 @@ export default function EventsDashboard() {
             Every HAE event at a glance — click a row to expand its card and checklist.
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={openAdd}>
-          + Add an Event
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="hae-btn-secondary" onClick={() => setImportOpen(true)}>
+            Import Events & Programs
+          </button>
+          <button type="button" className="hae-btn" onClick={openAdd}>
+            + Add an Event
+          </button>
+        </div>
       </header>
+
+      <Modal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Events & Programs"
+      >
+        <ModuleImportPanel
+          moduleIds={['events']}
+          defaultModuleId="events"
+          compact
+          onImported={() => {
+            load()
+          }}
+        />
+      </Modal>
 
       <Modal
         open={open}
