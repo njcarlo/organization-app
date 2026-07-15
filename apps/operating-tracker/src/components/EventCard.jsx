@@ -4,8 +4,17 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
 import EventChecklist from './EventChecklist'
-import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import { formatDate, formatLongDate, healthBadgeClass, healthLabel, namesLabel, toNameList } from '../utils'
+import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import {
+  eventTypeBadgeClass,
+  eventTypeLabel,
+  formatDate,
+  formatLongDate,
+  healthBadgeClass,
+  healthLabel,
+  namesLabel,
+  toNameList,
+} from '../utils'
 
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
@@ -58,6 +67,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       marketingDate: event.marketingDate || '',
       venue: event.venue || '',
       format: event.format || '',
+      type: event.type || '',
       lead: toNameList(event.lead),
       health: event.health || 'not-started',
     })
@@ -81,6 +91,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
         marketingDate: draft.marketingDate,
         venue: draft.venue.trim(),
         format: draft.format,
+        type: draft.type,
         lead: draft.lead,
         health: draft.health,
       })
@@ -111,6 +122,9 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
     { label: 'Time of Event', value: event.eventTime || '—' },
     { label: 'Date of Marketing', value: event.marketingDate ? formatDate(event.marketingDate) : '—' },
     { label: 'Online or In-Person', value: event.format || '—' },
+    ...(event.type
+      ? [{ label: 'Type', value: eventTypeLabel(event.type), badge: eventTypeBadgeClass(event.type) }]
+      : []),
     { label: 'Venue', value: event.venue || '—' },
     { label: 'HAE Lead', value: namesLabel(event.lead) || '—' },
   ]
@@ -195,6 +209,20 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
               {EVENT_FORMAT_OPTIONS.map((f) => (
                 <option key={f} value={f}>
                   {f}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Type">
+            <select
+              className={fieldClass}
+              value={draft.type}
+              onChange={(e) => setDraft({ ...draft, type: e.target.value })}
+            >
+              <option value="">Select type</option>
+              {EVENT_TYPE_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
                 </option>
               ))}
             </select>

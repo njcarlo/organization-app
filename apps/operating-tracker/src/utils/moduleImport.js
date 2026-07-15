@@ -4,7 +4,7 @@
  */
 
 import { toNameList } from '../utils'
-import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
 
 export const MODULE_IMPORT_SPECS = {
   surveys: {
@@ -333,13 +333,14 @@ Venture Lab,Academy Flagship,Jordan,Lee,jordan@harvardae.org,500`,
       'marketingDate',
       'venue',
       'format',
+      'type',
       'lead',
       'health',
       '_id',
     ],
     defaults: { health: 'not-started' },
-    exampleCsv: `name,eventDate,eventTime,marketingDate,venue,format,lead,health
-Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Jamie Lee,ongoing`,
+    exampleCsv: `name,eventDate,eventTime,marketingDate,venue,format,type,lead,health
+Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Live event (in-person),Jamie Lee,ongoing`,
     exampleJson: [
       {
         name: 'Founders Mixer',
@@ -348,6 +349,7 @@ Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Jamie Lee,ongoi
         marketingDate: '2026-08-01',
         venue: 'Boston',
         format: 'In-Person',
+        type: 'Live event (in-person)',
         lead: ['Jamie Lee'],
         health: 'ongoing',
       },
@@ -356,6 +358,7 @@ Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Jamie Lee,ongoi
       const name = String(row.name || '').trim()
       if (!name) return null
       const format = EVENT_FORMAT_OPTIONS.includes(row.format) ? row.format : ''
+      const type = EVENT_TYPE_OPTIONS.some((t) => t.value === row.type) ? row.type : ''
       const health = HEALTH_OPTIONS.some((h) => h.value === row.health)
         ? row.health
         : 'not-started'
@@ -367,6 +370,7 @@ Founders Mixer,2026-08-15,6:00 PM ET,2026-08-01,Boston,In-Person,Jamie Lee,ongoi
         marketingDate: row.marketingDate || '',
         venue: String(row.venue || '').trim(),
         format,
+        type,
         lead: toNameList(row.lead),
         health,
       }

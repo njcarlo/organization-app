@@ -53,6 +53,26 @@ export const HEALTH_ALIASES = {
 
 export const EVENT_FORMAT_OPTIONS = ['Online', 'In-Person']
 
+export const EVENT_TYPE_OPTIONS = [
+  { value: 'Accelerator', label: 'Accelerator', className: 'bg-purple-200 text-purple-900' },
+  { value: 'Live event (in-person)', label: 'Live event (in-person)', className: 'bg-sky-200 text-sky-900' },
+  { value: 'Hybrid event (live and online)', label: 'Hybrid event (live and online)', className: 'bg-cyan-200 text-cyan-900' },
+  { value: 'Podcast', label: 'Podcast', className: 'bg-green-200 text-green-900' },
+  { value: 'Webinar', label: 'Webinar', className: 'bg-amber-200 text-amber-900' },
+  { value: 'Info Sessions', label: 'Info Sessions', className: 'bg-rose-100 text-rose-900' },
+  { value: 'GAC Meeting', label: 'GAC Meeting', className: 'bg-red-200 text-red-900' },
+  { value: 'Global Pitch Event', label: 'Global Pitch Event', className: 'bg-slate-900 text-white' },
+  { value: 'In Person luncheon', label: 'In Person luncheon', className: 'bg-stone-500 text-white' },
+  { value: 'Announcement', label: 'Announcement', className: 'bg-red-900 text-white' },
+  { value: 'Chapter Events', label: 'Chapter Events', className: 'bg-red-600 text-white' },
+  { value: 'Include in Enews', label: 'Include in Enews', className: 'bg-yellow-300 text-black' },
+  { value: 'Startup Bootcamp', label: 'Startup Bootcamp', className: 'bg-yellow-100 text-black' },
+  { value: 'Online Event', label: 'Online Event', className: 'bg-purple-900 text-white' },
+  { value: 'Academy', label: 'Academy', className: 'bg-blue-600 text-white' },
+  { value: 'Social Media Post', label: 'Social Media Post', className: 'bg-indigo-950 text-white' },
+  { value: 'Board', label: 'Board', className: 'bg-blue-800 text-white' },
+]
+
 export const GRAPHICS_STATUS_OPTIONS = [
   'Not Started',
   'Ongoing',

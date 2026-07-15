@@ -1,4 +1,4 @@
-import { HEALTH_ALIASES, TASK_STATUSES, TASK_STATUS_ALIASES } from './constants'
+import { EVENT_TYPE_OPTIONS, HEALTH_ALIASES, TASK_STATUSES, TASK_STATUS_ALIASES } from './constants'
 
 /** Maps legacy task status strings onto the current 5-status hierarchy. */
 export function normalizeTaskStatus(status) {
@@ -157,6 +157,14 @@ export function toNameList(value) {
 /** Formats a lead/owner field as a comma-separated display string. */
 export function namesLabel(value) {
   return toNameList(value).join(', ')
+}
+
+export function eventTypeBadgeClass(type) {
+  return EVENT_TYPE_OPTIONS.find((o) => o.value === type)?.className || 'bg-gray-200 text-black'
+}
+
+export function eventTypeLabel(type) {
+  return EVENT_TYPE_OPTIONS.find((o) => o.value === type)?.label || type || '—'
 }
 
 export function healthLabel(health) {
