@@ -124,15 +124,6 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/events/:itemId"
-                  element={
-                    <CategoryProgramPage
-                      collectionName="trackerEvents"
-                      categoryLabel="Event"
-                    />
-                  }
-                />
-                <Route
                   path="/graphics/:itemId"
                   element={
                     <CategoryProgramPage

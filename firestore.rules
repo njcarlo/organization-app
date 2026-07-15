@@ -92,6 +92,15 @@ service cloud.firestore {
     match /trackerEvents/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerEvents/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /trackerEvents/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /trackerEventChecklist/{id} {
       allow read, write: if isStaff();
     }

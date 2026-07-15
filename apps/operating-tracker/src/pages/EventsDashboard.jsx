@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
 import { Modal, timeOfDayGreeting } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
@@ -7,7 +7,15 @@ import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import { eventTypeBadgeClass, formatLongDate, groupEventsByWeek } from '../utils'
+import {
+  eventTypeBadgeClass,
+  eventTypeLabel,
+  formatLongDate,
+  groupEventsByWeek,
+  healthBadgeClass,
+  healthLabel,
+  namesLabel,
+} from '../utils'
 
 const emptyForm = {
   name: '',
@@ -27,65 +35,7 @@ const emptyForm = {
   health: 'not-started',
 }
 
-const cellInputClass =
-  'w-full min-w-[7rem] rounded border border-transparent bg-transparent px-1.5 py-1 text-sm text-hae-ink outline-none hover:border-hae-line focus:border-hae-crimson focus:bg-white'
-
-const titleInputClass =
-  'w-full min-w-[20rem] rounded border border-transparent bg-transparent px-1.5 py-1 text-sm text-hae-ink outline-none hover:border-hae-line focus:border-hae-crimson focus:bg-white'
-
-const cellSelectClass =
-  'w-full min-w-[7rem] rounded border border-transparent px-1.5 py-1 text-[11px] font-medium outline-none hover:border-hae-line focus:border-hae-crimson cursor-pointer'
-
-const COLUMN_COUNT = 15
-
-function TextCell({ value, onChange, onCommit, placeholder, className = cellInputClass }) {
-  return (
-    <input
-      value={value || ''}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      onBlur={(e) => onCommit(e.target.value)}
-      onClick={(e) => e.stopPropagation()}
-      className={className}
-    />
-  )
-}
-
-function DateCell({ value, onChange }) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(value || '')
-
-  if (editing) {
-    return (
-      <input
-        type="date"
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false)
-          if (draft && draft !== value) onChange(draft)
-        }}
-        onClick={(e) => e.stopPropagation()}
-        className={cellInputClass}
-      />
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation()
-        setDraft(value || '')
-        setEditing(true)
-      }}
-      className="w-full min-w-[8rem] rounded border border-transparent px-1.5 py-1 text-left text-sm leading-snug whitespace-normal text-hae-ink hover:border-hae-line focus:border-hae-crimson"
-    >
-      {formatLongDate(value)}
-    </button>
-  )
-}
+const COLUMN_COUNT = 14
 
 export default function EventsDashboard() {
   const { userProfile } = useAuth()
@@ -122,22 +72,6 @@ export default function EventsDashboard() {
   const expandedEvent = useMemo(
     () => sortedEvents.find((event) => event.id === expandedId) || null,
     [sortedEvents, expandedId]
-  )
-
-  const updateField = useCallback((id, field, value) => {
-    setEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, [field]: value } : ev)))
-  }, [])
-
-  const commitField = useCallback((id, field, value) => {
-    updateDoc(doc(db, 'trackerEvents', id), { [field]: value }).catch(() => {})
-  }, [])
-
-  const setAndCommit = useCallback(
-    (id, field, value) => {
-      updateField(id, field, value)
-      commitField(id, field, value)
-    },
-    [updateField, commitField]
   )
 
   const close = () => {
@@ -237,7 +171,7 @@ export default function EventsDashboard() {
             Events & Programs Dashboard
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-            Every HAE event at a glance, grouped by week — click any cell to edit it directly.
+            Every HAE event at a glance, grouped by week — click a row to open, edit, and comment.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -462,7 +396,6 @@ export default function EventsDashboard() {
               <th className="px-3 py-2 font-semibold">Online or In-Person</th>
               <th className="px-3 py-2 font-semibold">Date of Marketing</th>
               <th className="px-3 py-2 font-semibold">Marketing Status</th>
-              <th className="px-3 py-2 font-semibold">Checklist</th>
             </tr>
           </thead>
           <tbody>
@@ -486,11 +419,12 @@ export default function EventsDashboard() {
                   {group.events.map((event) => (
                     <tr
                       key={event.id}
-                      className={`border-b border-hae-line/70 hover:bg-hae-mist/40 ${
+                      onClick={() => setExpandedId(event.id)}
+                      className={`cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40 ${
                         expandedId === event.id || selectedIds.has(event.id) ? 'bg-hae-mist/40' : ''
                       }`}
                     >
-                      <td className="px-3 py-1 text-center">
+                      <td className="px-3 py-2 text-center">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(event.id)}
@@ -499,127 +433,34 @@ export default function EventsDashboard() {
                           aria-label={`Select ${event.name}`}
                         />
                       </td>
-                      <td className="px-1 py-1">
-                        <DateCell
-                          value={event.eventDate}
-                          onChange={(v) => setAndCommit(event.id, 'eventDate', v)}
-                        />
+                      <td className="px-3 py-2 text-sm whitespace-nowrap text-hae-ink">
+                        {formatLongDate(event.eventDate)}
                       </td>
-                      <td className="px-1 py-1">
-                        <select
-                          value={event.type || ''}
-                          onChange={(e) => setAndCommit(event.id, 'type', e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className={`${cellSelectClass} ${eventTypeBadgeClass(event.type)}`}
+                      <td className="px-3 py-2">
+                        <span
+                          className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${eventTypeBadgeClass(event.type)}`}
                         >
-                          <option value="">—</option>
-                          {EVENT_TYPE_OPTIONS.map((t) => (
-                            <option key={t.value} value={t.value}>
-                              {t.label}
-                            </option>
-                          ))}
-                        </select>
+                          {eventTypeLabel(event.type)}
+                        </span>
                       </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.name}
-                          onChange={(v) => updateField(event.id, 'name', v)}
-                          onCommit={(v) => commitField(event.id, 'name', v.trim())}
-                          className={titleInputClass}
-                        />
+                      <td className="px-3 py-2 text-sm font-medium text-hae-ink">{event.name}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{namesLabel(event.lead) || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.instructor || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.moderator || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.zoomCoordinator || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.time || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.timeZone || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.guestSpeaker || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.format || '—'}</td>
+                      <td className="px-3 py-2 text-sm whitespace-nowrap text-hae-ink">
+                        {formatLongDate(event.marketingDate)}
                       </td>
-                      <td className="px-1 py-1">
-                        <LeadSelect
-                          value={event.lead}
-                          onChange={(lead) => setAndCommit(event.id, 'lead', lead)}
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.instructor}
-                          onChange={(v) => updateField(event.id, 'instructor', v)}
-                          onCommit={(v) => commitField(event.id, 'instructor', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.moderator}
-                          onChange={(v) => updateField(event.id, 'moderator', v)}
-                          onCommit={(v) => commitField(event.id, 'moderator', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.zoomCoordinator}
-                          onChange={(v) => updateField(event.id, 'zoomCoordinator', v)}
-                          onCommit={(v) => commitField(event.id, 'zoomCoordinator', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.time}
-                          onChange={(v) => updateField(event.id, 'time', v)}
-                          onCommit={(v) => commitField(event.id, 'time', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.timeZone}
-                          onChange={(v) => updateField(event.id, 'timeZone', v)}
-                          onCommit={(v) => commitField(event.id, 'timeZone', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.guestSpeaker}
-                          onChange={(v) => updateField(event.id, 'guestSpeaker', v)}
-                          onCommit={(v) => commitField(event.id, 'guestSpeaker', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <select
-                          value={event.format || ''}
-                          onChange={(e) => setAndCommit(event.id, 'format', e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className={cellSelectClass}
+                      <td className="px-3 py-2">
+                        <span
+                          className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${healthBadgeClass(event.health)}`}
                         >
-                          <option value="">—</option>
-                          {EVENT_FORMAT_OPTIONS.map((f) => (
-                            <option key={f} value={f}>
-                              {f}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-1 py-1">
-                        <DateCell
-                          value={event.marketingDate}
-                          onChange={(v) => setAndCommit(event.id, 'marketingDate', v)}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <select
-                          value={event.health || 'not-started'}
-                          onChange={(e) => setAndCommit(event.id, 'health', e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className={cellSelectClass}
-                        >
-                          {HEALTH_OPTIONS.map((h) => (
-                            <option key={h.value} value={h.value}>
-                              {h.label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-3 py-1 text-center">
-                        <button
-                          type="button"
-                          className="text-xs text-hae-slate underline hover:text-hae-crimson"
-                          onClick={() => setExpandedId(event.id)}
-                        >
-                          Open
-                        </button>
+                          {healthLabel(event.health)}
+                        </span>
                       </td>
                     </tr>
                   ))}
