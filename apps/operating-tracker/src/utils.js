@@ -174,10 +174,11 @@ function toISODate(date) {
   return `${y}-${m}-${d}`
 }
 
-/** Monday-start/Sunday-end range containing the given YYYY-MM-DD date. */
+/** Monday-start/Sunday-end range containing the given YYYY-MM-DD date, or null if it doesn't parse. */
 export function getWeekRange(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [y, m, d] = String(dateStr).split('-').map(Number)
   const date = new Date(y, m - 1, d)
+  if (Number.isNaN(date.getTime())) return null
   const diffToMonday = (date.getDay() + 6) % 7
   const start = new Date(date)
   start.setDate(date.getDate() - diffToMonday)
@@ -186,9 +187,14 @@ export function getWeekRange(dateStr) {
   return { start, end }
 }
 
-/** e.g. "Week of Jul 13 – Jul 19, 2026". */
+/** e.g. "Week of Jul 13 – Jul 19, 2026" (or "Dec 29, 2025 – Jan 4, 2026" across a year boundary). */
 export function formatWeekRangeLabel(start, end) {
-  const startLabel = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const spansYearBoundary = start.getFullYear() !== end.getFullYear()
+  const startLabel = start.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: spansYearBoundary ? 'numeric' : undefined,
+  })
   const endLabel = end.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -199,18 +205,19 @@ export function formatWeekRangeLabel(start, end) {
 
 /**
  * Buckets already-date-sorted events into Monday–Sunday week groups.
- * Events without an eventDate are collected into a trailing "No date set" group.
+ * Events without a parseable eventDate are collected into a trailing "No date set" group.
  */
 export function groupEventsByWeek(sortedEvents) {
   const groups = []
   const undated = []
   let currentKey = null
   for (const event of sortedEvents) {
-    if (!event.eventDate) {
+    const range = event.eventDate ? getWeekRange(event.eventDate) : null
+    if (!range) {
       undated.push(event)
       continue
     }
-    const { start, end } = getWeekRange(event.eventDate)
+    const { start, end } = range
     const key = toISODate(start)
     if (key !== currentKey) {
       groups.push({ key, start, end, label: formatWeekRangeLabel(start, end), events: [] })

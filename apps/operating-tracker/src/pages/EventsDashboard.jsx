@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
-import { addDoc, collection, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { Modal, timeOfDayGreeting } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
@@ -7,7 +7,7 @@ import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
-import { eventTypeBadgeClass, groupEventsByWeek } from '../utils'
+import { eventTypeBadgeClass, formatLongDate, groupEventsByWeek } from '../utils'
 
 const emptyForm = {
   name: '',
@@ -30,12 +30,15 @@ const emptyForm = {
 const cellInputClass =
   'w-full min-w-[7rem] rounded border border-transparent bg-transparent px-1.5 py-1 text-sm text-hae-ink outline-none hover:border-hae-line focus:border-hae-crimson focus:bg-white'
 
+const titleInputClass =
+  'w-full min-w-[20rem] rounded border border-transparent bg-transparent px-1.5 py-1 text-sm text-hae-ink outline-none hover:border-hae-line focus:border-hae-crimson focus:bg-white'
+
 const cellSelectClass =
   'w-full min-w-[7rem] rounded border border-transparent px-1.5 py-1 text-[11px] font-medium outline-none hover:border-hae-line focus:border-hae-crimson cursor-pointer'
 
 const COLUMN_COUNT = 15
 
-function TextCell({ value, onChange, onCommit, placeholder }) {
+function TextCell({ value, onChange, onCommit, placeholder, className = cellInputClass }) {
   return (
     <input
       value={value || ''}
@@ -43,20 +46,44 @@ function TextCell({ value, onChange, onCommit, placeholder }) {
       onChange={(e) => onChange(e.target.value)}
       onBlur={(e) => onCommit(e.target.value)}
       onClick={(e) => e.stopPropagation()}
-      className={cellInputClass}
+      className={className}
     />
   )
 }
 
 function DateCell({ value, onChange }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value || '')
+
+  if (editing) {
+    return (
+      <input
+        type="date"
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setEditing(false)
+          if (draft && draft !== value) onChange(draft)
+        }}
+        onClick={(e) => e.stopPropagation()}
+        className={cellInputClass}
+      />
+    )
+  }
+
   return (
-    <input
-      type="date"
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
-      onClick={(e) => e.stopPropagation()}
-      className={cellInputClass}
-    />
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        setDraft(value || '')
+        setEditing(true)
+      }}
+      className="w-full min-w-[8rem] rounded border border-transparent px-1.5 py-1 text-left text-sm leading-snug whitespace-normal text-hae-ink hover:border-hae-line focus:border-hae-crimson"
+    >
+      {formatLongDate(value)}
+    </button>
   )
 }
 
@@ -69,6 +96,8 @@ export default function EventsDashboard() {
   const [form, setForm] = useState(emptyForm)
   const [expandedId, setExpandedId] = useState(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [deleting, setDeleting] = useState(false)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'trackerEvents'))
@@ -120,6 +149,41 @@ export default function EventsDashboard() {
   const openAdd = () => {
     setForm(emptyForm)
     setOpen(true)
+  }
+
+  const toggleSelected = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allSelected = sortedEvents.length > 0 && selectedIds.size === sortedEvents.length
+  const someSelected = selectedIds.size > 0 && !allSelected
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(sortedEvents.map((event) => event.id)))
+  }
+
+  const deleteSelected = async () => {
+    if (deleting || selectedIds.size === 0) return
+    if (
+      !confirm(
+        `Delete ${selectedIds.size} event${selectedIds.size === 1 ? '' : 's'}? Their checklists are not cascade-deleted. This action cannot be undone.`
+      )
+    )
+      return
+    setDeleting(true)
+    try {
+      await Promise.all([...selectedIds].map((id) => deleteDoc(doc(db, 'trackerEvents', id))))
+      setSelectedIds(new Set())
+      if (expandedId && selectedIds.has(expandedId)) setExpandedId(null)
+      await load()
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const save = async (e) => {
@@ -177,6 +241,16 @@ export default function EventsDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {selectedIds.size > 0 ? (
+            <button
+              type="button"
+              className="hae-btn-secondary border-hae-crimson text-hae-crimson disabled:opacity-60"
+              onClick={deleteSelected}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : `Delete selected (${selectedIds.size})`}
+            </button>
+          ) : null}
           <button type="button" className="hae-btn-secondary" onClick={() => setImportOpen(true)}>
             Import Events & Programs
           </button>
@@ -361,9 +435,20 @@ export default function EventsDashboard() {
       </Modal>
 
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
-        <table className="w-full min-w-[1600px] text-left">
+        <table className="w-full min-w-[1500px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
+              <th className="px-3 py-2 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected
+                  }}
+                  onChange={toggleSelectAll}
+                  aria-label="Select all events"
+                />
+              </th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
               <th className="px-3 py-2 font-semibold">Type</th>
               <th className="px-3 py-2 font-semibold">Complete Event Title</th>
@@ -374,7 +459,6 @@ export default function EventsDashboard() {
               <th className="px-3 py-2 font-semibold">Time</th>
               <th className="px-3 py-2 font-semibold">Time Zone</th>
               <th className="px-3 py-2 font-semibold">Guest Speaker</th>
-              <th className="px-3 py-2 font-semibold">Is Regina available?</th>
               <th className="px-3 py-2 font-semibold">Online or In-Person</th>
               <th className="px-3 py-2 font-semibold">Date of Marketing</th>
               <th className="px-3 py-2 font-semibold">Marketing Status</th>
@@ -403,9 +487,18 @@ export default function EventsDashboard() {
                     <tr
                       key={event.id}
                       className={`border-b border-hae-line/70 hover:bg-hae-mist/40 ${
-                        expandedId === event.id ? 'bg-hae-mist/40' : ''
+                        expandedId === event.id || selectedIds.has(event.id) ? 'bg-hae-mist/40' : ''
                       }`}
                     >
+                      <td className="px-3 py-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(event.id)}
+                          onChange={() => toggleSelected(event.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Select ${event.name}`}
+                        />
+                      </td>
                       <td className="px-1 py-1">
                         <DateCell
                           value={event.eventDate}
@@ -432,6 +525,7 @@ export default function EventsDashboard() {
                           value={event.name}
                           onChange={(v) => updateField(event.id, 'name', v)}
                           onCommit={(v) => commitField(event.id, 'name', v.trim())}
+                          className={titleInputClass}
                         />
                       </td>
                       <td className="px-1 py-1">
@@ -481,13 +575,6 @@ export default function EventsDashboard() {
                           value={event.guestSpeaker}
                           onChange={(v) => updateField(event.id, 'guestSpeaker', v)}
                           onCommit={(v) => commitField(event.id, 'guestSpeaker', v.trim())}
-                        />
-                      </td>
-                      <td className="px-1 py-1">
-                        <TextCell
-                          value={event.reginaAvailable}
-                          onChange={(v) => updateField(event.id, 'reginaAvailable', v)}
-                          onCommit={(v) => commitField(event.id, 'reginaAvailable', v.trim())}
                         />
                       </td>
                       <td className="px-1 py-1">
