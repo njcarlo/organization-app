@@ -575,8 +575,11 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'chapters',
       label: 'Chapters',
       actions: sectionActions('chapters', 'Add a chapter'),
+      // Chapters always display alphabetically rather than by saved drag order;
+      // onReorderItems stays wired so drag-and-drop still works in the moment,
+      // but the list re-sorts back to A-Z on the next render/reload.
       onReorderItems: (items) => reorderCategory('chapters', items),
-      items: chapters.map((p) => ({
+      items: [...chapters].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((p) => ({
         id: p.id,
         to: `/chapters/${p.id}`,
         label: p.name,
