@@ -137,7 +137,16 @@ export default function App() {
                   element={
                     <CategoryProgramPage
                       collectionName="trackerData"
-                      categoryLabel="Data"
+                      categoryLabel="Data Projects"
+                    />
+                  }
+                />
+                <Route
+                  path="/board-commitments/:itemId"
+                  element={
+                    <CategoryProgramPage
+                      collectionName="boardCommitments"
+                      categoryLabel="Board Commitments"
                     />
                   }
                 />

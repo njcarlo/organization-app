@@ -27,7 +27,8 @@ const CATEGORY_META = {
   trackerDocuments: { label: 'Document', pathPrefix: '/documents' },
   trackerEvents: { label: 'Event', pathPrefix: '/events', showEventFields: true },
   trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
-  trackerData: { label: 'Data', pathPrefix: '/data' },
+  trackerData: { label: 'Data Project', pathPrefix: '/data' },
+  boardCommitments: { label: 'Board Commitment', pathPrefix: '/board-commitments' },
   chapters: { label: 'Chapter', pathPrefix: '/chapters', showChapterFields: true },
 }
 
@@ -56,6 +57,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [trackerEvents, setTrackerEvents] = useState([])
   const [trackerGraphics, setTrackerGraphics] = useState([])
   const [trackerData, setTrackerData] = useState([])
+  const [boardCommitments, setBoardCommitments] = useState([])
   const [chapters, setChapters] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
@@ -69,6 +71,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerEvents: setTrackerEvents,
     trackerGraphics: setTrackerGraphics,
     trackerData: setTrackerData,
+    boardCommitments: setBoardCommitments,
     chapters: setChapters,
   }
 
@@ -115,6 +118,7 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('trackerDocuments', setTrackerDocuments)
     loadInto('trackerGraphics', setTrackerGraphics)
     loadInto('trackerData', setTrackerData)
+    loadInto('boardCommitments', setBoardCommitments)
     loadInto('chapters', setChapters)
     return () => {
       cancelled = true
@@ -458,8 +462,8 @@ export default function Sidebar({ open = false, onClose }) {
 
     next.push({
       id: 'data',
-      label: 'Data',
-      actions: sectionActions('trackerData', 'Add Data'),
+      label: 'Data Projects',
+      actions: sectionActions('trackerData', 'Add Data Project'),
       onReorderItems: (items) => reorderCategory('trackerData', items),
       items: trackerData.map((p) => ({
         id: p.id,
@@ -470,6 +474,22 @@ export default function Sidebar({ open = false, onClose }) {
         actions: categoryActions('trackerData', p),
       })),
       emptyLabel: trackerData.length === 0 ? 'Nothing here yet' : undefined,
+    })
+
+    next.push({
+      id: 'board-commitments',
+      label: 'Board Commitments',
+      actions: sectionActions('boardCommitments', 'Add Board Commitment'),
+      onReorderItems: (items) => reorderCategory('boardCommitments', items),
+      items: boardCommitments.map((p) => ({
+        id: p.id,
+        to: `/board-commitments/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        actions: categoryActions('boardCommitments', p),
+      })),
+      emptyLabel: boardCommitments.length === 0 ? 'Nothing here yet' : undefined,
     })
 
     next.push({
@@ -497,6 +517,7 @@ export default function Sidebar({ open = false, onClose }) {
     trackerEvents,
     trackerGraphics,
     trackerData,
+    boardCommitments,
     chapters,
     isAdmin,
     isEnabled,
