@@ -12,13 +12,27 @@ import {
 } from 'firebase/firestore'
 import { CommentsPanel, Modal, useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
-import { MODULE_TYPES } from '../constants'
+import { COURSE_STATUSES, LEARNING_PATHS, MODULE_TYPES } from '../constants'
+import { centsToDollarsInput, parseDollarsToCents } from '../money'
 
 const emptyForm = {
   title: '',
   type: 'Lesson',
   order: '',
   resourceUrl: '',
+}
+
+const emptyCourseForm = {
+  name: '',
+  path: 'academy',
+  haeLead: '',
+  startDate: '',
+  facilitator: '',
+  guestSpeaker: '',
+  description: '',
+  durationWeeks: '',
+  status: 'Draft',
+  priceDollars: '',
 }
 
 export default function CourseDetail() {
@@ -31,6 +45,9 @@ export default function CourseDetail() {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editForm, setEditForm] = useState(emptyCourseForm)
 
   const load = useCallback(async () => {
     const [courseSnap, moduleSnap] = await Promise.all([
@@ -100,6 +117,51 @@ export default function CourseDetail() {
     load()
   }
 
+  const openEdit = () => {
+    setEditForm({
+      name: course.name || '',
+      path: course.path || 'academy',
+      haeLead: course.haeLead || '',
+      startDate: course.startDate || '',
+      facilitator: course.facilitator || '',
+      guestSpeaker: course.guestSpeaker || '',
+      description: course.description || '',
+      durationWeeks: course.durationWeeks ?? '',
+      status: course.status || 'Draft',
+      priceDollars: centsToDollarsInput(course.priceCents),
+    })
+    setEditOpen(true)
+  }
+
+  const closeEdit = () => {
+    if (editSaving) return
+    setEditOpen(false)
+  }
+
+  const saveEdit = async (e) => {
+    e.preventDefault()
+    if (!editForm.name.trim() || editSaving) return
+    setEditSaving(true)
+    try {
+      await updateDoc(doc(db, 'courses', courseId), {
+        name: editForm.name.trim(),
+        path: editForm.path,
+        haeLead: editForm.haeLead.trim(),
+        startDate: editForm.startDate,
+        facilitator: editForm.facilitator.trim(),
+        guestSpeaker: editForm.guestSpeaker.trim(),
+        description: editForm.description.trim(),
+        durationWeeks: editForm.durationWeeks ? Number(editForm.durationWeeks) : null,
+        status: editForm.status,
+        priceCents: parseDollarsToCents(editForm.priceDollars),
+      })
+      setEditOpen(false)
+      load()
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading course…</p>
   if (!course) {
     return (
@@ -118,7 +180,14 @@ export default function CourseDetail() {
         >
           ← {canManage ? 'Courses' : 'Catalog'}
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+          <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">{course.name}</h1>
+          {canManage ? (
+            <button type="button" className="hae-btn-secondary" onClick={openEdit}>
+              Edit
+            </button>
+          ) : null}
+        </div>
         <p className="mt-1 text-sm text-hae-slate">
           {course.path === 'flagship' ? 'Flagship Deep Dive' : 'Academy Fast Track'}
           {course.status ? ` · ${course.status}` : ''}
@@ -162,6 +231,108 @@ export default function CourseDetail() {
           </div>
         </dl>
       </div>
+
+      {canManage ? (
+        <Modal
+          open={editOpen}
+          onClose={closeEdit}
+          title="Edit course"
+          busy={editSaving}
+          footer={
+            <>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEdit}
+                disabled={editSaving}
+              >
+                Cancel
+              </button>
+              <button type="submit" form="edit-course-form" className="hae-btn" disabled={editSaving}>
+                {editSaving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          }
+        >
+          <form id="edit-course-form" onSubmit={saveEdit} className="grid gap-3 sm:grid-cols-2">
+            <input
+              required
+              placeholder="Course name"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <select
+              value={editForm.path}
+              onChange={(e) => setEditForm({ ...editForm, path: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm"
+            >
+              {LEARNING_PATHS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="HAE Lead"
+              value={editForm.haeLead}
+              onChange={(e) => setEditForm({ ...editForm, haeLead: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              type="date"
+              placeholder="Start date"
+              value={editForm.startDate}
+              onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm text-hae-slate"
+            />
+            <input
+              placeholder="Instructor"
+              value={editForm.facilitator}
+              onChange={(e) => setEditForm({ ...editForm, facilitator: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              placeholder="Guest speaker"
+              value={editForm.guestSpeaker}
+              onChange={(e) => setEditForm({ ...editForm, guestSpeaker: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              placeholder="Description"
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson sm:col-span-2"
+            />
+            <input
+              type="number"
+              min="1"
+              placeholder="Duration (weeks)"
+              value={editForm.durationWeeks}
+              onChange={(e) => setEditForm({ ...editForm, durationWeeks: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm"
+            />
+            <select
+              value={editForm.status}
+              onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm"
+            >
+              {COURSE_STATUSES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Tuition / price ($)"
+              value={editForm.priceDollars}
+              onChange={(e) => setEditForm({ ...editForm, priceDollars: e.target.value })}
+              className="border border-hae-line px-3 py-2 text-sm sm:col-span-2"
+            />
+          </form>
+        </Modal>
+      ) : null}
 
       {canManage ? (
         <div className="flex flex-wrap gap-2">

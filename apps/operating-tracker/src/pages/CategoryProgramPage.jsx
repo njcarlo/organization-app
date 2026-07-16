@@ -61,6 +61,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [editEventOpen, setEditEventOpen] = useState(false)
   const [eventSaving, setEventSaving] = useState(false)
   const [eventForm, setEventForm] = useState(null)
+  const [editAcademyOpen, setEditAcademyOpen] = useState(false)
+  const [academySaving, setAcademySaving] = useState(false)
+  const [academyForm, setAcademyForm] = useState(null)
 
   const load = useCallback(async () => {
     setError('')
@@ -187,6 +190,47 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, collectionName, itemId))
     navigate('/events-dashboard')
+  }
+
+  const startEditAcademy = () => {
+    setAcademyForm({
+      name: program.name || '',
+      lead: toNameList(program.lead),
+      haeLead: toNameList(program.haeLead),
+      startDate: program.startDate || '',
+      durationWeeks: program.durationWeeks ?? '',
+      instructor: program.instructor || '',
+      guestSpeaker: program.guestSpeaker || '',
+    })
+    setEditAcademyOpen(true)
+  }
+
+  const closeEditAcademy = () => {
+    if (academySaving) return
+    setEditAcademyOpen(false)
+    setAcademyForm(null)
+  }
+
+  const saveEditAcademy = async (e) => {
+    e.preventDefault()
+    if (!academyForm?.name.trim() || academySaving) return
+    setAcademySaving(true)
+    try {
+      await updateDoc(doc(db, collectionName, itemId), {
+        name: academyForm.name.trim(),
+        lead: academyForm.lead,
+        haeLead: academyForm.haeLead,
+        startDate: academyForm.startDate,
+        durationWeeks: academyForm.durationWeeks ? Number(academyForm.durationWeeks) : null,
+        instructor: academyForm.instructor.trim(),
+        guestSpeaker: academyForm.guestSpeaker.trim(),
+      })
+      setEditAcademyOpen(false)
+      setAcademyForm(null)
+      load()
+    } finally {
+      setAcademySaving(false)
+    }
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
@@ -398,8 +442,109 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               </button>
             </>
           ) : null}
+          {collectionName === 'academyPrograms' ? (
+            <button type="button" onClick={startEditAcademy} className="hae-btn-secondary">
+              Edit
+            </button>
+          ) : null}
         </div>
       </header>
+
+      {collectionName === 'academyPrograms' ? (
+        <Modal
+          open={editAcademyOpen}
+          onClose={closeEditAcademy}
+          title="Edit Academy item"
+          busy={academySaving}
+          footer={
+            <>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEditAcademy}
+                disabled={academySaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-academy-form"
+                className="hae-btn"
+                disabled={academySaving}
+              >
+                {academySaving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          }
+        >
+          {academyForm ? (
+            <form id="edit-academy-form" onSubmit={saveEditAcademy} className="grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                <span className="text-xs font-medium text-hae-slate">Name</span>
+                <input
+                  required
+                  value={academyForm.name}
+                  onChange={(e) => setAcademyForm({ ...academyForm, name: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Overall lead</span>
+                <LeadSelect
+                  value={academyForm.lead}
+                  onChange={(lead) => setAcademyForm({ ...academyForm, lead })}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">HAE Lead</span>
+                <LeadSelect
+                  value={academyForm.haeLead}
+                  onChange={(haeLead) => setAcademyForm({ ...academyForm, haeLead })}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Start date</span>
+                <input
+                  type="date"
+                  value={academyForm.startDate}
+                  onChange={(e) => setAcademyForm({ ...academyForm, startDate: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Duration (weeks)</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={academyForm.durationWeeks}
+                  onChange={(e) =>
+                    setAcademyForm({ ...academyForm, durationWeeks: e.target.value })
+                  }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Instructor</span>
+                <input
+                  value={academyForm.instructor}
+                  onChange={(e) => setAcademyForm({ ...academyForm, instructor: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Guest speaker</span>
+                <input
+                  value={academyForm.guestSpeaker}
+                  onChange={(e) =>
+                    setAcademyForm({ ...academyForm, guestSpeaker: e.target.value })
+                  }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+            </form>
+          ) : null}
+        </Modal>
+      ) : null}
 
       {collectionName === 'trackerEvents' ? (
         <Modal
