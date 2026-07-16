@@ -25,7 +25,7 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
  *
  * sections: [
  *   { id, label, to?, end?, icon?, emptyLabel?, actions?: [{ key, label, onClick, danger? }],
- *     onReorderItems?: (orderedItems) => void,
+ *     onReorderItems?: (orderedItems) => void, onRename?: (newLabel) => void,
  *     items?: [{ id?, to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }] }
  * ]
  *
@@ -34,6 +34,12 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
  * without one (e.g. a fixed "Dashboard" link ahead of a dynamic list) stay
  * pinned in place. `onReorderItems` is called with the full reordered
  * items array so the caller can persist the new order.
+ *
+ * Sections themselves are drag-reorderable against each other when
+ * `onReorderSections` is passed to `SideNav` — only sections carrying
+ * `draggable: true` become movable; others (e.g. a fixed "Workspace" group)
+ * stay pinned in place. It's called with the full reordered sections array.
+ * Sections with `onRename` get an inline rename affordance on hover.
  */
 export default function SideNav({
   open = false,
@@ -45,6 +51,7 @@ export default function SideNav({
   roleLabel,
   onLogout,
   helpTo = '/help',
+  onReorderSections,
 }) {
   const location = useLocation()
 
@@ -84,6 +91,20 @@ export default function SideNav({
   }
 
   const close = () => onClose?.()
+
+  const [renamingSectionId, setRenamingSectionId] = useState(null)
+  const [renameDraft, setRenameDraft] = useState('')
+
+  const startRename = (section) => {
+    setRenamingSectionId(section.id)
+    setRenameDraft(section.label)
+  }
+  const commitRename = (section) => {
+    const value = renameDraft.trim()
+    setRenamingSectionId(null)
+    if (value && value !== section.label) section.onRename?.(value)
+  }
+  const cancelRename = () => setRenamingSectionId(null)
 
   const [openMenuKey, setOpenMenuKey] = useState(null)
   const [menuRect, setMenuRect] = useState(null)
@@ -133,6 +154,222 @@ export default function SideNav({
     }
   }, [openMenuKey])
 
+  const renderSection = (section, dragProps = {}) => {
+    const { dragHandle, wrapperRef, wrapperStyle, isDragging } = dragProps
+    const hasChildren = Array.isArray(section.items)
+    if (!hasChildren && section.to) {
+      return (
+        <NavLink
+          key={section.id}
+          to={section.to}
+          end={section.end}
+          onClick={close}
+          className={({ isActive }) =>
+            `relative flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-hae-crimson text-white shadow-[0_4px_12px_rgba(184,0,40,0.25)]'
+                : 'text-hae-ink/80 hover:bg-hae-mist hover:text-hae-ink'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <span
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                  isActive
+                    ? 'bg-white/20 text-white'
+                    : 'bg-hae-mist text-hae-slate'
+                }`}
+              >
+                <NavIcon
+                  name={iconForNavItem(section)}
+                  className="[&>svg]:h-4 [&>svg]:w-4"
+                />
+              </span>
+              <span className="min-w-0 flex-1 truncate">{section.label}</span>
+            </>
+          )}
+        </NavLink>
+      )
+    }
+
+    const isOpen = expanded.has(section.id)
+    const groupActive = activeGroupIds.has(section.id)
+    const childItems = section.items || []
+    const isRenaming = renamingSectionId === section.id
+    const menuActions = [
+      ...(section.onRename
+        ? [{ key: 'rename', label: 'Rename section', onClick: () => startRename(section) }]
+        : []),
+      ...(Array.isArray(section.actions) ? section.actions : []),
+    ]
+    const menuKey = `section:${section.id}`
+    const menuOpen = openMenuKey === menuKey
+
+    return (
+      <div
+        key={section.id}
+        ref={wrapperRef}
+        style={wrapperStyle}
+        className={`group/section rounded-2xl ${isDragging ? 'z-10 opacity-90' : ''}`}
+      >
+        <div className="relative flex items-center gap-0.5">
+          {dragHandle ? (
+            <button
+              type="button"
+              {...dragHandle.attributes}
+              {...dragHandle.listeners}
+              ref={dragHandle.setActivatorNodeRef}
+              aria-label={`Reorder ${section.label}`}
+              className="flex h-8 w-4 shrink-0 touch-none items-center justify-center rounded text-hae-slate/50 opacity-0 hover:text-hae-ink group-hover/section:opacity-100 active:cursor-grabbing cursor-grab"
+            >
+              <NavIcon name="grip" className="[&>svg]:h-4 [&>svg]:w-4" />
+            </button>
+          ) : (
+            <span className="h-8 w-4 shrink-0" aria-hidden />
+          )}
+          {isRenaming ? (
+            <input
+              autoFocus
+              value={renameDraft}
+              onChange={(e) => setRenameDraft(e.target.value)}
+              onBlur={() => commitRename(section)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  commitRename(section)
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  cancelRename()
+                }
+              }}
+              className="min-w-0 flex-1 rounded-xl border border-hae-crimson/40 bg-white px-2.5 py-2 text-sm font-semibold text-hae-ink outline-none"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => toggle(section.id)}
+              aria-expanded={isOpen}
+              className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl py-2.5 pl-3 pr-3 text-left text-sm font-semibold transition-colors ${
+                groupActive || isOpen
+                  ? 'text-hae-crimson'
+                  : 'text-hae-ink hover:bg-hae-mist'
+              }`}
+            >
+              <span className="min-w-0 flex-1 truncate">{section.label}</span>
+              <span
+                className={groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'}
+              >
+                <Chevron open={isOpen} />
+              </span>
+            </button>
+          )}
+          {!isRenaming && menuActions.length > 0 ? (
+            <div
+              className="relative shrink-0"
+              ref={menuOpen ? buttonRef : undefined}
+            >
+              <button
+                type="button"
+                onClick={(e) => toggleMenu(menuKey, e.currentTarget, menuActions.length)}
+                aria-label={`${section.label} actions`}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                data-open={menuOpen}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover/section:opacity-100 data-[open=true]:bg-hae-mist data-[open=true]:opacity-100"
+              >
+                <NavIcon name="kebab" className="[&>svg]:h-4 [&>svg]:w-4" />
+              </button>
+              {menuOpen && menuRect
+                ? createPortal(
+                    <div
+                      ref={menuRef}
+                      role="menu"
+                      style={{
+                        position: 'fixed',
+                        top: menuRect.top ?? undefined,
+                        bottom: menuRect.bottom ?? undefined,
+                        right: menuRect.right,
+                      }}
+                      className="z-50 w-44 overflow-hidden rounded-2xl border border-transparent bg-white py-1 shadow-xl"
+                    >
+                      {menuActions.map((action) => (
+                        <button
+                          key={action.key}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            closeMenu()
+                            action.onClick()
+                          }}
+                          className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
+                            action.danger ? 'text-hae-red' : 'text-hae-ink'
+                          }`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>,
+                    document.body
+                  )
+                : null}
+            </div>
+          ) : (
+            <span className="h-7 w-7 shrink-0" aria-hidden />
+          )}
+        </div>
+
+        {isOpen ? (
+          <div className="mb-2 mt-0.5 space-y-0.5">
+            {childItems.length === 0 ? (
+              <p className="px-3 py-4 text-center text-xs text-hae-slate">
+                {section.emptyLabel || 'Nothing here yet'}
+              </p>
+            ) : (
+              (() => {
+                const reorderable = typeof section.onReorderItems === 'function'
+                const staticItems = reorderable
+                  ? childItems.filter((it) => it.id == null)
+                  : childItems
+                const draggableItems = reorderable
+                  ? childItems.filter((it) => it.id != null)
+                  : []
+                const renderRow = (item, dragProps) => (
+                  <NavItemRow
+                    key={item.to}
+                    item={item}
+                    active={pathMatches(location.pathname, item.to, item.end)}
+                    close={close}
+                    openMenuKey={openMenuKey}
+                    toggleMenu={toggleMenu}
+                    closeMenu={closeMenu}
+                    menuRect={menuRect}
+                    buttonRef={buttonRef}
+                    menuRef={menuRef}
+                    {...dragProps}
+                  />
+                )
+                return (
+                  <>
+                    {staticItems.map((item) => renderRow(item))}
+                    {draggableItems.length > 0 ? (
+                      <SortableItemList
+                        items={draggableItems}
+                        onReorder={section.onReorderItems}
+                        renderItem={renderRow}
+                      />
+                    ) : null}
+                  </>
+                )
+              })()
+            )}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-80 max-w-[85vw] flex-col overflow-hidden border-r-0 bg-white shadow-[4px_0_24px_rgba(26,26,26,0.06)] transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:max-w-none lg:translate-x-0 lg:shrink-0 lg:shadow-none ${
@@ -165,135 +402,27 @@ export default function SideNav({
         aria-label={`${title} navigation`}
       >
         <div className="space-y-1">
-          {sections.map((section) => {
-            const hasChildren = Array.isArray(section.items)
-            if (!hasChildren && section.to) {
-              return (
-                <NavLink
-                  key={section.id}
-                  to={section.to}
-                  end={section.end}
-                  onClick={close}
-                  className={({ isActive }) =>
-                    `relative flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-hae-crimson text-white shadow-[0_4px_12px_rgba(184,0,40,0.25)]'
-                        : 'text-hae-ink/80 hover:bg-hae-mist hover:text-hae-ink'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span
-                        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                          isActive
-                            ? 'bg-white/20 text-white'
-                            : 'bg-hae-mist text-hae-slate'
-                        }`}
-                      >
-                        <NavIcon
-                          name={iconForNavItem(section)}
-                          className="[&>svg]:h-4 [&>svg]:w-4"
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1 truncate">{section.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              )
-            }
-
-            const isOpen = expanded.has(section.id)
-            const groupActive = activeGroupIds.has(section.id)
-            const childItems = section.items || []
-            const sectionAction = Array.isArray(section.actions) ? section.actions[0] : undefined
-
+          {(() => {
+            const reorderableSections = typeof onReorderSections === 'function'
+            const staticSections = reorderableSections
+              ? sections.filter((s) => !s.draggable)
+              : sections
+            const draggableSections = reorderableSections
+              ? sections.filter((s) => s.draggable)
+              : []
             return (
-              <div key={section.id} className="group/section rounded-2xl">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => toggle(section.id)}
-                    aria-expanded={isOpen}
-                    className={`flex w-full items-center justify-between gap-2 rounded-2xl py-2.5 pl-3 text-left text-sm font-semibold transition-colors ${
-                      sectionAction ? 'pr-9' : 'pr-3'
-                    } ${
-                      groupActive || isOpen
-                        ? 'text-hae-crimson'
-                        : 'text-hae-ink hover:bg-hae-mist'
-                    }`}
-                  >
-                    <span className="min-w-0 flex-1 truncate">{section.label}</span>
-                    <span
-                      className={
-                        groupActive || isOpen ? 'text-hae-crimson' : 'text-hae-slate'
-                      }
-                    >
-                      <Chevron open={isOpen} />
-                    </span>
-                  </button>
-                  {sectionAction ? (
-                    <button
-                      type="button"
-                      onClick={sectionAction.onClick}
-                      aria-label={sectionAction.label}
-                      title={sectionAction.label}
-                      className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover/section:opacity-100"
-                    >
-                      <NavIcon name="plus" className="[&>svg]:h-4 [&>svg]:w-4" />
-                    </button>
-                  ) : null}
-                </div>
-
-                {isOpen ? (
-                  <div className="mb-2 mt-0.5 space-y-0.5">
-                    {childItems.length === 0 ? (
-                      <p className="px-3 py-4 text-center text-xs text-hae-slate">
-                        {section.emptyLabel || 'Nothing here yet'}
-                      </p>
-                    ) : (
-                      (() => {
-                        const reorderable = typeof section.onReorderItems === 'function'
-                        const staticItems = reorderable
-                          ? childItems.filter((it) => it.id == null)
-                          : childItems
-                        const draggableItems = reorderable
-                          ? childItems.filter((it) => it.id != null)
-                          : []
-                        const renderRow = (item, dragProps) => (
-                          <NavItemRow
-                            key={item.to}
-                            item={item}
-                            active={pathMatches(location.pathname, item.to, item.end)}
-                            close={close}
-                            openMenuKey={openMenuKey}
-                            toggleMenu={toggleMenu}
-                            closeMenu={closeMenu}
-                            menuRect={menuRect}
-                            buttonRef={buttonRef}
-                            menuRef={menuRef}
-                            {...dragProps}
-                          />
-                        )
-                        return (
-                          <>
-                            {staticItems.map((item) => renderRow(item))}
-                            {draggableItems.length > 0 ? (
-                              <SortableItemList
-                                items={draggableItems}
-                                onReorder={section.onReorderItems}
-                                renderItem={renderRow}
-                              />
-                            ) : null}
-                          </>
-                        )
-                      })()
-                    )}
-                  </div>
+              <>
+                {staticSections.map((section) => renderSection(section))}
+                {draggableSections.length > 0 ? (
+                  <SortableSectionList
+                    sections={draggableSections}
+                    onReorder={onReorderSections}
+                    renderSection={renderSection}
+                  />
                 ) : null}
-              </div>
+              </>
             )
-          })}
+          })()}
         </div>
       </nav>
 
@@ -487,6 +616,49 @@ function SortableItemList({ items, onReorder, renderItem }) {
       <SortableContext items={items.map((it) => it.id)} strategy={verticalListSortingStrategy}>
         {items.map((item) => (
           <SortableNavItem key={item.id} item={item} renderItem={renderItem} />
+        ))}
+      </SortableContext>
+    </DndContext>
+  )
+}
+
+function SortableSectionItem({ section, renderSection }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id })
+
+  return renderSection(section, {
+    wrapperRef: setNodeRef,
+    wrapperStyle: { transform: CSS.Transform.toString(transform), transition },
+    isDragging,
+    dragHandle: { attributes, listeners, setActivatorNodeRef },
+  })
+}
+
+function SortableSectionList({ sections, onReorder, renderSection }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+  )
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return
+    const oldIndex = sections.findIndex((s) => s.id === active.id)
+    const newIndex = sections.findIndex((s) => s.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    onReorder(arrayMove(sections, oldIndex, newIndex))
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+        {sections.map((section) => (
+          <SortableSectionItem key={section.id} section={section} renderSection={renderSection} />
         ))}
       </SortableContext>
     </DndContext>
