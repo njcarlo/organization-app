@@ -128,6 +128,18 @@ service cloud.firestore {
     match /chapters/{id} {
       allow read, write: if isStaff();
     }
+    match /chapterLeaders/{id} {
+      allow read, write: if isStaff();
+    }
+    match /chapterLeaders/{id}/comments/{commentId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    match /chapterLeaders/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     // Per-user sidebar section order (personal chrome; doc id == uid).
     match /sidebarOrder/{uid} {
       allow read, write: if isStaff() && request.auth.uid == uid;

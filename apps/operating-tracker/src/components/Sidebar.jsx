@@ -576,14 +576,17 @@ export default function Sidebar({ open = false, onClose }) {
       label: 'Chapters',
       actions: sectionActions('chapters', 'Add a chapter'),
       onReorderItems: (items) => reorderCategory('chapters', items),
-      items: chapters.map((p) => ({
-        id: p.id,
-        to: `/chapters/${p.id}`,
-        label: p.name,
-        icon: 'folder',
-        description: [p.chapterLeader, p.coLeaders].filter(Boolean).join(' · ') || undefined,
-        actions: categoryActions('chapters', p),
-      })),
+      items: [
+        { to: '/chapter-leader-dashboard', label: 'Chapter Leader Dashboard', icon: 'chart' },
+        ...chapters.map((p) => ({
+          id: p.id,
+          to: `/chapters/${p.id}`,
+          label: p.name,
+          icon: 'folder',
+          description: [p.chapterLeader, p.coLeaders].filter(Boolean).join(' · ') || undefined,
+          actions: categoryActions('chapters', p),
+        })),
+      ],
       emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
     })
 
