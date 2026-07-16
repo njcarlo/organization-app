@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router-dom'
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
 
 /**
@@ -11,8 +25,15 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
  *
  * sections: [
  *   { id, label, to?, end?, icon?, emptyLabel?, actions?: [{ key, label, onClick, danger? }],
- *     items?: [{ to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }] }
+ *     onReorderItems?: (orderedItems) => void,
+ *     items?: [{ id?, to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }] }
  * ]
+ *
+ * Items are drag-reorderable within a section when the section provides
+ * `onReorderItems` — only items carrying an `id` become draggable; items
+ * without one (e.g. a fixed "Dashboard" link ahead of a dynamic list) stay
+ * pinned in place. `onReorderItems` is called with the full reordered
+ * items array so the caller can persist the new order.
  */
 export default function SideNav({
   open = false,
@@ -231,103 +252,42 @@ export default function SideNav({
                         {section.emptyLabel || 'Nothing here yet'}
                       </p>
                     ) : (
-                      childItems.map((item) => {
-                        const icon = iconForNavItem(item)
-                        const active = pathMatches(
-                          location.pathname,
-                          item.to,
-                          item.end
+                      (() => {
+                        const reorderable = typeof section.onReorderItems === 'function'
+                        const staticItems = reorderable
+                          ? childItems.filter((it) => it.id == null)
+                          : childItems
+                        const draggableItems = reorderable
+                          ? childItems.filter((it) => it.id != null)
+                          : []
+                        const renderRow = (item, dragProps) => (
+                          <NavItemRow
+                            key={item.to}
+                            item={item}
+                            active={pathMatches(location.pathname, item.to, item.end)}
+                            close={close}
+                            openMenuKey={openMenuKey}
+                            toggleMenu={toggleMenu}
+                            closeMenu={closeMenu}
+                            menuRect={menuRect}
+                            buttonRef={buttonRef}
+                            menuRef={menuRef}
+                            {...dragProps}
+                          />
                         )
-                        const hasActions = Array.isArray(item.actions) && item.actions.length > 0
-                        const menuKey = item.to
-                        const menuOpen = openMenuKey === menuKey
                         return (
-                          <div key={item.to} className="group relative">
-                            <NavLink
-                              to={item.to}
-                              end={item.end}
-                              onClick={close}
-                              title={item.description || item.label}
-                              className={`relative flex items-center gap-2.5 rounded-2xl py-2 pl-3 text-sm transition-colors ${
-                                hasActions ? 'pr-9' : 'pr-3'
-                              } ${
-                                active
-                                  ? 'bg-hae-crimson text-white font-semibold shadow-[0_4px_12px_rgba(184,0,40,0.22)]'
-                                  : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
-                              }`}
-                            >
-                              <span
-                                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                                  active
-                                    ? 'bg-white/20 text-white'
-                                    : 'bg-hae-mist/80 text-hae-slate'
-                                }`}
-                              >
-                                <NavIcon
-                                  name={icon}
-                                  className="[&>svg]:h-4 [&>svg]:w-4"
-                                />
-                              </span>
-                              <span className="min-w-0 flex-1 truncate leading-snug">
-                                {item.label}
-                              </span>
-                            </NavLink>
-                            {hasActions ? (
-                              <div
-                                className="absolute right-1 top-1/2 -translate-y-1/2"
-                                ref={menuOpen ? buttonRef : undefined}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={(e) =>
-                                    toggleMenu(menuKey, e.currentTarget, item.actions.length)
-                                  }
-                                  aria-label={`${item.label} actions`}
-                                  aria-haspopup="menu"
-                                  aria-expanded={menuOpen}
-                                  data-open={menuOpen}
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover:opacity-100 data-[open=true]:bg-hae-mist data-[open=true]:opacity-100"
-                                >
-                                  <NavIcon name="kebab" className="[&>svg]:h-4 [&>svg]:w-4" />
-                                </button>
-                                {menuOpen && menuRect
-                                  ? createPortal(
-                                      <div
-                                        ref={menuRef}
-                                        role="menu"
-                                        style={{
-                                          position: 'fixed',
-                                          top: menuRect.top ?? undefined,
-                                          bottom: menuRect.bottom ?? undefined,
-                                          right: menuRect.right,
-                                        }}
-                                        className="z-50 w-44 overflow-hidden rounded-2xl border border-transparent bg-white py-1 shadow-xl"
-                                      >
-                                        {item.actions.map((action) => (
-                                          <button
-                                            key={action.key}
-                                            type="button"
-                                            role="menuitem"
-                                            onClick={() => {
-                                              closeMenu()
-                                              action.onClick()
-                                            }}
-                                            className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
-                                              action.danger ? 'text-hae-red' : 'text-hae-ink'
-                                            }`}
-                                          >
-                                            {action.label}
-                                          </button>
-                                        ))}
-                                      </div>,
-                                      document.body
-                                    )
-                                  : null}
-                              </div>
+                          <>
+                            {staticItems.map((item) => renderRow(item))}
+                            {draggableItems.length > 0 ? (
+                              <SortableItemList
+                                items={draggableItems}
+                                onReorder={section.onReorderItems}
+                                renderItem={renderRow}
+                              />
                             ) : null}
-                          </div>
+                          </>
                         )
-                      })
+                      })()
                     )}
                   </div>
                 ) : null}
@@ -373,6 +333,164 @@ function pathMatches(pathname, to, end) {
   if (!to) return false
   if (end) return pathname === to
   return pathname === to || pathname.startsWith(`${to}/`)
+}
+
+function NavItemRow({
+  item,
+  active,
+  close,
+  openMenuKey,
+  toggleMenu,
+  closeMenu,
+  menuRect,
+  buttonRef,
+  menuRef,
+  dragHandle,
+  wrapperRef,
+  wrapperStyle,
+  isDragging,
+}) {
+  const icon = iconForNavItem(item)
+  const hasActions = Array.isArray(item.actions) && item.actions.length > 0
+  const menuKey = item.to
+  const menuOpen = openMenuKey === menuKey
+
+  return (
+    <div
+      ref={wrapperRef}
+      style={wrapperStyle}
+      className={`group relative flex items-center gap-0.5 ${isDragging ? 'z-10 opacity-90' : ''}`}
+    >
+      {dragHandle ? (
+        <button
+          type="button"
+          {...dragHandle.attributes}
+          {...dragHandle.listeners}
+          ref={dragHandle.setActivatorNodeRef}
+          aria-label={`Reorder ${item.label}`}
+          className="flex h-8 w-4 shrink-0 touch-none items-center justify-center rounded text-hae-slate/50 opacity-0 hover:text-hae-ink group-hover:opacity-100 active:cursor-grabbing cursor-grab"
+        >
+          <NavIcon name="grip" className="[&>svg]:h-4 [&>svg]:w-4" />
+        </button>
+      ) : null}
+      <NavLink
+        to={item.to}
+        end={item.end}
+        onClick={close}
+        title={item.description || item.label}
+        className={`relative flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl py-2 pl-3 text-sm transition-colors ${
+          hasActions ? 'pr-9' : 'pr-3'
+        } ${
+          active
+            ? 'bg-hae-crimson text-white font-semibold shadow-[0_4px_12px_rgba(184,0,40,0.22)]'
+            : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
+        }`}
+      >
+        <span
+          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+            active ? 'bg-white/20 text-white' : 'bg-hae-mist/80 text-hae-slate'
+          }`}
+        >
+          <NavIcon name={icon} className="[&>svg]:h-4 [&>svg]:w-4" />
+        </span>
+        <span className="min-w-0 flex-1 truncate leading-snug">{item.label}</span>
+      </NavLink>
+      {hasActions ? (
+        <div
+          className="absolute right-1 top-1/2 -translate-y-1/2"
+          ref={menuOpen ? buttonRef : undefined}
+        >
+          <button
+            type="button"
+            onClick={(e) => toggleMenu(menuKey, e.currentTarget, item.actions.length)}
+            aria-label={`${item.label} actions`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            data-open={menuOpen}
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover:opacity-100 data-[open=true]:bg-hae-mist data-[open=true]:opacity-100"
+          >
+            <NavIcon name="kebab" className="[&>svg]:h-4 [&>svg]:w-4" />
+          </button>
+          {menuOpen && menuRect
+            ? createPortal(
+                <div
+                  ref={menuRef}
+                  role="menu"
+                  style={{
+                    position: 'fixed',
+                    top: menuRect.top ?? undefined,
+                    bottom: menuRect.bottom ?? undefined,
+                    right: menuRect.right,
+                  }}
+                  className="z-50 w-44 overflow-hidden rounded-2xl border border-transparent bg-white py-1 shadow-xl"
+                >
+                  {item.actions.map((action) => (
+                    <button
+                      key={action.key}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        closeMenu()
+                        action.onClick()
+                      }}
+                      className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
+                        action.danger ? 'text-hae-red' : 'text-hae-ink'
+                      }`}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              )
+            : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function SortableNavItem({ item, renderItem }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  return renderItem(item, {
+    wrapperRef: setNodeRef,
+    wrapperStyle: { transform: CSS.Transform.toString(transform), transition },
+    isDragging,
+    dragHandle: { attributes, listeners, setActivatorNodeRef },
+  })
+}
+
+function SortableItemList({ items, onReorder, renderItem }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+  )
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return
+    const oldIndex = items.findIndex((it) => it.id === active.id)
+    const newIndex = items.findIndex((it) => it.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    onReorder(arrayMove(items, oldIndex, newIndex))
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={items.map((it) => it.id)} strategy={verticalListSortingStrategy}>
+        {items.map((item) => (
+          <SortableNavItem key={item.id} item={item} renderItem={renderItem} />
+        ))}
+      </SortableContext>
+    </DndContext>
+  )
 }
 
 /**
