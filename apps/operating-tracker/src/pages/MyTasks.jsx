@@ -62,7 +62,6 @@ export default function MyTasks() {
   const [statusFilter, setStatusFilter] = useState('Active')
   const [page, setPage] = useState(0)
   const [editingId, setEditingId] = useState(null)
-  const [editSurface, setEditSurface] = useState(null) // 'inline' | 'popup'
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -86,7 +85,7 @@ export default function MyTasks() {
     const taskId = searchParams.get('task')
     if (!taskId || !tasks.length) return
     const target = tasks.find((t) => t.id === taskId)
-    if (target) startEdit(target, 'popup')
+    if (target) startEdit(target)
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
@@ -185,11 +184,10 @@ export default function MyTasks() {
     safePage * PAGE_SIZE + PAGE_SIZE
   )
 
-  const colCount = isStaff && viewAll ? 12 : 11
+  const colCount = isStaff && viewAll ? 10 : 9
 
-  const startEdit = (task, surface = 'inline') => {
+  const startEdit = (task) => {
     setEditingId(task.id)
-    setEditSurface(surface)
     setDraft({
       name: task.name || '',
       owner: toNameList(task.owner),
@@ -205,7 +203,6 @@ export default function MyTasks() {
 
   const cancelEdit = () => {
     setEditingId(null)
-    setEditSurface(null)
     setDraft(null)
   }
 
@@ -364,7 +361,7 @@ export default function MyTasks() {
               key={task.id}
               type="button"
               className="hae-mobile-card"
-              onClick={() => startEdit(task, 'popup')}
+              onClick={() => startEdit(task)}
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
@@ -414,7 +411,7 @@ export default function MyTasks() {
       </div>
 
       <Modal
-        open={editSurface === 'popup' && Boolean(editingId && draft)}
+        open={Boolean(editingId && draft)}
         onClose={cancelEdit}
         title="Edit task"
         busy={saving}
@@ -552,12 +549,10 @@ export default function MyTasks() {
       {/* Desktop: scrollable table with sticky first columns */}
       <div className="hae-desktop-only overflow-hidden rounded-xl border border-hae-line bg-white">
         <div className="hae-table-scroll">
-          <table className="w-full min-w-[720px] text-left lg:min-w-[1100px]">
+          <table className="w-full min-w-[640px] text-left lg:min-w-[980px]">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
-                <th className="w-6 px-1 py-2" />
-                <th className="px-3 py-2 font-semibold">Priority</th>
-                <th className="px-3 py-2 font-semibold">Task</th>
+                <th className="min-w-[200px] px-3 py-2 font-semibold">Task</th>
                 {isStaff && viewAll ? (
                   <th className="hae-col-sm-hide px-3 py-2 font-semibold">Owner</th>
                 ) : null}
@@ -579,129 +574,7 @@ export default function MyTasks() {
                   </td>
                 </tr>
               ) : (
-                pageItems.map((task) =>
-                  editingId === task.id && draft && editSurface === 'inline' ? (
-                    <tr key={task.id} className="bg-amber-50/80">
-                      <td colSpan={colCount} className="px-4 py-4">
-                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-semibold tracking-wide text-hae-slate uppercase">
-                              Editing task
-                            </p>
-                            <p className="text-sm text-hae-slate">
-                              {programNameOf(task, programsById)}
-                              {projectNameOf(task, projectsById)
-                                ? ` · ${projectNameOf(task, projectsById)}`
-                                : ''}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={cancelEdit} className="hae-btn-secondary">
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              disabled={saving}
-                              onClick={saveEdit}
-                              className="hae-btn disabled:opacity-60"
-                            >
-                              {saving ? 'Saving…' : 'Save'}
-                            </button>
-                          </div>
-                        </div>
-                        <div
-                          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                          onKeyDown={onEditKeyDown}
-                        >
-                          <Field label="Task" className="sm:col-span-2">
-                            <input
-                              autoFocus
-                              className={fieldClass}
-                              value={draft.name}
-                              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Owner">
-                            <LeadSelect
-                              className={fieldClass}
-                              value={draft.owner}
-                              onChange={(owner) => setDraft({ ...draft, owner })}
-                            />
-                          </Field>
-                          <Field label="Priority">
-                            <select
-                              className={fieldClass}
-                              value={draft.priority}
-                              onChange={(e) => setDraft({ ...draft, priority: e.target.value })}
-                            >
-                              <option value="">Auto</option>
-                              <option value="HIGH">HIGH</option>
-                              <option value="MEDIUM">MEDIUM</option>
-                              <option value="LOW">LOW</option>
-                            </select>
-                          </Field>
-                          <Field label="Status">
-                            <select
-                              className={fieldClass}
-                              value={draft.status}
-                              onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-                            >
-                              {TASK_STATUSES.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </select>
-                          </Field>
-                          <Field label="Due">
-                            <input
-                              type="date"
-                              className={fieldClass}
-                              value={draft.dueDate}
-                              onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Waiting on">
-                            <input
-                              className={fieldClass}
-                              value={draft.waitingOn}
-                              onChange={(e) => setDraft({ ...draft, waitingOn: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Leadership">
-                            <select
-                              className={fieldClass}
-                              value={draft.leadershipAttention}
-                              onChange={(e) =>
-                                setDraft({ ...draft, leadershipAttention: e.target.value })
-                              }
-                            >
-                              {LEADERSHIP_ATTENTION.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </select>
-                          </Field>
-                          <Field label="Next action">
-                            <input
-                              className={fieldClass}
-                              value={draft.nextAction}
-                              onChange={(e) => setDraft({ ...draft, nextAction: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Notes" className="sm:col-span-2 lg:col-span-3">
-                            <textarea
-                              className={fieldClass}
-                              rows={3}
-                              value={draft.notes}
-                              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-                            />
-                          </Field>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
+                pageItems.map((task) => (
                     <tr
                       key={task.id}
                       {...dragHandlers(task.id)}
@@ -713,23 +586,26 @@ export default function MyTasks() {
                           : ''
                       }`}
                     >
-                      <td className="px-1 py-2 text-hae-slate/50">
-                        <span className="cursor-grab select-none" aria-hidden="true">
-                          ⠿
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                        >
-                          {effectivePriority(task)}
-                          {task.priority ? (
-                            <span className="text-[9px] opacity-70">M</span>
-                          ) : null}
-                        </span>
-                      </td>
                       <td className="px-3 py-2 text-sm font-medium">
-                        <span className="line-clamp-2">{task.name}</span>
+                        <div className="flex items-start gap-2">
+                          <span
+                            className="mt-0.5 shrink-0 cursor-grab select-none text-hae-slate/50"
+                            aria-hidden="true"
+                          >
+                            ⠿
+                          </span>
+                          <div className="min-w-0">
+                            <span
+                              className={`mb-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                            >
+                              {effectivePriority(task)}
+                              {task.priority ? (
+                                <span className="text-[9px] opacity-70">M</span>
+                              ) : null}
+                            </span>
+                            <div className="line-clamp-2">{task.name}</div>
+                          </div>
+                        </div>
                       </td>
                       {isStaff && viewAll ? (
                         <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
@@ -795,8 +671,7 @@ export default function MyTasks() {
                         </div>
                       </td>
                     </tr>
-                  )
-                )
+                  ))
               )}
             </tbody>
           </table>
