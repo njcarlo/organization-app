@@ -133,6 +133,7 @@ export function statusBadgeClass(status) {
 
 export function customProgramStatusBadgeClass(status) {
   if (status === 'Prospect') return 'bg-blue-900 text-white'
+  if (status === 'In Progress') return 'bg-orange-200 text-amber-900'
   if (status === 'Approved') return 'bg-green-900 text-white'
   return 'bg-gray-200 text-black'
 }
@@ -142,6 +143,14 @@ export function graphicsStatusBadgeClass(status) {
   if (status === 'Ready for posting') return 'bg-blue-900 text-white'
   if (status === 'For Approval by Regina') return 'bg-hae-crimson text-white'
   if (status === 'Complete') return 'bg-green-900 text-green-400'
+  return 'bg-gray-200 text-black'
+}
+
+export function membershipStatusBadgeClass(status) {
+  if (status === 'Full Member') return 'bg-green-900 text-white'
+  if (status === 'Legacy Member') return 'bg-blue-900 text-white'
+  if (status === 'Lifetime Member') return 'bg-hae-crimson text-white'
+  if (status === 'Expired') return 'bg-yellow-200 text-black'
   return 'bg-gray-200 text-black'
 }
 

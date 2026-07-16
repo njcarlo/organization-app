@@ -81,6 +81,14 @@ export const GRAPHICS_STATUS_OPTIONS = [
   'Complete',
 ]
 
+export const MEMBERSHIP_STATUS_OPTIONS = [
+  'Non-Member',
+  'Full Member',
+  'Legacy Member',
+  'Lifetime Member',
+  'Expired',
+]
+
 export const WHERE_TO_POST_OPTIONS = [
   "Regina's LinkedIn",
   'Instagram',

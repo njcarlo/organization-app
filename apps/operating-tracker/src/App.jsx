@@ -9,6 +9,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import EventsDashboard from './pages/EventsDashboard'
 import GraphicsDashboard from './pages/GraphicsDashboard'
+import ChapterLeaderDashboard from './pages/ChapterLeaderDashboard'
 import Activity from './pages/Activity'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
@@ -74,6 +75,7 @@ export default function App() {
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/events-dashboard" element={<EventsDashboard />} />
                 <Route path="/graphics-dashboard" element={<GraphicsDashboard />} />
+                <Route path="/chapter-leader-dashboard" element={<ChapterLeaderDashboard />} />
                 <Route path="/activity" element={<Activity />} />
                 <Route
                   path="/executive-inbox"
