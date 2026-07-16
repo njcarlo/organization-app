@@ -6,6 +6,7 @@ import {
   doc,
   getDocs,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { downloadIcs, FEATURES, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
@@ -24,6 +25,7 @@ import {
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
+  sortByOrder,
   sortByPriorityThenDue,
   statusBadgeClass,
   toNameList,
@@ -122,8 +124,55 @@ export default function MyTasks() {
       list = list.filter((t) => normalizeTaskStatus(t.status) === statusFilter)
     }
     list.sort(sortByPriorityThenDue)
+    list.sort(sortByOrder)
     return list
   }, [tasks, isStaff, viewAll, userProfile, statusFilter])
+
+  const [draggedId, setDraggedId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+
+  const reorderFiltered = async (draggedTaskId, targetTaskId) => {
+    if (draggedTaskId === targetTaskId) return
+    const from = filtered.findIndex((t) => t.id === draggedTaskId)
+    const to = filtered.findIndex((t) => t.id === targetTaskId)
+    if (from === -1 || to === -1) return
+    const reordered = [...filtered]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+    const batch = writeBatch(db)
+    reordered.forEach((t, i) => {
+      if (t.order !== i) batch.update(doc(db, 'tasks', t.id), { order: i })
+    })
+    await batch.commit()
+    await load()
+  }
+
+  const dragHandlers = (taskId) => ({
+    draggable: true,
+    onDragStart: (e) => {
+      setDraggedId(taskId)
+      e.dataTransfer.effectAllowed = 'move'
+    },
+    onDragOver: (e) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      if (dragOverId !== taskId) setDragOverId(taskId)
+    },
+    onDragLeave: () => {
+      setDragOverId((cur) => (cur === taskId ? null : cur))
+    },
+    onDrop: (e) => {
+      e.preventDefault()
+      const from = draggedId
+      setDraggedId(null)
+      setDragOverId(null)
+      if (from) reorderFiltered(from, taskId)
+    },
+    onDragEnd: () => {
+      setDraggedId(null)
+      setDragOverId(null)
+    },
+  })
 
   useEffect(() => {
     setPage(0)
@@ -136,7 +185,7 @@ export default function MyTasks() {
     safePage * PAGE_SIZE + PAGE_SIZE
   )
 
-  const colCount = isStaff && viewAll ? 11 : 10
+  const colCount = isStaff && viewAll ? 12 : 11
 
   const startEdit = (task, surface = 'inline') => {
     setEditingId(task.id)
@@ -506,6 +555,7 @@ export default function MyTasks() {
           <table className="w-full min-w-[720px] text-left lg:min-w-[1100px]">
             <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
               <tr>
+                <th className="w-6 px-1 py-2" />
                 <th className="px-3 py-2 font-semibold">Priority</th>
                 <th className="px-3 py-2 font-semibold">Task</th>
                 {isStaff && viewAll ? (
@@ -652,7 +702,22 @@ export default function MyTasks() {
                       </td>
                     </tr>
                   ) : (
-                    <tr key={task.id} className="group border-b border-hae-line/70">
+                    <tr
+                      key={task.id}
+                      {...dragHandlers(task.id)}
+                      className={`group border-b border-hae-line/70 ${
+                        draggedId === task.id ? 'opacity-40' : ''
+                      } ${
+                        dragOverId === task.id && draggedId && draggedId !== task.id
+                          ? 'bg-hae-mist/60'
+                          : ''
+                      }`}
+                    >
+                      <td className="px-1 py-2 text-hae-slate/50">
+                        <span className="cursor-grab select-none" aria-hidden="true">
+                          ⠿
+                        </span>
+                      </td>
                       <td className="px-3 py-2">
                         <span
                           className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
