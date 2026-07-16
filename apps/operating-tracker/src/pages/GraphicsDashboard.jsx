@@ -175,7 +175,14 @@ export default function GraphicsDashboard() {
               <span className="text-xs font-medium text-hae-slate">Status</span>
               <select
                 value={modal.form.status}
-                onChange={(e) => setModal({ ...modal, form: { ...modal.form, status: e.target.value } })}
+                onChange={(e) => {
+                  const status = e.target.value
+                  const lead =
+                    status === 'For Approval by Regina' && !modal.form.lead.includes('Regina')
+                      ? [...modal.form.lead, 'Regina']
+                      : modal.form.lead
+                  setModal({ ...modal, form: { ...modal.form, status, lead } })
+                }}
                 className="rounded-md border border-hae-line px-3 py-2 text-sm"
               >
                 {GRAPHICS_STATUS_OPTIONS.map((s) => (

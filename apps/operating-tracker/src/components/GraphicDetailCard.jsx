@@ -256,7 +256,14 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
             <select
               className={fieldClass}
               value={draft.status}
-              onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+              onChange={(e) => {
+                const status = e.target.value
+                const lead =
+                  status === 'For Approval by Regina' && !draft.lead.includes('Regina')
+                    ? [...draft.lead, 'Regina']
+                    : draft.lead
+                setDraft({ ...draft, status, lead })
+              }}
             >
               {GRAPHICS_STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
