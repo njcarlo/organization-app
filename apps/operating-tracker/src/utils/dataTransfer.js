@@ -15,7 +15,7 @@ export const EXPORT_COLLECTIONS = [
   { id: 'programs', label: 'Programs', app: 'Tracker' },
   { id: 'academyPrograms', label: 'Academy', app: 'Tracker' },
   { id: 'customPrograms', label: 'Custom Programs', app: 'Tracker' },
-  { id: 'trackerDocuments', label: 'Documents', app: 'Tracker' },
+  { id: 'trackerDocuments', label: 'Documents & Assets', app: 'Tracker' },
   { id: 'trackerDocumentFiles', label: 'Document Files', app: 'Tracker' },
   { id: 'trackerEvents', label: 'Events', app: 'Tracker' },
   { id: 'trackerGraphics', label: 'Graphics', app: 'Tracker' },

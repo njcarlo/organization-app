@@ -169,6 +169,12 @@ const ICONS = {
       <circle cx="15" cy="18" r="1.5" />
     </svg>
   ),
+  edit: (
+    <Svg>
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
+      <path d="M13.5 7.5l3 3" />
+    </Svg>
+  ),
 }
 
 export function NavIcon({ name, className }) {

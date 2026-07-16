@@ -5,9 +5,11 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   serverTimestamp,
+  setDoc,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore'
@@ -44,6 +46,22 @@ const emptyProject = {
 const sortByOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0)
 const toList = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
+// Section order is a personal preference (per user); renamed labels are shared
+// chrome that applies org-wide, so they live in separate docs/collections.
+const sidebarOrderDoc = (uid) => `sidebarOrder/${uid}`
+const SIDEBAR_LABELS_DOC = 'sidebarLabels/tracker'
+const DEFAULT_SECTION_ORDER = [
+  'programs',
+  'academy',
+  'custom-programs',
+  'documents',
+  'events',
+  'graphics',
+  'data',
+  'board-commitments',
+  'chapters',
+]
+
 /** Tracker sidenav — expandable chrome; platform switch lives in the header. */
 export default function Sidebar({ open = false, onClose }) {
   const { user, userProfile, isAdmin, logout, roleLabel } = useAuth()
@@ -62,6 +80,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [sectionConfig, setSectionConfig] = useState({ order: [], labels: {} })
 
   const setters = {
     programs: setPrograms,
@@ -99,6 +118,66 @@ export default function Sidebar({ open = false, onClose }) {
       reload(collectionName)
     }
   }
+
+  const reorderSections = async (reorderedSections) => {
+    if (!user?.uid) return
+    const orderedIds = reorderedSections.map((s) => s.id)
+    setSectionConfig((prev) => ({ ...prev, order: orderedIds }))
+    try {
+      await setDoc(doc(db, sidebarOrderDoc(user.uid)), { order: orderedIds }, { merge: true })
+    } catch (err) {
+      console.error('Failed to save sidebar section order', err)
+    }
+  }
+
+  const renameSection = async (sectionId, label) => {
+    setSectionConfig((prev) => ({ ...prev, labels: { ...prev.labels, [sectionId]: label } }))
+    try {
+      await setDoc(
+        doc(db, SIDEBAR_LABELS_DOC),
+        { [`labels.${sectionId}`]: label },
+        { merge: true }
+      )
+    } catch (err) {
+      console.error('Failed to rename sidebar section', err)
+    }
+  }
+
+  // Order: personal, keyed by uid. Labels: shared org-wide, one doc for everyone.
+  useEffect(() => {
+    if (!user?.uid) return
+    let cancelled = false
+    getDoc(doc(db, sidebarOrderDoc(user.uid)))
+      .then((snap) => {
+        if (cancelled || !snap.exists()) return
+        const data = snap.data()
+        setSectionConfig((prev) => ({
+          ...prev,
+          order: Array.isArray(data.order) ? data.order : [],
+        }))
+      })
+      .catch((err) => console.error('Failed to load sidebar section order', err))
+    return () => {
+      cancelled = true
+    }
+  }, [user?.uid])
+
+  useEffect(() => {
+    let cancelled = false
+    getDoc(doc(db, SIDEBAR_LABELS_DOC))
+      .then((snap) => {
+        if (cancelled || !snap.exists()) return
+        const data = snap.data()
+        setSectionConfig((prev) => ({
+          ...prev,
+          labels: data.labels && typeof data.labels === 'object' ? data.labels : {},
+        }))
+      })
+      .catch((err) => console.error('Failed to load sidebar section labels', err))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -419,7 +498,7 @@ export default function Sidebar({ open = false, onClose }) {
 
     next.push({
       id: 'documents',
-      label: 'Documents',
+      label: 'Documents & Assets',
       actions: sectionActions('trackerDocuments'),
       onReorderItems: (items) => reorderCategory('trackerDocuments', items),
       items: trackerDocuments.map((p) => ({
@@ -430,7 +509,7 @@ export default function Sidebar({ open = false, onClose }) {
         description: namesLabel(p.lead) || undefined,
         actions: categoryActions('trackerDocuments', p),
       })),
-      emptyLabel: trackerDocuments.length === 0 ? 'No Documents yet' : undefined,
+      emptyLabel: trackerDocuments.length === 0 ? 'No Documents & Assets yet' : undefined,
     })
 
     next.push({
@@ -508,7 +587,27 @@ export default function Sidebar({ open = false, onClose }) {
       emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
     })
 
-    return next
+    // Workspace stays fixed. The rest: reordering is a personal preference
+    // (each user drags their own view), while renaming is shared org-wide
+    // chrome — any staff user can rename, and it changes the label for everyone.
+    const [workspace, ...content] = next
+    const byId = new Map(content.map((section) => [section.id, section]))
+    const orderedIds = [
+      ...sectionConfig.order.filter((id) => byId.has(id)),
+      ...DEFAULT_SECTION_ORDER.filter((id) => byId.has(id) && !sectionConfig.order.includes(id)),
+    ]
+    const orderedContent = orderedIds.map((id) => {
+      const section = byId.get(id)
+      const labelOverride = sectionConfig.labels[id]
+      return {
+        ...section,
+        label: labelOverride || section.label,
+        draggable: true,
+        onRename: (label) => renameSection(id, label),
+      }
+    })
+
+    return [workspace, ...orderedContent]
   }, [
     programs,
     academyPrograms,
@@ -522,6 +621,7 @@ export default function Sidebar({ open = false, onClose }) {
     isAdmin,
     isEnabled,
     isExecInboxUser,
+    sectionConfig,
   ])
 
   return (
@@ -535,6 +635,7 @@ export default function Sidebar({ open = false, onClose }) {
         userName={userProfile?.name}
         roleLabel={roleLabel}
         onLogout={logout}
+        onReorderSections={reorderSections}
       />
 
       <Modal

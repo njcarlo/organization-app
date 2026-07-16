@@ -85,7 +85,7 @@ const TABS = [
   { id: 'programs', label: 'Programs' },
   { id: 'academy', label: 'Academy' },
   { id: 'customPrograms', label: 'Custom Programs' },
-  { id: 'documents', label: 'Documents' },
+  { id: 'documents', label: 'Documents & Assets' },
   { id: 'events', label: 'Events' },
   { id: 'graphics', label: 'Graphics' },
   { id: 'features', label: 'Features', superadminOnly: true },
