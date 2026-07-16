@@ -361,11 +361,17 @@ export default function Sidebar({ open = false, onClose }) {
     try {
       if (id) {
         await updateDoc(doc(db, collectionName, id), data)
+        reload(collectionName)
       } else {
         await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() })
+        if (collectionName === 'chapters') {
+          const snap = await getDocs(collection(db, collectionName))
+          await sortAlphabetically(collectionName, toList(snap))
+        } else {
+          reload(collectionName)
+        }
       }
       setEditCategoryModal(null)
-      reload(collectionName)
     } catch (err) {
       console.error(`Failed to save ${meta.label.toLowerCase()}`, err)
       alert(err.message || `Failed to save ${meta.label.toLowerCase()}`)
@@ -393,6 +399,13 @@ export default function Sidebar({ open = false, onClose }) {
       onClick: () => openAddCategory(collectionName),
     },
   ]
+
+  const sortAlphabetically = (collectionName, items) => {
+    const sorted = [...items].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '')
+    )
+    return reorderCategory(collectionName, sorted)
+  }
 
   const categoryActions = (collectionName, category) => [
     ...(collectionName === 'trackerEvents'
@@ -574,7 +587,14 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'chapters',
       label: 'Chapters',
-      actions: sectionActions('chapters', 'Add a chapter'),
+      actions: [
+        ...sectionActions('chapters', 'Add a chapter'),
+        {
+          key: 'sort-az',
+          label: 'Sort A–Z',
+          onClick: () => sortAlphabetically('chapters', chapters),
+        },
+      ],
       onReorderItems: (items) => reorderCategory('chapters', items),
       items: chapters.map((p) => ({
         id: p.id,
