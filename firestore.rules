@@ -122,6 +122,9 @@ service cloud.firestore {
     match /trackerData/{id} {
       allow read, write: if isStaff();
     }
+    match /boardCommitments/{id} {
+      allow read, write: if isStaff();
+    }
     match /chapters/{id} {
       allow read, write: if isStaff();
     }
