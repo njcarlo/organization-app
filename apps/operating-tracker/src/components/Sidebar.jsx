@@ -9,6 +9,7 @@ import {
   onSnapshot,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
@@ -75,6 +76,25 @@ export default function Sidebar({ open = false, onClose }) {
     getDocs(collection(db, collectionName))
       .then((snap) => setters[collectionName](toList(snap).sort(sortByOrder)))
       .catch((err) => console.error(`Failed to load ${collectionName}`, err))
+  }
+
+  const reorderCategory = async (collectionName, orderedItems) => {
+    const ids = orderedItems.map((item) => item.id)
+    const setter = setters[collectionName]
+    setter((prev) => {
+      const byId = new Map(prev.map((entry) => [entry.id, entry]))
+      return ids.map((id) => byId.get(id)).filter(Boolean)
+    })
+    try {
+      const batch = writeBatch(db)
+      ids.forEach((id, index) => {
+        batch.update(doc(db, collectionName, id), { order: index })
+      })
+      await batch.commit()
+    } catch (err) {
+      console.error(`Failed to reorder ${collectionName}`, err)
+      reload(collectionName)
+    }
   }
 
   useEffect(() => {
@@ -347,7 +367,9 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'programs',
       label: 'Programs',
       actions: sectionActions('programs'),
+      onReorderItems: (items) => reorderCategory('programs', items),
       items: programs.map((p) => ({
+        id: p.id,
         to: `/programs/${p.id}`,
         label: p.name,
         icon: 'folder',
@@ -361,9 +383,11 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'academy',
       label: 'Academy',
       actions: sectionActions('academyPrograms'),
+      onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
         ...academyPrograms.map((p) => ({
+          id: p.id,
           to: `/academy/${p.id}`,
           label: p.name,
           icon: 'folder',
@@ -377,7 +401,9 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'custom-programs',
       label: 'Custom Programs',
       actions: sectionActions('customPrograms'),
+      onReorderItems: (items) => reorderCategory('customPrograms', items),
       items: customPrograms.map((p) => ({
+        id: p.id,
         to: `/custom-programs/${p.id}`,
         label: p.name,
         icon: 'folder',
@@ -391,7 +417,9 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'documents',
       label: 'Documents',
       actions: sectionActions('trackerDocuments'),
+      onReorderItems: (items) => reorderCategory('trackerDocuments', items),
       items: trackerDocuments.map((p) => ({
+        id: p.id,
         to: `/documents/${p.id}`,
         label: p.name,
         icon: 'folder',
@@ -414,9 +442,11 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'graphics',
       label: 'Graphics',
       actions: sectionActions('trackerGraphics'),
+      onReorderItems: (items) => reorderCategory('trackerGraphics', items),
       items: [
         { to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' },
         ...trackerGraphics.map((p) => ({
+          id: p.id,
           to: `/graphics/${p.id}`,
           label: p.name,
           icon: 'folder',
@@ -430,7 +460,9 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'data',
       label: 'Data',
       actions: sectionActions('trackerData', 'Add Data'),
+      onReorderItems: (items) => reorderCategory('trackerData', items),
       items: trackerData.map((p) => ({
+        id: p.id,
         to: `/data/${p.id}`,
         label: p.name,
         icon: 'folder',
@@ -444,7 +476,9 @@ export default function Sidebar({ open = false, onClose }) {
       id: 'chapters',
       label: 'Chapters',
       actions: sectionActions('chapters', 'Add a chapter'),
+      onReorderItems: (items) => reorderCategory('chapters', items),
       items: chapters.map((p) => ({
+        id: p.id,
         to: `/chapters/${p.id}`,
         label: p.name,
         icon: 'folder',
