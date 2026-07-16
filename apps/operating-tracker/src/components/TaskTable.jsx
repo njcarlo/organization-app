@@ -6,6 +6,7 @@ import {
   doc,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
@@ -19,6 +20,7 @@ import {
   namesLabel,
   normalizeTaskStatus,
   priorityBadgeClass,
+  sortByOrder,
   sortByStatus,
   statusBadgeClass,
   toNameList,
@@ -392,6 +394,8 @@ const TaskTable = forwardRef(function TaskTable(
   const [editingSubtask, setEditingSubtask] = useState(null)
   const [subtaskDraft, setSubtaskDraft] = useState(null)
   const [subtaskSaving, setSubtaskSaving] = useState(false)
+  const [draggedId, setDraggedId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
 
   const { active, completed } = useMemo(() => {
     const a = []
@@ -401,11 +405,55 @@ const TaskTable = forwardRef(function TaskTable(
       else a.push(t)
     }
     a.sort(sortByStatus)
+    a.sort(sortByOrder)
     return { active: a, completed: c }
   }, [tasks])
 
+  const reorderActive = async (draggedTaskId, targetTaskId) => {
+    if (draggedTaskId === targetTaskId) return
+    const from = active.findIndex((t) => t.id === draggedTaskId)
+    const to = active.findIndex((t) => t.id === targetTaskId)
+    if (from === -1 || to === -1) return
+    const reordered = [...active]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+    const batch = writeBatch(db)
+    reordered.forEach((t, i) => {
+      if (t.order !== i) batch.update(doc(db, 'tasks', t.id), { order: i })
+    })
+    await batch.commit()
+    onChanged?.()
+  }
+
+  const dragHandlers = (taskId) => ({
+    draggable: true,
+    onDragStart: (e) => {
+      setDraggedId(taskId)
+      e.dataTransfer.effectAllowed = 'move'
+    },
+    onDragOver: (e) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      if (dragOverId !== taskId) setDragOverId(taskId)
+    },
+    onDragLeave: () => {
+      setDragOverId((cur) => (cur === taskId ? null : cur))
+    },
+    onDrop: (e) => {
+      e.preventDefault()
+      const from = draggedId
+      setDraggedId(null)
+      setDragOverId(null)
+      if (from) reorderActive(from, taskId)
+    },
+    onDragEnd: () => {
+      setDraggedId(null)
+      setDragOverId(null)
+    },
+  })
+
   const visible = showCompleted ? [...active, ...completed] : active
-  const colCount = dense ? (showOwner ? 9 : 8) : showOwner ? 5 : 4
+  const colCount = dense ? (showOwner ? 10 : 9) : showOwner ? 5 : 4
 
   const startAdd = () => {
     setAdding(true)
@@ -665,6 +713,7 @@ const TaskTable = forwardRef(function TaskTable(
           <table className="w-full min-w-[640px] text-left lg:min-w-[960px]">
             <thead className="text-[10px] tracking-wide text-hae-slate/80 uppercase">
               <tr className="border-b border-hae-line/80 bg-hae-mist/50">
+                <th className="w-6 px-1 py-2" />
                 <th className="px-3 py-2 font-semibold">Task</th>
                 {showOwner ? (
                   <th className="hae-col-sm-hide px-3 py-2 font-semibold">Owner</th>
@@ -695,10 +744,22 @@ const TaskTable = forwardRef(function TaskTable(
                 ) : (
                   <Fragment key={task.id}>
                   <tr
+                    {...(isComplete(task) ? {} : dragHandlers(task.id))}
                     className={`group border-b border-hae-line/50 ${
                       isComplete(task) ? 'opacity-60' : ''
+                    } ${draggedId === task.id ? 'opacity-40' : ''} ${
+                      dragOverId === task.id && draggedId && draggedId !== task.id
+                        ? 'bg-hae-mist/60'
+                        : ''
                     }`}
                   >
+                    <td className="px-1 py-2.5 text-hae-slate/50">
+                      {isComplete(task) ? null : (
+                        <span className="cursor-grab select-none" aria-hidden="true">
+                          ⠿
+                        </span>
+                      )}
+                    </td>
                     <td className="px-3 py-2.5 text-sm font-medium text-hae-ink">
                       <button
                         type="button"
@@ -814,8 +875,13 @@ const TaskTable = forwardRef(function TaskTable(
             return (
               <li
                 key={task.id}
+                {...(isComplete(task) ? {} : dragHandlers(task.id))}
                 className={`rounded-lg border border-hae-line/70 bg-white/90 ${
                   isComplete(task) ? 'opacity-65' : ''
+                } ${draggedId === task.id ? 'opacity-40' : ''} ${
+                  dragOverId === task.id && draggedId && draggedId !== task.id
+                    ? 'bg-hae-mist/60'
+                    : ''
                 }`}
               >
                 {editing ? (
@@ -831,6 +897,14 @@ const TaskTable = forwardRef(function TaskTable(
                 ) : (
                   <>
                     <div className="flex items-start gap-2 px-3 py-2.5">
+                      {!isComplete(task) ? (
+                        <span
+                          className="mt-1 shrink-0 cursor-grab select-none text-hae-slate/50"
+                          aria-hidden="true"
+                        >
+                          ⠿
+                        </span>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => toggleExpand(task.id)}

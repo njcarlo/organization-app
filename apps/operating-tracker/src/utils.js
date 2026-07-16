@@ -55,6 +55,13 @@ export function sortByStatus(a, b) {
   return (ra === -1 ? TASK_STATUSES.length : ra) - (rb === -1 ? TASK_STATUSES.length : rb)
 }
 
+/** Manual drag order, set via reordering a task list. Tasks without an order sort after ones with. */
+export function sortByOrder(a, b) {
+  const oa = typeof a.order === 'number' ? a.order : Infinity
+  const ob = typeof b.order === 'number' ? b.order : Infinity
+  return oa - ob
+}
+
 export function formatDate(dateStr) {
   if (!dateStr) return '—'
   const [y, m, d] = dateStr.split('-')
