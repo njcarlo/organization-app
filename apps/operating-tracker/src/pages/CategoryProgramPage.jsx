@@ -10,12 +10,11 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { Modal, Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
 import DocumentFilesTable from '../components/DocumentFilesTable'
 import EventChecklist from '../components/EventChecklist'
-import Linkify from '../components/Linkify'
 import LeadSelect from '../components/LeadSelect'
 import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import {

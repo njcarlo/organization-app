@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Linkify } from '@hae/ui'
 import {
   effectivePriority,
   formatDate,
@@ -64,7 +65,9 @@ export default function WaitingOnSection({ tasks, programsById, projectsById, on
                   <PriorityCell task={task} />
                 </div>
                 <div className="hae-mobile-card__meta">
-                  <span>Waiting on {task.waitingOn}</span>
+                  <span>
+                    Waiting on <Linkify text={task.waitingOn} />
+                  </span>
                   <span>Needed by {formatDate(task.dueDate)}</span>
                   <span className="line-clamp-1">
                     {programNameOf(task, programsById)}
@@ -108,7 +111,9 @@ export default function WaitingOnSection({ tasks, programsById, projectsById, on
                     {projectNameOf(task, projectsById)}
                   </td>
                   <td className="px-3 py-2 text-sm font-medium">{task.name}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{task.waitingOn}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    <Linkify text={task.waitingOn} />
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {formatDate(task.dueDate)}
                   </td>

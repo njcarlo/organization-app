@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
+import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 
 /**
@@ -129,7 +130,7 @@ export default function ExpertDetail({ basePath = '', publicMode = false }) {
             About
           </h2>
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-hae-ink">
-            {expert.bio}
+            <Linkify text={expert.bio} />
           </p>
         </section>
       ) : null}

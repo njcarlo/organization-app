@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { HEALTH_OPTIONS } from '../constants'
@@ -215,11 +216,13 @@ export default function ProjectCard({
                 ) : null}
               </p>
               {project.promise ? (
-                <p className="mt-1 line-clamp-2 text-sm text-hae-slate/90">{project.promise}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-hae-slate/90">
+                  <Linkify text={project.promise} />
+                </p>
               ) : null}
               {project.notes ? (
                 <p className="mt-1 line-clamp-2 text-xs text-hae-slate/80">
-                  Notes: {project.notes}
+                  Notes: <Linkify text={project.notes} />
                 </p>
               ) : null}
             </>

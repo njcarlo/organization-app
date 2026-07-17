@@ -8,7 +8,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COURSE_STATUSES, LEARNING_PATHS } from '../constants'
 import { formatMoney, parseDollarsToCents } from '../money'
@@ -254,7 +254,9 @@ export default function Courses() {
                       {c.name}
                     </Link>
                     {c.description ? (
-                      <div className="text-xs text-hae-slate">{c.description}</div>
+                      <div className="text-xs text-hae-slate">
+                        <Linkify text={c.description} />
+                      </div>
                     ) : null}
                   </td>
                   <td className="px-3 py-2 text-sm capitalize text-hae-slate">

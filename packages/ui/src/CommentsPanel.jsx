@@ -28,6 +28,28 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+const URL_PATTERN = /(https?:\/\/[^\s]+)/g
+
+function linkifySegment(text, keyPrefix) {
+  const parts = String(text).split(URL_PATTERN)
+  if (parts.length === 1) return text
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <a
+        key={`${keyPrefix}-${i}`}
+        href={part}
+        target="_blank"
+        rel="noreferrer"
+        className="text-hae-crimson hover:underline"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}
+
 function buildMentionMailto({ emails, authorName, parentName, commentText, link }) {
   const subject = encodeURIComponent(`${authorName} mentioned you on ${parentName || 'HAE'}`)
   const body = encodeURIComponent(
@@ -58,7 +80,7 @@ function renderTextWithMentions(text, users) {
           {part}
         </span>
       ) : (
-        <span key={i}>{part}</span>
+        <span key={i}>{linkifySegment(part, i)}</span>
       )
     )
 }

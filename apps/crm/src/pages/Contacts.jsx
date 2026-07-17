@@ -21,7 +21,7 @@ import {
   attachmentsToFormLines,
   formLinesToAttachments,
 } from '../components/Attachments'
-import { CommentsPanel, FEATURES, Modal, useFeatures } from '@hae/ui'
+import { CommentsPanel, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
 
 const emptyForm = {
   name: '',
@@ -312,7 +312,9 @@ export default function Contacts() {
                     <div className="text-sm font-medium">{c.name}</div>
                     <div className="text-xs text-hae-slate">{c.email || '—'}</div>
                     {c.notes ? (
-                      <div className="mt-0.5 text-xs text-hae-slate">{c.notes}</div>
+                      <div className="mt-0.5 text-xs text-hae-slate">
+                        <Linkify text={c.notes} />
+                      </div>
                     ) : null}
                     <AttachmentList attachments={c.attachments} />
                   </td>

@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Modal } from '@hae/ui'
+import { CommentsPanel, Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { COMMITTEE_ROLES } from '../constants'
 
@@ -212,7 +212,9 @@ export default function Committees() {
                     {c.memberName || '—'}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{c.role}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{c.notes || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    <Linkify text={c.notes || '—'} />
+                  </td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
                       type="button"

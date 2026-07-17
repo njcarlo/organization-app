@@ -7,6 +7,7 @@ import {
   getDoc,
   serverTimestamp,
 } from 'firebase/firestore'
+import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 
 const fieldClass =
@@ -159,7 +160,7 @@ export default function SurveyRespond() {
           </h1>
           {survey?.description ? (
             <p className="mt-2 whitespace-pre-wrap text-sm text-hae-slate">
-              {survey.description}
+              <Linkify text={survey.description} />
             </p>
           ) : null}
 
