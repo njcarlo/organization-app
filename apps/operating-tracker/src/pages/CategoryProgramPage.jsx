@@ -13,7 +13,7 @@ import {
 import { Modal, Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
-import DocumentFilesTable from '../components/DocumentFilesTable'
+import DocumentGroupsSection from '../components/DocumentGroupsSection'
 import EventChecklist from '../components/EventChecklist'
 import LeadSelect from '../components/LeadSelect'
 import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
@@ -665,7 +665,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Documents
           </h2>
-          <DocumentFilesTable programId={itemId} />
+          <DocumentGroupsSection programId={itemId} />
         </section>
       ) : null}
 
