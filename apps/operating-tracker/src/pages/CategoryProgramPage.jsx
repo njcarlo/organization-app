@@ -15,6 +15,7 @@ import { db } from '../firebase'
 import ProjectCard from '../components/ProjectCard'
 import DocumentFilesTable from '../components/DocumentFilesTable'
 import EventChecklist from '../components/EventChecklist'
+import Linkify from '../components/Linkify'
 import LeadSelect from '../components/LeadSelect'
 import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import {
@@ -357,13 +358,17 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Chapter Leader/s
                 </dt>
-                <dd className="text-hae-ink">{program.chapterLeader || '—'}</dd>
+                <dd className="text-hae-ink break-words">
+                  {program.chapterLeader ? <Linkify text={program.chapterLeader} /> : '—'}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Co-Leaders
                 </dt>
-                <dd className="text-hae-ink">{program.coLeaders || '—'}</dd>
+                <dd className="text-hae-ink break-words">
+                  {program.coLeaders ? <Linkify text={program.coLeaders} /> : '—'}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
