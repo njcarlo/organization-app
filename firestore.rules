@@ -125,6 +125,12 @@ service cloud.firestore {
     match /boardCommitments/{id} {
       allow read, write: if isStaff();
     }
+    match /customSections/{id} {
+      allow read, write: if isStaff();
+    }
+    match /customSectionItems/{id} {
+      allow read, write: if isStaff();
+    }
     match /chapters/{id} {
       allow read, write: if isStaff();
     }

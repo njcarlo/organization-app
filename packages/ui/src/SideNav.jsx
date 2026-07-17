@@ -52,6 +52,8 @@ export default function SideNav({
   onLogout,
   helpTo = '/help',
   onReorderSections,
+  onAddSection,
+  addSectionLabel = 'Add a section',
 }) {
   const location = useLocation()
 
@@ -402,6 +404,16 @@ export default function SideNav({
         aria-label={`${title} navigation`}
       >
         <div className="space-y-1">
+          {onAddSection ? (
+            <button
+              type="button"
+              onClick={onAddSection}
+              className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-semibold text-hae-crimson hover:bg-hae-mist"
+            >
+              <NavIcon name="plus" className="[&>svg]:h-4 [&>svg]:w-4" />
+              <span>{addSectionLabel}</span>
+            </button>
+          ) : null}
           {(() => {
             const reorderableSections = typeof onReorderSections === 'function'
             const staticSections = reorderableSections

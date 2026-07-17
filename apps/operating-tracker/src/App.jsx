@@ -13,6 +13,7 @@ import ChapterLeaderDashboard from './pages/ChapterLeaderDashboard'
 import Activity from './pages/Activity'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
+import CustomSectionItemPage from './pages/CustomSectionItemPage'
 import CourseRegistrations from './pages/CourseRegistrations'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
@@ -160,6 +161,10 @@ export default function App() {
                       categoryLabel="Chapter"
                     />
                   }
+                />
+                <Route
+                  path="/custom-sections/:sectionId/:itemId"
+                  element={<CustomSectionItemPage />}
                 />
                 <Route
                   element={

@@ -32,6 +32,7 @@ const CATEGORY_META = {
   trackerData: { label: 'Data Project', pathPrefix: '/data' },
   boardCommitments: { label: 'Board Commitment', pathPrefix: '/board-commitments' },
   chapters: { label: 'Chapter', pathPrefix: '/chapters', showChapterFields: true },
+  customSectionItems: { label: 'Item' },
 }
 
 const emptyProject = {
@@ -77,8 +78,13 @@ export default function Sidebar({ open = false, onClose }) {
   const [trackerData, setTrackerData] = useState([])
   const [boardCommitments, setBoardCommitments] = useState([])
   const [chapters, setChapters] = useState([])
+  const [customSections, setCustomSections] = useState([])
+  const [customSectionItems, setCustomSectionItems] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
+  const [addSectionOpen, setAddSectionOpen] = useState(false)
+  const [newSectionLabel, setNewSectionLabel] = useState('')
+  const [addingSection, setAddingSection] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sectionConfig, setSectionConfig] = useState({ order: [], labels: {} })
 
@@ -92,21 +98,35 @@ export default function Sidebar({ open = false, onClose }) {
     trackerData: setTrackerData,
     boardCommitments: setBoardCommitments,
     chapters: setChapters,
+    customSections: setCustomSections,
+    customSectionItems: setCustomSectionItems,
   }
 
+  // customSectionItems spans many sections (tagged by sectionId), so it isn't
+  // sorted as one flat list here — sorting happens per-section in `sections`.
   const reload = (collectionName) => {
     getDocs(collection(db, collectionName))
-      .then((snap) => setters[collectionName](toList(snap).sort(sortByOrder)))
+      .then((snap) => {
+        const list = toList(snap)
+        setters[collectionName](
+          collectionName === 'customSectionItems' ? list : list.sort(sortByOrder)
+        )
+      })
       .catch((err) => console.error(`Failed to load ${collectionName}`, err))
   }
 
   const reorderCategory = async (collectionName, orderedItems) => {
     const ids = orderedItems.map((item) => item.id)
     const setter = setters[collectionName]
-    setter((prev) => {
-      const byId = new Map(prev.map((entry) => [entry.id, entry]))
-      return ids.map((id) => byId.get(id)).filter(Boolean)
-    })
+    // Update `order` in place rather than rebuilding the array — collections like
+    // customSectionItems are shared across many sections, so `orderedItems` may
+    // only be a subset; rebuilding from just those ids would drop the rest.
+    setter((prev) =>
+      prev.map((entry) => {
+        const idx = ids.indexOf(entry.id)
+        return idx === -1 ? entry : { ...entry, order: idx }
+      })
+    )
     try {
       const batch = writeBatch(db)
       ids.forEach((id, index) => {
@@ -199,6 +219,8 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('trackerData', setTrackerData)
     loadInto('boardCommitments', setBoardCommitments)
     loadInto('chapters', setChapters)
+    loadInto('customSections', setCustomSections)
+    loadInto('customSectionItems', setCustomSectionItems)
     return () => {
       cancelled = true
     }
@@ -219,6 +241,7 @@ export default function Sidebar({ open = false, onClose }) {
       collectionName,
       categoryId: category.id,
       categoryName: category.name,
+      sectionId: category.sectionId,
       form: emptyProject,
     })
   }
@@ -231,7 +254,7 @@ export default function Sidebar({ open = false, onClose }) {
   const submitAddProject = async (e) => {
     e.preventDefault()
     if (!addProjectModal?.form.name.trim() || saving) return
-    const { collectionName, categoryId, form } = addProjectModal
+    const { collectionName, categoryId, sectionId, form } = addProjectModal
     setSaving(true)
     try {
       await addDoc(collection(db, 'projects'), {
@@ -245,7 +268,11 @@ export default function Sidebar({ open = false, onClose }) {
         createdAt: serverTimestamp(),
       })
       setAddProjectModal(null)
-      navigate(`${CATEGORY_META[collectionName].pathPrefix}/${categoryId}`)
+      const pathPrefix =
+        collectionName === 'customSectionItems'
+          ? `/custom-sections/${sectionId}`
+          : CATEGORY_META[collectionName].pathPrefix
+      navigate(`${pathPrefix}/${categoryId}`)
       onClose?.()
     } finally {
       setSaving(false)
@@ -272,9 +299,10 @@ export default function Sidebar({ open = false, onClose }) {
     ...(meta.showChapterFields ? { chapterLeader: '', coLeaders: '' } : {}),
   })
 
-  const openAddCategory = (collectionName) => {
+  const openAddCategory = (collectionName, sectionId) => {
     setEditCategoryModal({
       collectionName,
+      sectionId,
       id: null,
       form: emptyCategoryForm(CATEGORY_META[collectionName]),
     })
@@ -328,7 +356,7 @@ export default function Sidebar({ open = false, onClose }) {
   const submitEditCategory = async (e) => {
     e.preventDefault()
     if (!editCategoryModal?.form.name.trim() || saving) return
-    const { collectionName, id, form } = editCategoryModal
+    const { collectionName, id, sectionId, form } = editCategoryModal
     const meta = CATEGORY_META[collectionName]
     const data = {
       name: form.name.trim(),
@@ -363,7 +391,11 @@ export default function Sidebar({ open = false, onClose }) {
         await updateDoc(doc(db, collectionName, id), data)
         reload(collectionName)
       } else {
-        await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() })
+        await addDoc(collection(db, collectionName), {
+          ...data,
+          ...(collectionName === 'customSectionItems' ? { sectionId } : {}),
+          createdAt: serverTimestamp(),
+        })
         if (collectionName === 'chapters') {
           const snap = await getDocs(collection(db, collectionName))
           await sortAlphabetically(collectionName, toList(snap))
@@ -392,11 +424,59 @@ export default function Sidebar({ open = false, onClose }) {
     }
   }
 
-  const sectionActions = (collectionName, labelOverride) => [
+  const openAddSection = () => {
+    setNewSectionLabel('')
+    setAddSectionOpen(true)
+  }
+
+  const closeAddSection = () => {
+    if (addingSection) return
+    setAddSectionOpen(false)
+  }
+
+  const submitAddSection = async (e) => {
+    e.preventDefault()
+    const label = newSectionLabel.trim()
+    if (!label || addingSection) return
+    setAddingSection(true)
+    try {
+      const maxOrder = customSections.reduce((max, s) => Math.max(max, s.order ?? 0), -1)
+      await addDoc(collection(db, 'customSections'), {
+        label,
+        order: maxOrder + 1,
+        createdAt: serverTimestamp(),
+      })
+      reload('customSections')
+      setAddSectionOpen(false)
+    } catch (err) {
+      console.error('Failed to add section', err)
+      alert(err.message || 'Failed to add section')
+    } finally {
+      setAddingSection(false)
+    }
+  }
+
+  const deleteCustomSection = async (section) => {
+    if (
+      !confirm(
+        `Delete "${section.label}"? Items in this section are not cascade-deleted. This action cannot be undone.`
+      )
+    )
+      return
+    try {
+      await deleteDoc(doc(db, 'customSections', section.id))
+      reload('customSections')
+    } catch (err) {
+      console.error('Failed to delete section', err)
+      alert(err.message || 'Failed to delete section')
+    }
+  }
+
+  const sectionActions = (collectionName, labelOverride, sectionId) => [
     {
       key: 'add-category',
       label: labelOverride || `Add ${CATEGORY_META[collectionName].label.toLowerCase()}`,
-      onClick: () => openAddCategory(collectionName),
+      onClick: () => openAddCategory(collectionName, sectionId),
     },
   ]
 
@@ -610,6 +690,40 @@ export default function Sidebar({ open = false, onClose }) {
       emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
     })
 
+    // User-created sections, one per `customSections` doc; items live in the
+    // shared `customSectionItems` collection, tagged by `sectionId`.
+    customSections
+      .slice()
+      .sort(sortByOrder)
+      .forEach((section) => {
+        next.push({
+          id: section.id,
+          label: section.label,
+          actions: [
+            ...sectionActions('customSectionItems', 'Add item', section.id),
+            {
+              key: 'delete-section',
+              label: 'Delete section',
+              danger: true,
+              onClick: () => deleteCustomSection(section),
+            },
+          ],
+          onReorderItems: (items) => reorderCategory('customSectionItems', items),
+          items: customSectionItems
+            .filter((it) => it.sectionId === section.id)
+            .sort(sortByOrder)
+            .map((p) => ({
+              id: p.id,
+              to: `/custom-sections/${section.id}/${p.id}`,
+              label: p.name,
+              icon: 'folder',
+              description: namesLabel(p.lead) || undefined,
+              actions: categoryActions('customSectionItems', p),
+            })),
+          emptyLabel: 'No items yet',
+        })
+      })
+
     // Workspace stays fixed. The rest: reordering is a personal preference
     // (each user drags their own view), while renaming is shared org-wide
     // chrome — any staff user can rename, and it changes the label for everyone.
@@ -619,7 +733,12 @@ export default function Sidebar({ open = false, onClose }) {
       ...sectionConfig.order.filter((id) => byId.has(id)),
       ...DEFAULT_SECTION_ORDER.filter((id) => byId.has(id) && !sectionConfig.order.includes(id)),
     ]
-    const orderedContent = orderedIds.map((id) => {
+    // Sections absent from both the user's saved order and the hardcoded
+    // defaults (e.g. a custom section created after the user's last reorder)
+    // would otherwise silently disappear — append them at the end.
+    const remainingIds = [...byId.keys()].filter((id) => !orderedIds.includes(id))
+    const finalOrderedIds = [...orderedIds, ...remainingIds]
+    const orderedContent = finalOrderedIds.map((id) => {
       const section = byId.get(id)
       const labelOverride = sectionConfig.labels[id]
       return {
@@ -641,6 +760,8 @@ export default function Sidebar({ open = false, onClose }) {
     trackerData,
     boardCommitments,
     chapters,
+    customSections,
+    customSectionItems,
     isAdmin,
     isEnabled,
     isExecInboxUser,
@@ -659,7 +780,46 @@ export default function Sidebar({ open = false, onClose }) {
         roleLabel={roleLabel}
         onLogout={logout}
         onReorderSections={reorderSections}
+        onAddSection={openAddSection}
       />
+
+      <Modal
+        open={addSectionOpen}
+        onClose={closeAddSection}
+        title="Add a section"
+        busy={addingSection}
+        footer={
+          <>
+            <button
+              type="button"
+              className="hae-btn-secondary"
+              onClick={closeAddSection}
+              disabled={addingSection}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="sidebar-add-section-form"
+              className="hae-btn"
+              disabled={addingSection}
+            >
+              {addingSection ? 'Saving…' : 'Create section'}
+            </button>
+          </>
+        }
+      >
+        <form id="sidebar-add-section-form" onSubmit={submitAddSection}>
+          <input
+            required
+            autoFocus
+            placeholder="Section name"
+            value={newSectionLabel}
+            onChange={(e) => setNewSectionLabel(e.target.value)}
+            className="w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+          />
+        </form>
+      </Modal>
 
       <Modal
         open={!!addProjectModal}
