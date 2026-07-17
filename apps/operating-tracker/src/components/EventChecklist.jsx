@@ -15,7 +15,7 @@ const cellInputClass =
 
 /**
  * Directly editable checklist nested under a single Event category item —
- * mirrors DocumentFilesTable's always-editable-row pattern, but for
+ * mirrors DocumentLinksTable's trailing-blank-row pattern, but for
  * checkbox + text checklist items instead of document links.
  */
 export default function EventChecklist({ eventId }) {
