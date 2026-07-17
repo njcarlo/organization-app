@@ -8,7 +8,7 @@ import {
   updateDoc,
   writeBatch,
 } from 'firebase/firestore'
-import { downloadIcs, FEATURES, Modal, useFeatures } from '@hae/ui'
+import { downloadIcs, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import ActivityLog from '../components/ActivityLog'
@@ -396,12 +396,12 @@ export default function MyTasks() {
                 </span>
                 {task.nextAction ? (
                   <span className="line-clamp-2 w-full text-hae-ink/75">
-                    Next: {task.nextAction}
+                    Next: <Linkify text={task.nextAction} />
                   </span>
                 ) : null}
                 {task.notes ? (
                   <span className="line-clamp-2 w-full text-hae-ink/75">
-                    Notes: {task.notes}
+                    Notes: <Linkify text={task.notes} />
                   </span>
                 ) : null}
               </div>

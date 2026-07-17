@@ -8,6 +8,7 @@ import {
   updateDoc,
   writeBatch,
 } from 'firebase/firestore'
+import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
@@ -222,7 +223,7 @@ function SubtaskList({
               </div>
               {sub.notes ? (
                 <p className="mt-1 whitespace-pre-wrap text-xs text-hae-slate/90">
-                  {sub.notes}
+                  <Linkify text={sub.notes} />
                 </p>
               ) : null}
             </li>
@@ -837,7 +838,7 @@ const TaskTable = forwardRef(function TaskTable(
                               Notes
                             </div>
                             <p className="mt-0.5 whitespace-pre-wrap text-xs text-hae-slate">
-                              {task.notes}
+                              <Linkify text={task.notes} />
                             </p>
                           </div>
                         ) : null}
@@ -932,7 +933,7 @@ const TaskTable = forwardRef(function TaskTable(
                           <span>Due {formatDate(task.dueDate)}</span>
                           {task.nextAction ? (
                             <span className="line-clamp-1 text-hae-ink/70">
-                              Next: {task.nextAction}
+                              Next: <Linkify text={task.nextAction} />
                             </span>
                           ) : null}
                         </div>
@@ -976,7 +977,7 @@ const TaskTable = forwardRef(function TaskTable(
                               Waiting on
                             </div>
                             <div className="mt-0.5 text-hae-ink/80">
-                              {task.waitingOn || '—'}
+                              <Linkify text={task.waitingOn || '—'} />
                             </div>
                           </div>
                           <div>
@@ -993,7 +994,9 @@ const TaskTable = forwardRef(function TaskTable(
                             <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
                               Notes
                             </div>
-                            <p className="mt-0.5 whitespace-pre-wrap">{task.notes}</p>
+                            <p className="mt-0.5 whitespace-pre-wrap">
+                              <Linkify text={task.notes} />
+                            </p>
                           </div>
                         ) : null}
                         <div className="mt-3 border-t border-hae-line/50 pt-3">

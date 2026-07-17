@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Modal } from '@hae/ui'
+import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
@@ -202,7 +202,9 @@ export default function Events() {
                   <td className="px-3 py-2">
                     <div className="text-sm font-medium">{e.name}</div>
                     {e.description ? (
-                      <div className="text-xs text-hae-slate">{e.description}</div>
+                      <div className="text-xs text-hae-slate">
+                        <Linkify text={e.description} />
+                      </div>
                     ) : null}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">

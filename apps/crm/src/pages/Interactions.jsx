@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Modal } from '@hae/ui'
+import { CommentsPanel, Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
 import {
@@ -260,7 +260,9 @@ export default function Interactions() {
                     {row.subject || '—'}
                     <AttachmentList attachments={row.attachments} />
                   </td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    <Linkify text={row.notes || '—'} />
+                  </td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
                       type="button"

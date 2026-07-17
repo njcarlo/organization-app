@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Modal, useAuth, PERMISSIONS } from '@hae/ui'
+import { CommentsPanel, Linkify, Modal, useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 import { COURSE_STATUSES, LEARNING_PATHS, MODULE_TYPES } from '../constants'
 import { centsToDollarsInput, parseDollarsToCents } from '../money'
@@ -193,7 +193,9 @@ export default function CourseDetail() {
           {course.status ? ` · ${course.status}` : ''}
         </p>
         {course.description ? (
-          <p className="mt-3 text-sm text-hae-slate">{course.description}</p>
+          <p className="mt-3 text-sm text-hae-slate">
+            <Linkify text={course.description} />
+          </p>
         ) : null}
 
         <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">

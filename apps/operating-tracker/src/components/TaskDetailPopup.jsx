@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { Modal, Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import ActivityLog from './ActivityLog'
@@ -41,7 +41,9 @@ function Row({ label, value }) {
       <dt className="text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
         {label}
       </dt>
-      <dd className="text-sm text-hae-ink break-words">{value}</dd>
+      <dd className="text-sm text-hae-ink break-words">
+        <Linkify text={value} />
+      </dd>
     </div>
   )
 }
