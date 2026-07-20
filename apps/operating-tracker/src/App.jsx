@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { AuthActionPage, FeaturesProvider, useFeatures, FEATURES } from '@hae/ui'
 import { useAuth } from './context/AuthContext'
@@ -24,8 +24,38 @@ import Help from './pages/Help'
 import Surveys from './pages/Surveys'
 import SurveyEditor from './pages/SurveyEditor'
 import SurveyRespond from './pages/SurveyRespond'
+import RestrictedHome from './pages/RestrictedHome'
 import { PERMISSIONS } from '../../../packages/ui/src/rbac.js'
 import { EXEC_INBOX_EMAILS } from './constants'
+
+/** Root route: full Dashboard for unrestricted users, else their section. */
+function Home() {
+  const { sectionAccess } = useAuth()
+  return sectionAccess ? <RestrictedHome /> : <Dashboard />
+}
+
+/** Gates a section's routes for section-restricted users; unrestricted users
+ * (sectionAccess === null) always pass. */
+function SectionRoute({ sectionId, children }) {
+  const { sectionAccess } = useAuth()
+  if (sectionAccess && !sectionAccess.includes(sectionId)) {
+    return <Navigate to="/" replace />
+  }
+  return children
+}
+
+function CustomSectionItemRoute({ children }) {
+  const { sectionId } = useParams()
+  return <SectionRoute sectionId={sectionId}>{children}</SectionRoute>
+}
+
+/** Activity is an org-wide feed across all sections — not shown to
+ * section-restricted users. */
+function UnrestrictedRoute({ children }) {
+  const { sectionAccess } = useAuth()
+  if (sectionAccess) return <Navigate to="/" replace />
+  return children
+}
 
 function TrackerFeaturesProvider({ children }) {
   const { isSuperAdmin } = useAuth()
@@ -71,13 +101,41 @@ export default function App() {
 
             <Route element={<ProtectedRoute permission={PERMISSIONS.TRACKER_READ} />}>
               <Route element={<Layout />}>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Home />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
                 <Route path="/calendar" element={<Calendar />} />
-                <Route path="/events-dashboard" element={<EventsDashboard />} />
-                <Route path="/graphics-dashboard" element={<GraphicsDashboard />} />
-                <Route path="/chapter-leader-dashboard" element={<ChapterLeaderDashboard />} />
-                <Route path="/activity" element={<Activity />} />
+                <Route
+                  path="/events-dashboard"
+                  element={
+                    <SectionRoute sectionId="events">
+                      <EventsDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/graphics-dashboard"
+                  element={
+                    <SectionRoute sectionId="graphics">
+                      <GraphicsDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/chapter-leader-dashboard"
+                  element={
+                    <SectionRoute sectionId="chapters">
+                      <ChapterLeaderDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/activity"
+                  element={
+                    <UnrestrictedRoute>
+                      <Activity />
+                    </UnrestrictedRoute>
+                  }
+                />
                 <Route
                   path="/executive-inbox"
                   element={
@@ -94,77 +152,106 @@ export default function App() {
                     </FeatureRoute>
                   }
                 />
-                <Route path="/programs/:programId" element={<ProgramPage />} />
+                <Route
+                  path="/programs/:programId"
+                  element={
+                    <SectionRoute sectionId="programs">
+                      <ProgramPage />
+                    </SectionRoute>
+                  }
+                />
                 <Route
                   path="/academy/course-registrations"
-                  element={<CourseRegistrations />}
+                  element={
+                    <SectionRoute sectionId="academy">
+                      <CourseRegistrations />
+                    </SectionRoute>
+                  }
                 />
                 <Route
                   path="/academy/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="academyPrograms"
-                      categoryLabel="Academy"
-                    />
+                    <SectionRoute sectionId="academy">
+                      <CategoryProgramPage
+                        collectionName="academyPrograms"
+                        categoryLabel="Academy"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/custom-programs/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="customPrograms"
-                      categoryLabel="Custom Program"
-                    />
+                    <SectionRoute sectionId="custom-programs">
+                      <CategoryProgramPage
+                        collectionName="customPrograms"
+                        categoryLabel="Custom Program"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/documents/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="trackerDocuments"
-                      categoryLabel="Document"
-                    />
+                    <SectionRoute sectionId="documents">
+                      <CategoryProgramPage
+                        collectionName="trackerDocuments"
+                        categoryLabel="Document"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/graphics/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="trackerGraphics"
-                      categoryLabel="Graphic"
-                    />
+                    <SectionRoute sectionId="graphics">
+                      <CategoryProgramPage
+                        collectionName="trackerGraphics"
+                        categoryLabel="Graphic"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/data/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="trackerData"
-                      categoryLabel="Data Projects"
-                    />
+                    <SectionRoute sectionId="data">
+                      <CategoryProgramPage
+                        collectionName="trackerData"
+                        categoryLabel="Data Projects"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/board-commitments/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="boardCommitments"
-                      categoryLabel="Board Commitments"
-                    />
+                    <SectionRoute sectionId="board-commitments">
+                      <CategoryProgramPage
+                        collectionName="boardCommitments"
+                        categoryLabel="Board Commitments"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/chapters/:itemId"
                   element={
-                    <CategoryProgramPage
-                      collectionName="chapters"
-                      categoryLabel="Chapter"
-                    />
+                    <SectionRoute sectionId="chapters">
+                      <CategoryProgramPage
+                        collectionName="chapters"
+                        categoryLabel="Chapter"
+                      />
+                    </SectionRoute>
                   }
                 />
                 <Route
                   path="/custom-sections/:sectionId/:itemId"
-                  element={<CustomSectionItemPage />}
+                  element={
+                    <CustomSectionItemRoute>
+                      <CustomSectionItemPage />
+                    </CustomSectionItemRoute>
+                  }
                 />
                 <Route
                   element={

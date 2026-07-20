@@ -20,6 +20,7 @@ import {
 import { isSuperAdminEmail } from '../../../../packages/ui/src/superadmin.js'
 import { ensureSuperAdminProfile } from '../../../../packages/ui/src/ensureSuperAdmin.js'
 import { consumeSsoTokenIfPresent } from '../../../../packages/ui/src/sso.js'
+import { isSectionRestricted } from '../sectionAccess'
 
 const AuthContext = createContext(null)
 
@@ -88,6 +89,12 @@ export function AuthProvider({ children }) {
   const isSuperAdmin = isSuperAdminEmail(user?.email || userProfile?.email)
   const isAdmin = isAdminRole(role) || isSuperAdmin
   const isStaff = isStaffRole(role) || isSuperAdmin
+  // Superadmins and platform admins are never section-restricted, even if a
+  // stale sectionAccess value lingers on their user doc.
+  const sectionAccess =
+    !isSuperAdmin && !isAdmin && isSectionRestricted(userProfile?.sectionAccess)
+      ? userProfile.sectionAccess
+      : null
 
   const value = useMemo(
     () => ({
@@ -104,13 +111,24 @@ export function AuthProvider({ children }) {
       isAdmin,
       isStaff,
       isSuperAdmin,
+      sectionAccess,
       hasPermission: (perm) => isSuperAdmin || hasPermission(permissions, perm),
       hasAnyPermission: (perms) =>
         isSuperAdmin || hasAnyPermission(permissions, perms),
       canAccessModule: (moduleId) =>
         isSuperAdmin || canAccessModule(permissions, moduleId),
     }),
-    [user, userProfile, loading, role, permissions, isAdmin, isStaff, isSuperAdmin]
+    [
+      user,
+      userProfile,
+      loading,
+      role,
+      permissions,
+      isAdmin,
+      isStaff,
+      isSuperAdmin,
+      sectionAccess,
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
