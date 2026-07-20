@@ -12,6 +12,7 @@ import { downloadIcs, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import ActivityLog from '../components/ActivityLog'
+import AddTaskModal from '../components/AddTaskModal'
 import CommentsPanel from '../components/CommentsPanel'
 import LeadSelect from '../components/LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
@@ -64,6 +65,7 @@ export default function MyTasks() {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
 
   const load = useCallback(async () => {
     const [taskSnap, programSnap, projectSnap] = await Promise.all([
@@ -301,6 +303,9 @@ export default function MyTasks() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="hae-btn" onClick={() => setAddOpen(true)}>
+            + Add Task
+          </button>
           {canExportCalendar ? (
             <button
               type="button"
@@ -419,6 +424,12 @@ export default function MyTasks() {
           ))
         )}
       </div>
+
+      <AddTaskModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreated={load}
+      />
 
       <Modal
         open={Boolean(editingId && draft)}
