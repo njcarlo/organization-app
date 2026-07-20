@@ -199,6 +199,14 @@ export default function ProjectCard({
                 >
                   {healthLabel(project.health)}
                 </span>
+                {tasks.length ? (
+                  <span
+                    className="rounded-full bg-hae-mist px-2 py-0.5 text-[10px] font-semibold text-hae-slate"
+                    title={`${tasks.length} task${tasks.length === 1 ? '' : 's'}`}
+                  >
+                    {tasks.length}
+                  </span>
+                ) : null}
                 <span className="text-xs text-hae-slate/70">{open ? '▾' : '▸'}</span>
               </div>
               <p className="mt-1.5 text-xs text-hae-slate">

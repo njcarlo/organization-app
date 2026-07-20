@@ -364,7 +364,17 @@ export default function MyTasks() {
               onClick={() => startEdit(task)}
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
+                <div className="hae-mobile-card__title min-w-0 flex-1 flex items-center gap-1.5">
+                  <span className="min-w-0">{task.name}</span>
+                  {task.subtasks?.length ? (
+                    <span
+                      className="shrink-0 rounded-full bg-hae-mist px-1.5 py-0.5 text-[10px] font-semibold text-hae-slate"
+                      title={`${task.subtasks.length} subtask${task.subtasks.length === 1 ? '' : 's'}`}
+                    >
+                      {task.subtasks.length}
+                    </span>
+                  ) : null}
+                </div>
                 <span
                   className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
                 >
@@ -603,7 +613,17 @@ export default function MyTasks() {
                                 <span className="text-[9px] opacity-70">M</span>
                               ) : null}
                             </span>
-                            <div className="line-clamp-2">{task.name}</div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="line-clamp-2">{task.name}</span>
+                              {task.subtasks?.length ? (
+                                <span
+                                  className="shrink-0 rounded-full bg-hae-mist px-1.5 py-0.5 text-[10px] font-semibold text-hae-slate"
+                                  title={`${task.subtasks.length} subtask${task.subtasks.length === 1 ? '' : 's'}`}
+                                >
+                                  {task.subtasks.length}
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       </td>
