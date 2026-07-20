@@ -12,7 +12,7 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 
-const emptyRow = { name: '', url: '', createdBy: '', filePath: '' }
+const emptyRow = { name: '', url: '', createdBy: '', filePath: '', notes: '' }
 
 const cellInputClass =
   'w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-hae-crimson focus:bg-white'
@@ -23,7 +23,7 @@ const cellInputClass =
  * blank row is directly editable — pressing Enter commits it and a fresh blank
  * row appears below.
  */
-export default function DocumentLinksTable({ groupId }) {
+export default function DocumentLinksTable({ groupId, showNotes = false }) {
   const { user, userProfile } = useAuth()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -73,6 +73,7 @@ export default function DocumentLinksTable({ groupId }) {
         url: editRow.url.trim(),
         createdBy: editRow.createdBy.trim(),
         filePath: editRow.filePath.trim(),
+        notes: (editRow.notes || '').trim(),
       })
       setEditRow(null)
       await load()
@@ -108,6 +109,7 @@ export default function DocumentLinksTable({ groupId }) {
         url: newRow.url.trim(),
         createdBy: newRow.createdBy.trim() || byName,
         filePath: newRow.filePath.trim(),
+        notes: newRow.notes.trim(),
         groupId,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
@@ -139,6 +141,7 @@ export default function DocumentLinksTable({ groupId }) {
               <th className="px-3 py-2 font-semibold">Link</th>
               <th className="px-3 py-2 font-semibold">Created by</th>
               <th className="px-3 py-2 font-semibold">File Path</th>
+              {showNotes && <th className="px-3 py-2 font-semibold">Notes</th>}
             </tr>
           </thead>
           <tbody>
@@ -166,6 +169,9 @@ export default function DocumentLinksTable({ groupId }) {
                 </td>
                 <td className="px-3 py-2 text-sm text-hae-slate">{row.createdBy || '—'}</td>
                 <td className="px-3 py-2 text-sm text-hae-slate">{row.filePath || '—'}</td>
+                {showNotes && (
+                  <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
+                )}
               </tr>
             ))}
             <tr className="border-b border-hae-line/70">
@@ -206,6 +212,17 @@ export default function DocumentLinksTable({ groupId }) {
                   onKeyDown={onEnterCommitNewRow}
                 />
               </td>
+              {showNotes && (
+                <td className="px-1 py-1">
+                  <input
+                    placeholder="Notes"
+                    className={cellInputClass}
+                    value={newRow.notes}
+                    onChange={(e) => setNewRow({ ...newRow, notes: e.target.value })}
+                    onKeyDown={onEnterCommitNewRow}
+                  />
+                </td>
+              )}
             </tr>
           </tbody>
         </table>
@@ -275,6 +292,17 @@ export default function DocumentLinksTable({ groupId }) {
                 className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
               />
             </label>
+            {showNotes && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Notes</span>
+                <textarea
+                  rows={3}
+                  value={editRow.notes || ''}
+                  onChange={(e) => setEditRow({ ...editRow, notes: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+            )}
           </form>
         ) : null}
       </Modal>

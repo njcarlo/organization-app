@@ -15,6 +15,7 @@ import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
 import CustomSectionItemPage from './pages/CustomSectionItemPage'
 import CourseRegistrations from './pages/CourseRegistrations'
+import AcademyLinks from './pages/AcademyLinks'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
@@ -165,6 +166,14 @@ export default function App() {
                   element={
                     <SectionRoute sectionId="academy">
                       <CourseRegistrations />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/academy/links"
+                  element={
+                    <SectionRoute sectionId="academy">
+                      <AcademyLinks />
                     </SectionRoute>
                   }
                 />
