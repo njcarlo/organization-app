@@ -569,6 +569,7 @@ export default function Sidebar({ open = false, onClose }) {
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
+        { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
         ...academyPrograms.map((p) => ({
           id: p.id,
           to: `/academy/${p.id}`,
