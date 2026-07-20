@@ -775,6 +775,14 @@ const TaskTable = forwardRef(function TaskTable(
                           {expandedId === task.id ? '▾' : '▸'}
                         </span>
                         <span className="line-clamp-2">{task.name}</span>
+                        {task.subtasks?.length ? (
+                          <span
+                            className="shrink-0 rounded-full bg-hae-mist px-1.5 py-0.5 text-[10px] font-semibold text-hae-slate"
+                            title={`${task.subtasks.length} subtask${task.subtasks.length === 1 ? '' : 's'}`}
+                          >
+                            {task.subtasks.length}
+                          </span>
+                        ) : null}
                       </button>
                     </td>
                     {showOwner ? (
@@ -924,6 +932,14 @@ const TaskTable = forwardRef(function TaskTable(
                           <span className="text-sm font-medium text-hae-ink">
                             {task.name}
                           </span>
+                          {task.subtasks?.length ? (
+                            <span
+                              className="shrink-0 rounded-full bg-hae-mist px-1.5 py-0.5 text-[10px] font-semibold text-hae-slate"
+                              title={`${task.subtasks.length} subtask${task.subtasks.length === 1 ? '' : 's'}`}
+                            >
+                              {task.subtasks.length}
+                            </span>
+                          ) : null}
                           <StatusPill status={task.status} waitingOn={isWaitingOn(task)} />
                         </div>
                         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-hae-slate">
