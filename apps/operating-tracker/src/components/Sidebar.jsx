@@ -8,9 +8,11 @@ import {
   getDoc,
   getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -257,6 +259,10 @@ export default function Sidebar({ open = false, onClose }) {
     const { collectionName, categoryId, sectionId, form } = addProjectModal
     setSaving(true)
     try {
+      const existingSnap = await getDocs(
+        query(collection(db, 'projects'), where('programId', '==', categoryId))
+      )
+      const maxOrder = existingSnap.docs.reduce((m, d) => Math.max(m, d.data().order ?? 0), -1)
       await addDoc(collection(db, 'projects'), {
         name: form.name.trim(),
         lead: form.lead,
@@ -265,6 +271,7 @@ export default function Sidebar({ open = false, onClose }) {
         targetDate: form.targetDate || '',
         notes: form.notes.trim(),
         programId: categoryId,
+        order: maxOrder + 1,
         createdAt: serverTimestamp(),
       })
       setAddProjectModal(null)

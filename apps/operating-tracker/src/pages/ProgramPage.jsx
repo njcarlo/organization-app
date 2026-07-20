@@ -3,17 +3,24 @@ import { useParams } from 'react-router-dom'
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import { useAuth } from '../context/AuthContext'
 import ProjectCard from '../components/ProjectCard'
 import LeadSelect from '../components/LeadSelect'
+import DraggableList from '../components/DraggableList'
+import SelectionToolbar from '../components/SelectionToolbar'
+import MoveCopyProjectModal from '../components/MoveCopyProjectModal'
 import { HEALTH_OPTIONS } from '../constants'
-import { namesLabel, normalizeHealth, sortByHealth } from '../utils'
+import { namesLabel, normalizeHealth, sortByOrder } from '../utils'
+import { logHistory } from '../utils/activityLog'
 
 const emptyProject = {
   name: '',
@@ -26,6 +33,7 @@ const emptyProject = {
 
 export default function ProgramPage() {
   const { programId } = useParams()
+  const { user, userProfile } = useAuth()
   const [program, setProgram] = useState(null)
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
@@ -35,6 +43,8 @@ export default function ProgramPage() {
   const [dense, setDense] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [moveModal, setMoveModal] = useState(null)
 
   const load = useCallback(async () => {
     const [programSnap, projectSnap, taskSnap] = await Promise.all([
@@ -57,7 +67,7 @@ export default function ProgramPage() {
 
     setProgram(prog)
     setProjects(
-      allProjects.filter((p) => p.programId === programId).sort(sortByHealth)
+      allProjects.filter((p) => p.programId === programId).sort(sortByOrder)
     )
     setTasks(allTasks.filter((t) => t.programId === programId))
     setLoading(false)
@@ -91,6 +101,7 @@ export default function ProgramPage() {
     if (!newProject.name.trim() || saving) return
     setSaving(true)
     try {
+      const maxOrder = projects.reduce((m, p) => Math.max(m, p.order ?? 0), -1)
       await addDoc(collection(db, 'projects'), {
         name: newProject.name.trim(),
         lead: newProject.lead,
@@ -99,6 +110,7 @@ export default function ProgramPage() {
         targetDate: newProject.targetDate || '',
         notes: newProject.notes.trim(),
         programId,
+        order: maxOrder + 1,
         createdAt: serverTimestamp(),
       })
       setNewProject(emptyProject)
@@ -107,6 +119,67 @@ export default function ProgramPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const reorderProjects = async (reorderedItems) => {
+    const batch = writeBatch(db)
+    reorderedItems.forEach((p, i) => {
+      if (p.order !== i) batch.update(doc(db, 'projects', p.id), { order: i })
+    })
+    await batch.commit()
+    load()
+  }
+
+  const toggleSelect = (projectId, checked) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(projectId)
+      else next.delete(projectId)
+      return next
+    })
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const openMoveModal = (initialAction) => {
+    setMoveModal({
+      initialAction,
+      projects: projects.filter((p) => selectedIds.has(p.id)),
+    })
+  }
+
+  const closeMoveModal = () => setMoveModal(null)
+
+  const handleMoveDone = () => {
+    clearSelection()
+    load()
+  }
+
+  const deleteSelected = async () => {
+    const selected = projects.filter((p) => selectedIds.has(p.id))
+    if (!selected.length) return
+    const label =
+      selected.length === 1 ? `project "${selected[0].name}"` : `${selected.length} projects`
+    if (!confirm(`Delete ${label}? Tasks are not cascade-deleted. This action cannot be undone.`)) {
+      return
+    }
+    await Promise.all(
+      selected.map(async (p) => {
+        await deleteDoc(doc(db, 'projects', p.id))
+        logHistory({
+          parentType: 'projects',
+          parentId: p.id,
+          parentName: p.name,
+          programId: p.programId,
+          action: 'deleted',
+          snapshot: p,
+          byId: user?.uid,
+          byName: userProfile?.name || user?.email || 'Someone',
+        })
+      })
+    )
+    clearSelection()
+    load()
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading program…</p>
@@ -232,18 +305,47 @@ export default function ProgramPage() {
             All projects are complete — show completed above if needed.
           </div>
         ) : (
-          visibleProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              program={program}
-              tasks={tasksByProject[project.id] || []}
-              onChanged={load}
-              dense={dense}
-            />
-          ))
+          <DraggableList
+            items={visibleProjects}
+            onReorder={reorderProjects}
+            renderCheckbox={(project) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.has(project.id)}
+                onChange={(e) => toggleSelect(project.id, e.target.checked)}
+                aria-label={`Select ${project.name}`}
+                className="h-4 w-4 shrink-0 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
+              />
+            )}
+            renderItem={(project) => (
+              <ProjectCard
+                project={project}
+                program={program}
+                tasks={tasksByProject[project.id] || []}
+                onChanged={load}
+                dense={dense}
+              />
+            )}
+          />
         )}
       </div>
+
+      <SelectionToolbar
+        count={selectedIds.size}
+        onCopy={() => openMoveModal('copy')}
+        onMoveTo={() => openMoveModal('move')}
+        onDelete={deleteSelected}
+        onClear={clearSelection}
+      />
+
+      <MoveCopyProjectModal
+        open={!!moveModal}
+        onClose={closeMoveModal}
+        projects={moveModal?.projects}
+        initialAction={moveModal?.initialAction}
+        program={program}
+        onDone={handleMoveDone}
+      />
     </div>
   )
 }

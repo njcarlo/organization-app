@@ -89,6 +89,22 @@ export const MEMBERSHIP_STATUS_OPTIONS = [
   'Expired',
 ]
 
+/**
+ * Top-level collections that host projects (via a project's `programId`),
+ * used by the "Move / copy project" picker. `customSectionItems` (user-
+ * created sections) is handled separately since it's one shared collection
+ * spanning many sections, tagged by `sectionId`.
+ */
+export const PROJECT_DESTINATION_GROUPS = [
+  { collectionName: 'programs', label: 'Programs', pathPrefix: '/programs' },
+  { collectionName: 'academyPrograms', label: 'Academy', pathPrefix: '/academy' },
+  { collectionName: 'customPrograms', label: 'Custom Programs', pathPrefix: '/custom-programs' },
+  { collectionName: 'trackerGraphics', label: 'Graphics', pathPrefix: '/graphics' },
+  { collectionName: 'trackerData', label: 'Data Projects', pathPrefix: '/data' },
+  { collectionName: 'boardCommitments', label: 'Board Commitments', pathPrefix: '/board-commitments' },
+  { collectionName: 'chapters', label: 'Chapters', pathPrefix: '/chapters' },
+]
+
 export const WHERE_TO_POST_OPTIONS = [
   "Regina's LinkedIn",
   'Instagram',
