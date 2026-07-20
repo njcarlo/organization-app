@@ -73,3 +73,4 @@ export {
   downloadIcs,
 } from './ics.js'
 export { timeOfDayGreeting } from './greeting.js'
+export { sendMentionEmail } from './mentionEmail.js'
