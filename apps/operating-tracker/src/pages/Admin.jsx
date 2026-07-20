@@ -8,6 +8,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   serverTimestamp,
@@ -29,7 +30,8 @@ import AdminFeatureToggles from '../components/AdminFeatureToggles'
 import LeadSelect from '../components/LeadSelect'
 import { namesLabel, toNameList } from '../utils'
 import { useAuth } from '../context/AuthContext'
-import { FEATURES, useFeatures } from '@hae/ui'
+import { FEATURES, Modal, useFeatures } from '@hae/ui'
+import { TRACKER_SECTIONS, sectionLabel } from '../sectionAccess'
 
 const CREATE_GUIDE = [
   {
@@ -137,6 +139,7 @@ export default function Admin() {
   })
   const [users, setUsers] = useState([])
   const [programs, setPrograms] = useState([])
+  const [customSections, setCustomSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -149,6 +152,9 @@ export default function Admin() {
   })
   const [editingUserId, setEditingUserId] = useState(null)
   const [userDraft, setUserDraft] = useState(null)
+  const [sectionAccessUser, setSectionAccessUser] = useState(null)
+  const [sectionAccessDraft, setSectionAccessDraft] = useState([])
+  const [savingSectionAccess, setSavingSectionAccess] = useState(false)
 
   const [newProgram, setNewProgram] = useState({ name: '', lead: [] })
   const [editingProgramId, setEditingProgramId] = useState(null)
@@ -165,9 +171,10 @@ export default function Admin() {
   const fileRef = useRef(null)
 
   const load = useCallback(async () => {
-    const [userSnap, programSnap] = await Promise.all([
+    const [userSnap, programSnap, customSectionSnap] = await Promise.all([
       getDocs(collection(db, 'users')),
       getDocs(collection(db, 'programs')),
+      getDocs(collection(db, 'customSections')),
     ])
     const userList = userSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
     userList.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
@@ -175,6 +182,7 @@ export default function Admin() {
     programList.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     setUsers(userList)
     setPrograms(programList)
+    setCustomSections(customSectionSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     setLoading(false)
   }, [])
 
@@ -283,6 +291,43 @@ export default function Admin() {
     setEditingUserId(null)
     setUserDraft(null)
     await load()
+  }
+
+  const openSectionAccess = (u) => {
+    setSectionAccessUser(u)
+    setSectionAccessDraft(Array.isArray(u.sectionAccess) ? u.sectionAccess : [])
+  }
+
+  const closeSectionAccess = () => {
+    if (savingSectionAccess) return
+    setSectionAccessUser(null)
+    setSectionAccessDraft([])
+  }
+
+  const toggleSectionAccessDraft = (id) => {
+    setSectionAccessDraft((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  const saveSectionAccess = async () => {
+    if (!sectionAccessUser) return
+    setSavingSectionAccess(true)
+    try {
+      await updateDoc(
+        doc(db, 'users', sectionAccessUser.id),
+        sectionAccessDraft.length
+          ? { sectionAccess: sectionAccessDraft }
+          : { sectionAccess: deleteField() }
+      )
+      setSectionAccessUser(null)
+      setSectionAccessDraft([])
+      await load()
+    } catch (err) {
+      setError(err.message || 'Failed to save section access')
+    } finally {
+      setSavingSectionAccess(false)
+    }
   }
 
   const removeUser = async (id) => {
@@ -444,6 +489,7 @@ export default function Admin() {
                   <th className="px-3 py-2 font-semibold">Name</th>
                   <th className="px-3 py-2 font-semibold">Email</th>
                   <th className="px-3 py-2 font-semibold">Role</th>
+                  <th className="px-3 py-2 font-semibold">Section access</th>
                   <th className="px-3 py-2 font-semibold w-24" />
                 </tr>
               </thead>
@@ -476,6 +522,11 @@ export default function Admin() {
                           ))}
                         </select>
                       </td>
+                      <td className="px-3 py-2 text-xs text-hae-slate">
+                        {Array.isArray(u.sectionAccess) && u.sectionAccess.length
+                          ? `${u.sectionAccess.length} section${u.sectionAccess.length === 1 ? '' : 's'}`
+                          : 'All sections'}
+                      </td>
                       <td className="px-3 py-2 text-right text-xs">
                         <button
                           type="button"
@@ -504,6 +555,17 @@ export default function Admin() {
                         >
                           {u.role === 'user' ? 'staff' : u.role}
                         </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => openSectionAccess(u)}
+                          className="text-xs text-hae-slate hover:text-hae-crimson"
+                        >
+                          {Array.isArray(u.sectionAccess) && u.sectionAccess.length
+                            ? `${u.sectionAccess.length} section${u.sectionAccess.length === 1 ? '' : 's'}`
+                            : 'All sections'}
+                        </button>
                       </td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
@@ -539,6 +601,61 @@ export default function Admin() {
               </tbody>
             </table>
           </div>
+
+          <Modal
+            open={!!sectionAccessUser}
+            onClose={closeSectionAccess}
+            title={sectionAccessUser ? `Section access — ${sectionAccessUser.name}` : ''}
+            busy={savingSectionAccess}
+            footer={
+              <>
+                <button
+                  type="button"
+                  onClick={closeSectionAccess}
+                  className="hae-btn-secondary"
+                  disabled={savingSectionAccess}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveSectionAccess}
+                  className="hae-btn"
+                  disabled={savingSectionAccess}
+                >
+                  {savingSectionAccess ? 'Saving…' : 'Save'}
+                </button>
+              </>
+            }
+          >
+            <p className="text-sm text-hae-slate">
+              Leave everything unchecked for full access to all Tracker sections (the
+              default). Check specific sections to limit this user to only those —
+              their sidebar and navigation will be restricted accordingly.
+            </p>
+            <div className="mt-3 space-y-1.5">
+              {TRACKER_SECTIONS.map((s) => (
+                <label key={s.id} className="flex items-center gap-2 text-sm text-hae-ink">
+                  <input
+                    type="checkbox"
+                    checked={sectionAccessDraft.includes(s.id)}
+                    onChange={() => toggleSectionAccessDraft(s.id)}
+                  />
+                  {s.label}
+                </label>
+              ))}
+              {customSections.map((s) => (
+                <label key={s.id} className="flex items-center gap-2 text-sm text-hae-ink">
+                  <input
+                    type="checkbox"
+                    checked={sectionAccessDraft.includes(s.id)}
+                    onChange={() => toggleSectionAccessDraft(s.id)}
+                  />
+                  {sectionLabel(s.id, customSections)}
+                </label>
+              ))}
+            </div>
+          </Modal>
         </div>
       )}
 

@@ -65,7 +65,7 @@ const DEFAULT_SECTION_ORDER = [
 
 /** Tracker sidenav — expandable chrome; platform switch lives in the header. */
 export default function Sidebar({ open = false, onClose }) {
-  const { user, userProfile, isAdmin, logout, roleLabel } = useAuth()
+  const { user, userProfile, isAdmin, logout, roleLabel, sectionAccess } = useAuth()
   const { isEnabled } = useFeatures()
   const navigate = useNavigate()
   const isExecInboxUser = EXEC_INBOX_EMAILS.includes((user?.email || '').toLowerCase())
@@ -511,12 +511,19 @@ export default function Sidebar({ open = false, onClose }) {
   ]
 
   const sections = useMemo(() => {
-    const workspaceItems = [
-      { to: '/', label: 'Dashboard', end: true, icon: 'home' },
-      { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-      { to: '/calendar', label: 'Calendar', icon: 'calendar' },
-      { to: '/activity', label: 'Activity', icon: 'history' },
-    ]
+    // Section-restricted users don't get the org-wide Dashboard or Activity
+    // feed — they land in (and stay within) their assigned section(s).
+    const workspaceItems = sectionAccess
+      ? [
+          { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
+          { to: '/calendar', label: 'Calendar', icon: 'calendar' },
+        ]
+      : [
+          { to: '/', label: 'Dashboard', end: true, icon: 'home' },
+          { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
+          { to: '/calendar', label: 'Calendar', icon: 'calendar' },
+          { to: '/activity', label: 'Activity', icon: 'history' },
+        ]
     if (isExecInboxUser) {
       workspaceItems.push({
         to: '/executive-inbox',
@@ -727,7 +734,10 @@ export default function Sidebar({ open = false, onClose }) {
     // Workspace stays fixed. The rest: reordering is a personal preference
     // (each user drags their own view), while renaming is shared org-wide
     // chrome — any staff user can rename, and it changes the label for everyone.
-    const [workspace, ...content] = next
+    const [workspace, ...allContent] = next
+    const content = sectionAccess
+      ? allContent.filter((section) => sectionAccess.includes(section.id))
+      : allContent
     const byId = new Map(content.map((section) => [section.id, section]))
     const orderedIds = [
       ...sectionConfig.order.filter((id) => byId.has(id)),
@@ -766,6 +776,7 @@ export default function Sidebar({ open = false, onClose }) {
     isEnabled,
     isExecInboxUser,
     sectionConfig,
+    sectionAccess,
   ])
 
   return (
@@ -779,8 +790,8 @@ export default function Sidebar({ open = false, onClose }) {
         userName={userProfile?.name}
         roleLabel={roleLabel}
         onLogout={logout}
-        onReorderSections={reorderSections}
-        onAddSection={openAddSection}
+        onReorderSections={sectionAccess ? undefined : reorderSections}
+        onAddSection={sectionAccess ? undefined : openAddSection}
       />
 
       <Modal
