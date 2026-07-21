@@ -71,6 +71,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [editAcademyOpen, setEditAcademyOpen] = useState(false)
   const [academySaving, setAcademySaving] = useState(false)
   const [academyForm, setAcademyForm] = useState(null)
+  const [editChapterOpen, setEditChapterOpen] = useState(false)
+  const [chapterSaving, setChapterSaving] = useState(false)
+  const [chapterForm, setChapterForm] = useState(null)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [moveModal, setMoveModal] = useState(null)
 
@@ -305,6 +308,39 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     }
   }
 
+  const startEditChapter = () => {
+    setChapterForm({
+      name: program.name || '',
+      chapterLeader: program.chapterLeader || '',
+      coLeaders: program.coLeaders || '',
+    })
+    setEditChapterOpen(true)
+  }
+
+  const closeEditChapter = () => {
+    if (chapterSaving) return
+    setEditChapterOpen(false)
+    setChapterForm(null)
+  }
+
+  const saveEditChapter = async (e) => {
+    e.preventDefault()
+    if (!chapterForm?.name.trim() || chapterSaving) return
+    setChapterSaving(true)
+    try {
+      await updateDoc(doc(db, collectionName, itemId), {
+        name: chapterForm.name.trim(),
+        chapterLeader: chapterForm.chapterLeader.trim(),
+        coLeaders: chapterForm.coLeaders.trim(),
+      })
+      setEditChapterOpen(false)
+      setChapterForm(null)
+      load()
+    } finally {
+      setChapterSaving(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
   if (error) return <p className="text-sm text-hae-red">{error}</p>
   if (!program)
@@ -523,6 +559,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               Edit
             </button>
           ) : null}
+          {collectionName === 'chapters' ? (
+            <button type="button" onClick={startEditChapter} className="hae-btn-secondary">
+              Edit
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -614,6 +655,67 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   onChange={(e) =>
                     setAcademyForm({ ...academyForm, guestSpeaker: e.target.value })
                   }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+            </form>
+          ) : null}
+        </Modal>
+      ) : null}
+
+      {collectionName === 'chapters' ? (
+        <Modal
+          open={editChapterOpen}
+          onClose={closeEditChapter}
+          title="Edit Chapter"
+          busy={chapterSaving}
+          footer={
+            <>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEditChapter}
+                disabled={chapterSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-chapter-form"
+                className="hae-btn"
+                disabled={chapterSaving}
+              >
+                {chapterSaving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          }
+        >
+          {chapterForm ? (
+            <form id="edit-chapter-form" onSubmit={saveEditChapter} className="grid gap-3">
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Name</span>
+                <input
+                  required
+                  value={chapterForm.name}
+                  onChange={(e) => setChapterForm({ ...chapterForm, name: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Chapter Leader/s</span>
+                <input
+                  value={chapterForm.chapterLeader}
+                  onChange={(e) =>
+                    setChapterForm({ ...chapterForm, chapterLeader: e.target.value })
+                  }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Co-Leaders</span>
+                <input
+                  value={chapterForm.coLeaders}
+                  onChange={(e) => setChapterForm({ ...chapterForm, coLeaders: e.target.value })}
                   className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
                 />
               </label>
