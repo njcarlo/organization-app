@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { hubHref, MODULES, moduleHref, getModule } from './modules.js'
+import { hubHref, getVisibleModules, moduleHref, getModule } from './modules.js'
+import { isHubHidden } from './platformSurface.js'
 import { navigateToModule } from './sso.js'
 import { useFeatures } from './FeaturesContext.jsx'
 
 /**
- * Top site header — brand + platform switcher in a single row.
- * Markup/classes match packages/branding/src/platform-header.css and the hub landing.
- * Left: logo + “Now in” (a dropdown to switch apps in-app); on the hub landing, the
- * full app chip row is shown instead since choosing an app is the point of that page.
+ * Top site header — brand + optional platform switcher.
+ * When the product surface is Tracker-only, Hub and other apps are hidden
+ * (apps/data remain in the repo; they are just not linked here).
  */
 export default function PlatformHeader({
   moduleId = null,
@@ -28,12 +28,16 @@ export default function PlatformHeader({
   const { isModuleEnabled } = useFeatures()
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const switcherRef = useRef(null)
+  const hideHub = isHubHidden()
+  const brandHref = hideHub && !isHub ? '/' : hubHref()
 
-  const platforms = MODULES.filter((m) => {
+  const platforms = getVisibleModules().filter((m) => {
     if (!isModuleEnabled(m.id)) return false
     if (isHub) return true
     return m.id === moduleId || (canAccessModule ? canAccessModule(m.id) : true)
   })
+
+  const showSwitcher = !hideHub || platforms.length > 1 || isHub
 
   useEffect(() => {
     if (!switcherOpen) return undefined
@@ -83,21 +87,21 @@ export default function PlatformHeader({
         ) : null}
 
         <a
-          href={hubHref()}
+          href={brandHref}
           className="hae-platform-header__brand"
-          title="HAE Platform hub"
+          title={hideHub ? displayTitle : 'HAE Platform hub'}
         >
           <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" />
         </a>
 
         <div className="hae-platform-header__divider" aria-hidden />
 
-        {isHub ? (
+        {isHub && !hideHub ? (
           <div className="hae-platform-header__title-block">
             <div className="hae-platform-header__kicker">Now in</div>
             <div className="hae-platform-header__title">{displayTitle}</div>
           </div>
-        ) : (
+        ) : showSwitcher ? (
           <div className="hae-platform-header__switcher" ref={switcherRef}>
             <button
               type="button"
@@ -130,10 +134,18 @@ export default function PlatformHeader({
 
             {switcherOpen ? (
               <div className="hae-platform-header__switcher-menu" role="menu">
-                <a href={hubHref()} className="hae-platform-header__switcher-item" role="menuitem">
-                  <span className="hae-platform-header__switcher-item-name">Hub</span>
-                  <span className="hae-platform-header__switcher-item-desc">All HAE apps</span>
-                </a>
+                {!hideHub ? (
+                  <a
+                    href={hubHref()}
+                    className="hae-platform-header__switcher-item"
+                    role="menuitem"
+                  >
+                    <span className="hae-platform-header__switcher-item-name">Hub</span>
+                    <span className="hae-platform-header__switcher-item-desc">
+                      All HAE apps
+                    </span>
+                  </a>
+                ) : null}
                 {platforms.map((m) => {
                   const active = m.id === moduleId
                   return (
@@ -147,7 +159,9 @@ export default function PlatformHeader({
                       role="menuitem"
                       aria-current={active ? 'page' : undefined}
                     >
-                      <span className="hae-platform-header__switcher-item-name">{m.name}</span>
+                      <span className="hae-platform-header__switcher-item-name">
+                        {m.name}
+                      </span>
                       <span className="hae-platform-header__switcher-item-desc">
                         {m.description}
                       </span>
@@ -157,11 +171,16 @@ export default function PlatformHeader({
               </div>
             ) : null}
           </div>
+        ) : (
+          <div className="hae-platform-header__title-block">
+            <div className="hae-platform-header__kicker">HAE</div>
+            <div className="hae-platform-header__title">{displayTitle}</div>
+          </div>
         )}
 
         <div className="hae-platform-header__spacer" aria-hidden />
 
-        {isHub ? (
+        {isHub && !hideHub ? (
           <nav className="hae-platform-header__nav" aria-label="Platform apps">
             <span className="hae-platform-header__chip is-current" aria-current="page">
               Hub

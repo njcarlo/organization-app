@@ -1,3 +1,5 @@
+import { visibleModuleIds } from './platformSurface.js'
+
 /** Platform hub (landing) — Firebase Hosting site `hae` */
 export const HUB_URL = 'https://hae.web.app'
 export const HUB_LOCAL_PORT = 5180
@@ -55,6 +57,13 @@ export const MODULES = [
     tagline: 'Membership & events',
   },
 ]
+
+/** Modules exposed in the product UI (header switcher). Others stay in repo. */
+export function getVisibleModules() {
+  const allowed = visibleModuleIds()
+  if (!allowed) return MODULES
+  return MODULES.filter((m) => allowed.includes(m.id))
+}
 
 export function getModule(moduleId) {
   return MODULES.find((m) => m.id === moduleId) || null

@@ -37,10 +37,10 @@ const CREATE_GUIDE = [
   {
     app: 'Roles (RBAC)',
     items: [
-      { what: 'Admin', where: 'Full access — users, import/export, all apps' },
-      { what: 'Staff', where: 'HAE team — Tracker, LMS manage, EiR manage, CRM, AMS' },
-      { what: 'Member', where: 'Alumni — EiR directory/booking, AMS events & own membership' },
-      { what: 'Student', where: 'Academy — LMS My learning, catalog, certificates; EiR browse' },
+      { what: 'Admin', where: 'Full access — users, import/export, Tracker' },
+      { what: 'Staff', where: 'HAE team — Tracker programs, projects, and tasks' },
+      { what: 'Member', where: 'Limited Tracker access when granted' },
+      { what: 'Student', where: 'Limited Tracker access when granted' },
       { what: 'Legacy "user"', where: 'Treated as Staff automatically' },
     ],
   },
@@ -50,32 +50,6 @@ const CREATE_GUIDE = [
       { what: 'Users', where: 'Admin → Users (this page)' },
       { what: 'Programs', where: 'Admin → Programs (this page)' },
       { what: 'Projects & tasks', where: 'Admin → Add items, or Programs → open a program' },
-      { what: 'Surveys', where: 'Tracker → Surveys (or Import surveys / Admin → Bulk import)' },
-    ],
-  },
-  {
-    app: 'LMS',
-    items: [
-      { what: 'Courses, modules, enrollments…', where: 'Admin → Add items, Bulk import, or LMS manage pages' },
-      { what: 'Learner email', where: 'Must match login email for student views' },
-    ],
-  },
-  {
-    app: 'EiR',
-    items: [{ what: 'Experts', where: 'Admin → Add items / Bulk import, or EiR → Manage experts' }],
-  },
-  {
-    app: 'CRM',
-    items: [
-      { what: 'Contacts & interactions', where: 'Admin → Add items / Bulk import, or CRM pages' },
-      { what: 'Pipeline stage', where: 'CRM → Pipeline (moves existing contacts)' },
-    ],
-  },
-  {
-    app: 'AMS',
-    items: [
-      { what: 'Members, memberships, events…', where: 'Admin → Add items / Bulk import, or AMS pages' },
-      { what: 'Member email', where: 'Stored on memberships for member view' },
     ],
   },
 ]

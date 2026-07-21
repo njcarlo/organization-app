@@ -13,10 +13,10 @@ export const HELP_SECTIONS = [
       {
         heading: 'Sign in',
         steps: [
-          'Open the app URL you were given (Tracker, LMS, EiR, CRM, or AMS).',
+          'Open the Operations Tracker URL (https://tracker-hae.web.app).',
           'Sign in with your HAE email and password.',
           'Forgot password? Use Forgot password on the sign-in screen — Firebase emails a reset link.',
-          'If you have no account yet, ask an admin to create one under Tracker → Admin → Users.',
+          'If you have no account yet, ask an admin to create one under Admin → Users.',
         ],
       },
       {
@@ -27,12 +27,11 @@ export const HELP_SECTIONS = [
         ],
       },
       {
-        heading: 'Switching between apps',
+        heading: 'This app',
         steps: [
-          'Use the top header chips (Hub, Tracker, LMS, EiR, CRM, AMS) to move between apps.',
-          'The left sidenav only shows pages for the app you are in right now.',
-          'Start from the Hub (hae.web.app) for a landing overview of every workspace.',
-          'If you are already signed in, switching apps should keep you signed in.',
+          'You are in Operations Tracker — programs, projects, tasks, and related workspace sections.',
+          'The left sidenav lists Tracker sections only (other HAE apps are hidden from this surface).',
+          'Logo in the header returns you to the Tracker home dashboard.',
         ],
       },
     ],
@@ -97,9 +96,8 @@ export const HELP_SECTIONS = [
       {
         heading: 'Surveys',
         steps: [
-          'Create surveys with short/long text, single/multi choice, or 1–5 rating questions.',
-          'Set status to Open, copy the public link (/s/…), or Compose invite email (BCC via your inbox).',
-          'Analytics shows choice/rating breakdowns; Export CSV downloads all responses.',
+          'Surveys are currently hidden from the Tracker product surface (nav and routes).',
+          'Existing survey data in Firestore is retained and was not deleted.',
         ],
       },
       {

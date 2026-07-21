@@ -18,7 +18,7 @@ import {
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
-import { FEATURES, Modal, SideNav, useFeatures } from '@hae/ui'
+import { FEATURES, Modal, SideNav, useFeatures, isSurveysHidden } from '@hae/ui'
 import { EVENT_FORMAT_OPTIONS, EXEC_INBOX_EMAILS, HEALTH_OPTIONS } from '../constants'
 import { formatDate, namesLabel, toNameList } from '../utils'
 
@@ -550,7 +550,7 @@ export default function Sidebar({ open = false, onClose }) {
         icon: 'message',
       })
     }
-    if (isEnabled(FEATURES.SURVEYS)) {
+    if (!isSurveysHidden() && isEnabled(FEATURES.SURVEYS)) {
       workspaceItems.push({ to: '/surveys', label: 'Surveys', icon: 'survey' })
     }
     if (isAdmin) {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FEATURE_CATALOG, mergeFeatures, useFeatures } from '@hae/ui'
+import { featureCatalogForSurface, mergeFeatures, useFeatures } from '@hae/ui'
 
 export default function AdminFeatureToggles() {
   const { flags, loading, saveFlags, isSuperAdmin } = useFeatures()
@@ -7,6 +7,7 @@ export default function AdminFeatureToggles() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const catalog = featureCatalogForSurface()
 
   const current = draft || flags
 
@@ -55,15 +56,15 @@ export default function AdminFeatureToggles() {
       <div>
         <h2 className="text-sm font-semibold text-hae-ink">Feature toggles</h2>
         <p className="mt-1 text-sm text-hae-slate">
-          Turn platform apps and features on or off for everyone except
-          superadmins. You and the other superadmin always see everything.
+          Turn Tracker features on or off. Other HAE apps and Surveys are hidden
+          from this product surface (code and Firestore data are kept).
         </p>
       </div>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
       {message && <p className="text-sm text-hae-green">{message}</p>}
 
-      {FEATURE_CATALOG.map((group) => (
+      {catalog.map((group) => (
         <section
           key={group.group}
           className="rounded-xl border border-hae-line bg-white p-4 sm:p-5"

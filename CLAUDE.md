@@ -9,12 +9,14 @@ Monorepo for Harvard Alumni Entrepreneurs (HAE) platform apps on **one Firebase 
 
 | App | Path | Live |
 |-----|------|------|
-| Hub | `apps/hub` | https://hae.web.app |
-| Operations (Tracker) | `apps/operating-tracker` | https://tracker-hae.web.app |
-| LMS | `apps/lms` | https://lms-hae.web.app |
-| EiR (Experts) | `apps/eir` | https://eir-hae.web.app (public) + `/app` (members) |
-| CRM | `apps/crm` | https://crm-hae.web.app |
-| AMS | `apps/ams` | https://ams-hae.web.app |
+| Hub | `apps/hub` | https://hae.web.app (hidden from UI) |
+| Operations (Tracker) | `apps/operating-tracker` | https://tracker-hae.web.app (**primary product surface**) |
+| LMS | `apps/lms` | https://lms-hae.web.app (hidden from UI) |
+| EiR (Experts) | `apps/eir` | https://eir-hae.web.app (hidden from UI) |
+| CRM | `apps/crm` | https://crm-hae.web.app (hidden from UI) |
+| AMS | `apps/ams` | https://ams-hae.web.app (hidden from UI) |
+
+Product surface toggles: `packages/ui/src/platformSurface.js` (Tracker-only; Surveys hidden; **do not delete Firestore data**).
 
 Shared packages: `@hae/firebase`, `@hae/branding`, `@hae/ui`.
 
