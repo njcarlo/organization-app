@@ -51,7 +51,7 @@ CI: `.github/workflows/deploy-firebase.yml` deploys hosting + rules on `main`; f
 4. **Feature flags** via `FEATURES` / `useFeatures` when gating optional product surfaces.
 5. **Firestore rules** must stay in sync with any new collection or public-read change (`firestore.rules`).
 6. **Prefer small PRs** with clear scope; branch names `cursor/<descriptive-name>-****` when using Cursor cloud agents.
-7. **Never commit secrets**; Firebase web config in `packages/firebase` is the public client config (expected).
+7. **Never commit secrets**; Firebase web config in `packages/firebase` is the public client config (expected). **`FIREBASE_TOKEN` (GitHub Actions) is deploy-only — not Gmail.** See [`SECRETS.md`](./SECRETS.md).
 
 ## Where to look
 
