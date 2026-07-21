@@ -3,8 +3,11 @@
  * Stored at Firestore: platformSettings/features
  *
  * When a flag is off, non-superadmin users lose that UI / module.
- * Superadmins always see everything.
+ * Superadmins always see everything — except product-surface hides
+ * (see platformSurface.js), which apply to everyone.
  */
+
+import { isSurveysHidden, visibleModuleIds } from './platformSurface.js'
 
 export const FEATURES = {
   MODULE_TRACKER: 'module_tracker',
@@ -111,8 +114,55 @@ export const FEATURE_CATALOG = [
   },
 ]
 
+/** Catalog filtered to the current product surface (Tracker-only hides other apps/Surveys). */
+export function featureCatalogForSurface() {
+  const allowedModules = visibleModuleIds()
+  const hideSurveys = isSurveysHidden()
+  return FEATURE_CATALOG.map((group) => {
+    let items = group.items
+    if (group.group === 'Apps' && allowedModules) {
+      const moduleFeatureById = {
+        [FEATURES.MODULE_TRACKER]: 'tracker',
+        [FEATURES.MODULE_LMS]: 'lms',
+        [FEATURES.MODULE_EIR]: 'eir',
+        [FEATURES.MODULE_CRM]: 'crm',
+        [FEATURES.MODULE_AMS]: 'ams',
+      }
+      items = items.filter((i) => {
+        const mid = moduleFeatureById[i.id]
+        return !mid || allowedModules.includes(mid)
+      })
+    }
+    if (group.group === 'Tracker features' && hideSurveys) {
+      items = items.filter((i) => i.id !== FEATURES.SURVEYS)
+    }
+    if (group.group === 'LMS features' && allowedModules && !allowedModules.includes('lms')) {
+      items = []
+    }
+    if (group.group === 'CRM features' && allowedModules && !allowedModules.includes('crm')) {
+      items = []
+    }
+    return { ...group, items }
+  }).filter((g) => g.items.length > 0)
+}
+
 export const DEFAULT_FEATURES = Object.fromEntries(
-  FEATURE_CATALOG.flatMap((g) => g.items.map((i) => [i.id, true]))
+  FEATURE_CATALOG.flatMap((g) =>
+    g.items.map((i) => {
+      // Tracker-only surface: other apps + surveys off by default (data kept).
+      if (i.id === FEATURES.MODULE_TRACKER) return [i.id, true]
+      if (
+        i.id === FEATURES.MODULE_LMS ||
+        i.id === FEATURES.MODULE_EIR ||
+        i.id === FEATURES.MODULE_CRM ||
+        i.id === FEATURES.MODULE_AMS ||
+        i.id === FEATURES.SURVEYS
+      ) {
+        return [i.id, false]
+      }
+      return [i.id, true]
+    })
+  )
 )
 
 export function mergeFeatures(raw) {
@@ -122,10 +172,36 @@ export function mergeFeatures(raw) {
       if (typeof raw[key] === 'boolean') flags[key] = raw[key]
     }
   }
+  // Product surface always wins for Surveys (UI hidden; data retained).
+  if (isSurveysHidden()) flags[FEATURES.SURVEYS] = false
+  const allowed = visibleModuleIds()
+  if (allowed) {
+    for (const [featureId, moduleId] of Object.entries({
+      [FEATURES.MODULE_TRACKER]: 'tracker',
+      [FEATURES.MODULE_LMS]: 'lms',
+      [FEATURES.MODULE_EIR]: 'eir',
+      [FEATURES.MODULE_CRM]: 'crm',
+      [FEATURES.MODULE_AMS]: 'ams',
+    })) {
+      if (!allowed.includes(moduleId)) flags[featureId] = false
+    }
+  }
   return flags
 }
 
 export function isFeatureOn(flags, featureId, { isSuperAdmin = false } = {}) {
+  // Surface hides apply even to superadmins (other apps/Surveys not in product UI).
+  if (featureId === FEATURES.SURVEYS && isSurveysHidden()) return false
+  const allowed = visibleModuleIds()
+  if (allowed && featureId) {
+    const moduleForFeature = {
+      [FEATURES.MODULE_LMS]: 'lms',
+      [FEATURES.MODULE_EIR]: 'eir',
+      [FEATURES.MODULE_CRM]: 'crm',
+      [FEATURES.MODULE_AMS]: 'ams',
+    }[featureId]
+    if (moduleForFeature && !allowed.includes(moduleForFeature)) return false
+  }
   if (isSuperAdmin) return true
   if (!featureId) return true
   if (!flags || typeof flags[featureId] === 'undefined') return true

@@ -6,21 +6,24 @@ Guide for developers joining this monorepo. Read this first, then [`README.md`](
 
 ## 1. What we are building
 
-Harvard Alumni Entrepreneurs (**HAE**) runs **one platform** across several product modules. All modules share:
+Harvard Alumni Entrepreneurs (**HAE**) platform monorepo. **Current product surface is Operations Tracker only** (see `packages/ui/src/platformSurface.js`).
+
+Other apps (LMS, EiR, CRM, AMS, Hub) remain in the repo and may still be deployed; they are **not linked** from the Tracker header. **No Firestore data is deleted** when hiding surfaces (including Surveys).
+
+Shared infrastructure:
 
 - One Firebase project: **`hae-operating-tracker`**
 - One Auth directory (`users` + Firebase Auth)
 - Shared branding (`@hae/branding`) and UI shell (`@hae/ui`)
-- A top **platform header** to switch Hub / Tracker / LMS / EiR / CRM / AMS
 
-| Module | App path | Live URL | Status |
-|--------|----------|----------|--------|
-| Hub (landing) | `apps/hub` | https://hae.web.app | Live (static) |
-| Operations (Tracker) | `apps/operating-tracker` | https://tracker-hae.web.app | Live |
-| Learning (LMS) | `apps/lms` | https://lms-hae.web.app | Live |
-| Experts (EiR) | `apps/eir` | https://eir-hae.web.app | Live (public + `/app`) |
-| Relationships (CRM) | `apps/crm` | https://crm-hae.web.app | Live |
-| Membership (AMS) | `apps/ams` | https://ams-hae.web.app | Live |
+| Module | App path | Live URL | In product UI? |
+|--------|----------|----------|----------------|
+| Hub (landing) | `apps/hub` | https://hae.web.app | Hidden |
+| Operations (Tracker) | `apps/operating-tracker` | https://tracker-hae.web.app | **Yes — primary app** |
+| Learning (LMS) | `apps/lms` | https://lms-hae.web.app | Hidden |
+| Experts (EiR) | `apps/eir` | https://eir-hae.web.app | Hidden |
+| Relationships (CRM) | `apps/crm` | https://crm-hae.web.app | Hidden |
+| Membership (AMS) | `apps/ams` | https://ams-hae.web.app | Hidden |
 
 Public brand site (external): https://www.harvardae.org/
 

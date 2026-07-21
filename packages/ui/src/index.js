@@ -18,10 +18,17 @@ export {
   HUB_URL,
   HUB_LOCAL_PORT,
   getModule,
+  getVisibleModules,
   hubHref,
   moduleHref,
   moduleUrl,
 } from './modules.js'
+export {
+  PLATFORM_SURFACE,
+  isHubHidden,
+  isSurveysHidden,
+  visibleModuleIds,
+} from './platformSurface.js'
 export {
   consumeSsoTokenIfPresent,
   createSsoToken,
@@ -50,6 +57,7 @@ export { ensureSuperAdminProfile } from './ensureSuperAdmin.js'
 export {
   FEATURES,
   FEATURE_CATALOG,
+  featureCatalogForSurface,
   DEFAULT_FEATURES,
   MODULE_FEATURE,
   FEATURES_DOC_PATH,

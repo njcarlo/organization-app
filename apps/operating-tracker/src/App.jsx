@@ -22,12 +22,12 @@ import Notifications from './pages/Notifications'
 import ExecutiveInbox from './pages/ExecutiveInbox'
 import Admin from './pages/Admin'
 import Help from './pages/Help'
-import Surveys from './pages/Surveys'
-import SurveyEditor from './pages/SurveyEditor'
-import SurveyRespond from './pages/SurveyRespond'
 import RestrictedHome from './pages/RestrictedHome'
 import { PERMISSIONS } from '../../../packages/ui/src/rbac.js'
 import { EXEC_INBOX_EMAILS } from './constants'
+
+// Surveys UI is hidden (platformSurface.hideSurveys). Page files + Firestore
+// `surveys*` data are intentionally kept — do not delete.
 
 /** Root route: full Dashboard for unrestricted users, else their section. */
 function Home() {
@@ -90,8 +90,6 @@ export default function App() {
               element={<AuthActionPage appName="Operations" />}
             />
             <Route path="/setup" element={<Setup />} />
-            {/* Public survey response — no login required */}
-            <Route path="/s/:surveyId" element={<SurveyRespond />} />
 
             {/* Help: any signed-in directory user (not only tracker:read) */}
             <Route element={<ProtectedRoute />}>
@@ -265,36 +263,15 @@ export default function App() {
                 <Route
                   element={
                     <ProtectedRoute
-                      anyOf={[PERMISSIONS.TRACKER_WRITE, PERMISSIONS.TRACKER_ADMIN]}
-                    />
-                  }
-                >
-                  <Route
-                    path="/surveys"
-                    element={
-                      <FeatureRoute feature={FEATURES.SURVEYS}>
-                        <Surveys />
-                      </FeatureRoute>
-                    }
-                  />
-                  <Route
-                    path="/surveys/:surveyId"
-                    element={
-                      <FeatureRoute feature={FEATURES.SURVEYS}>
-                        <SurveyEditor />
-                      </FeatureRoute>
-                    }
-                  />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute
                       anyOf={[PERMISSIONS.TRACKER_ADMIN, PERMISSIONS.PLATFORM_USERS]}
                     />
                   }
                 >
                   <Route path="/admin" element={<Admin />} />
                 </Route>
+                {/* Surveys routes removed from UI; data + page modules retained. */}
+                <Route path="/surveys/*" element={<Navigate to="/" replace />} />
+                <Route path="/s/:surveyId" element={<Navigate to="/" replace />} />
               </Route>
             </Route>
 

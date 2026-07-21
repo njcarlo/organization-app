@@ -2,6 +2,8 @@
 
 One repo, **one app per milestone module**. Shared Firebase + branding packages.
 
+**Current product surface:** Operations Tracker only (Hub / LMS / EiR / CRM / AMS / Surveys are hidden from UI; code and Firestore data are kept). See [`packages/ui/src/platformSurface.js`](./packages/ui/src/platformSurface.js).
+
 **Architecture for developers:** [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md) — system map, data model, deploy, and task backlog.
 
 **Live hub (landing):** https://hae.web.app  
