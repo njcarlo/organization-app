@@ -48,6 +48,7 @@ export default function EventsDashboard() {
   const [importOpen, setImportOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [deleting, setDeleting] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'trackerEvents'))
@@ -68,6 +69,29 @@ export default function EventsDashboard() {
   )
 
   const weekGroups = useMemo(() => groupEventsByWeek(sortedEvents), [sortedEvents])
+
+  const todayStart = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
+
+  const { archivedGroups, visibleGroups } = useMemo(() => {
+    const archived = []
+    const visible = []
+    for (const group of weekGroups) {
+      if (group.end && group.end < todayStart) archived.push(group)
+      else visible.push(group)
+    }
+    return { archivedGroups: archived, visibleGroups: visible }
+  }, [weekGroups, todayStart])
+
+  const archivedEventCount = useMemo(
+    () => archivedGroups.reduce((n, g) => n + g.events.length, 0),
+    [archivedGroups]
+  )
+
+  const displayedGroups = showArchived ? weekGroups : visibleGroups
 
   const expandedEvent = useMemo(
     () => sortedEvents.find((event) => event.id === expandedId) || null,
@@ -183,6 +207,17 @@ export default function EventsDashboard() {
               disabled={deleting}
             >
               {deleting ? 'Deleting…' : `Delete selected (${selectedIds.size})`}
+            </button>
+          ) : null}
+          {archivedEventCount > 0 ? (
+            <button
+              type="button"
+              className="hae-btn-secondary"
+              onClick={() => setShowArchived((v) => !v)}
+            >
+              {showArchived
+                ? 'Hide past weeks'
+                : `Show past weeks (${archivedEventCount})`}
             </button>
           ) : null}
           <button type="button" className="hae-btn-secondary" onClick={() => setImportOpen(true)}>
@@ -405,8 +440,23 @@ export default function EventsDashboard() {
                   No events yet.
                 </td>
               </tr>
+            ) : displayedGroups.length === 0 ? (
+              <tr>
+                <td colSpan={COLUMN_COUNT} className="px-3 py-8 text-center text-sm text-hae-slate">
+                  All events are in past weeks.{' '}
+                  <button
+                    type="button"
+                    className="font-semibold text-hae-crimson underline"
+                    onClick={() => setShowArchived(true)}
+                  >
+                    Show past weeks
+                  </button>
+                </td>
+              </tr>
             ) : (
-              weekGroups.map((group) => (
+              displayedGroups.map((group) => {
+                const isArchived = group.end && group.end < todayStart
+                return (
                 <Fragment key={group.key}>
                   <tr className="bg-hae-mist border-b border-hae-line">
                     <td
@@ -414,6 +464,9 @@ export default function EventsDashboard() {
                       className="px-3 py-1.5 text-[11px] font-semibold tracking-wide text-hae-ink uppercase"
                     >
                       {group.label}
+                      {isArchived ? (
+                        <span className="ml-2 normal-case tracking-normal text-hae-slate">(archived)</span>
+                      ) : null}
                     </td>
                   </tr>
                   {group.events.map((event) => (
@@ -421,6 +474,8 @@ export default function EventsDashboard() {
                       key={event.id}
                       onClick={() => setExpandedId(event.id)}
                       className={`cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40 ${
+                        isArchived ? 'opacity-60' : ''
+                      } ${
                         expandedId === event.id || selectedIds.has(event.id) ? 'bg-hae-mist/40' : ''
                       }`}
                     >
@@ -465,7 +520,8 @@ export default function EventsDashboard() {
                     </tr>
                   ))}
                 </Fragment>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>
