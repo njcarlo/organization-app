@@ -100,6 +100,9 @@ Pushes to `main` (and manual **Run workflow**) build all apps and deploy Firebas
    (GitHub → Settings → Secrets and variables → Actions)
 3. Merge to `main` — workflow: `.github/workflows/deploy-firebase.yml`
 
+**Important for other developers:** `FIREBASE_TOKEN` is **only** for CI deploy. It is **not** a Gmail / EmailJS credential.  
+Full map of GitHub vs Firebase vs email secrets: **[`SECRETS.md`](./SECRETS.md)**.
+
 ---
 
 ## Live URLs

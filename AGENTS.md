@@ -5,9 +5,10 @@ This repo uses shared agent instructions so everyone ships the same way.
 ## Start here
 
 1. Read **[`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md)** (platform map + task backlog).
-2. Read **[`CLAUDE.md`](./CLAUDE.md)** (project facts + non-negotiables).
-3. Follow rules in **[`.claude/rules/`](./.claude/rules/)** (coding, UI, Firebase, git).
-4. Use skills in **[`.claude/skills/`](./.claude/skills/)** for repeatable workflows.
+2. Read **[`SECRETS.md`](./SECRETS.md)** (GitHub `FIREBASE_TOKEN` vs Gmail/EmailJS — they are different).
+3. Read **[`CLAUDE.md`](./CLAUDE.md)** (project facts + non-negotiables).
+4. Follow rules in **[`.claude/rules/`](./.claude/rules/)** (coding, UI, Firebase, git).
+5. Use skills in **[`.claude/skills/`](./.claude/skills/)** for repeatable workflows.
 
 ## Claude Code
 

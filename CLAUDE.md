@@ -58,6 +58,7 @@ CI: `.github/workflows/deploy-firebase.yml` deploys hosting + rules on `main`; f
 | Need | Location |
 |------|----------|
 | System architecture + backlog | [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md) |
+| Secrets (CI token vs Gmail/EmailJS) | [`SECRETS.md`](./SECRETS.md) |
 | Coding / UI / Firebase rules | `.claude/rules/` |
 | Multi-step workflows | `.claude/skills/*/SKILL.md` (Claude: `/skill-name`) |
 | Cursor always-on rules | `.cursor/rules/` |
