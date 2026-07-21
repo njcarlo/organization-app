@@ -123,11 +123,16 @@ export default function Sidebar({ open = false, onClose }) {
     // Update `order` in place rather than rebuilding the array — collections like
     // customSectionItems are shared across many sections, so `orderedItems` may
     // only be a subset; rebuilding from just those ids would drop the rest.
+    // Re-sort by the updated `order` afterwards: most sections render this array
+    // directly (no sort at the render site), so without re-sorting here the drag
+    // visually snaps back even though Firestore is updated correctly.
     setter((prev) =>
-      prev.map((entry) => {
-        const idx = ids.indexOf(entry.id)
-        return idx === -1 ? entry : { ...entry, order: idx }
-      })
+      prev
+        .map((entry) => {
+          const idx = ids.indexOf(entry.id)
+          return idx === -1 ? entry : { ...entry, order: idx }
+        })
+        .sort(sortByOrder)
     )
     try {
       const batch = writeBatch(db)
@@ -494,6 +499,13 @@ export default function Sidebar({ open = false, onClose }) {
     return reorderCategory(collectionName, sorted)
   }
 
+  // Appended to every section that supports drag reordering.
+  const sortAzAction = (collectionName, items) => ({
+    key: 'sort-az',
+    label: 'Sort A–Z',
+    onClick: () => sortAlphabetically(collectionName, items),
+  })
+
   const categoryActions = (collectionName, category) => [
     ...(collectionName === 'trackerEvents'
       ? []
@@ -556,7 +568,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'programs',
       label: 'Programs',
-      actions: sectionActions('programs'),
+      actions: [...sectionActions('programs'), sortAzAction('programs', programs)],
       onReorderItems: (items) => reorderCategory('programs', items),
       items: programs.map((p) => ({
         id: p.id,
@@ -572,7 +584,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'academy',
       label: 'Academy',
-      actions: sectionActions('academyPrograms'),
+      actions: [...sectionActions('academyPrograms'), sortAzAction('academyPrograms', academyPrograms)],
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
@@ -591,7 +603,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'custom-programs',
       label: 'Custom Programs',
-      actions: sectionActions('customPrograms'),
+      actions: [...sectionActions('customPrograms'), sortAzAction('customPrograms', customPrograms)],
       onReorderItems: (items) => reorderCategory('customPrograms', items),
       items: customPrograms.map((p) => ({
         id: p.id,
@@ -607,7 +619,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'documents',
       label: 'Documents & Assets',
-      actions: sectionActions('trackerDocuments'),
+      actions: [...sectionActions('trackerDocuments'), sortAzAction('trackerDocuments', trackerDocuments)],
       onReorderItems: (items) => reorderCategory('trackerDocuments', items),
       items: trackerDocuments.map((p) => ({
         id: p.id,
@@ -632,7 +644,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'graphics',
       label: 'Graphics',
-      actions: sectionActions('trackerGraphics'),
+      actions: [...sectionActions('trackerGraphics'), sortAzAction('trackerGraphics', trackerGraphics)],
       onReorderItems: (items) => reorderCategory('trackerGraphics', items),
       items: [
         { to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' },
@@ -650,7 +662,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'data',
       label: 'Data Projects',
-      actions: sectionActions('trackerData', 'Add Data Project'),
+      actions: [...sectionActions('trackerData', 'Add Data Project'), sortAzAction('trackerData', trackerData)],
       onReorderItems: (items) => reorderCategory('trackerData', items),
       items: trackerData.map((p) => ({
         id: p.id,
@@ -666,7 +678,10 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'board-commitments',
       label: 'Board Commitments',
-      actions: sectionActions('boardCommitments', 'Add Board Commitment'),
+      actions: [
+        ...sectionActions('boardCommitments', 'Add Board Commitment'),
+        sortAzAction('boardCommitments', boardCommitments),
+      ],
       onReorderItems: (items) => reorderCategory('boardCommitments', items),
       items: boardCommitments.map((p) => ({
         id: p.id,
@@ -682,14 +697,7 @@ export default function Sidebar({ open = false, onClose }) {
     next.push({
       id: 'chapters',
       label: 'Chapters',
-      actions: [
-        ...sectionActions('chapters', 'Add a chapter'),
-        {
-          key: 'sort-az',
-          label: 'Sort A–Z',
-          onClick: () => sortAlphabetically('chapters', chapters),
-        },
-      ],
+      actions: [...sectionActions('chapters', 'Add a chapter'), sortAzAction('chapters', chapters)],
       onReorderItems: (items) => reorderCategory('chapters', items),
       items: [
         { to: '/chapter-leader-dashboard', label: 'Chapter Leader Dashboard', icon: 'chart' },
@@ -711,11 +719,15 @@ export default function Sidebar({ open = false, onClose }) {
       .slice()
       .sort(sortByOrder)
       .forEach((section) => {
+        const sectionItems = customSectionItems
+          .filter((it) => it.sectionId === section.id)
+          .sort(sortByOrder)
         next.push({
           id: section.id,
           label: section.label,
           actions: [
             ...sectionActions('customSectionItems', 'Add item', section.id),
+            sortAzAction('customSectionItems', sectionItems),
             {
               key: 'delete-section',
               label: 'Delete section',
@@ -724,9 +736,7 @@ export default function Sidebar({ open = false, onClose }) {
             },
           ],
           onReorderItems: (items) => reorderCategory('customSectionItems', items),
-          items: customSectionItems
-            .filter((it) => it.sectionId === section.id)
-            .sort(sortByOrder)
+          items: sectionItems
             .map((p) => ({
               id: p.id,
               to: `/custom-sections/${section.id}/${p.id}`,
