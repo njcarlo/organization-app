@@ -201,8 +201,8 @@ export default function Notifications() {
           <li key={m.id}>
             <Link
               to={
-                m.parentType === 'projects' && m.programId
-                  ? `/programs/${m.programId}`
+                m.parentType === 'projects' && (m.programPath || m.programId)
+                  ? m.programPath || `/programs/${m.programId}`
                   : m.parentId
                     ? `/my-tasks?task=${m.parentId}`
                     : '/my-tasks'

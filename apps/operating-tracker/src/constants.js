@@ -105,6 +105,21 @@ export const PROJECT_DESTINATION_GROUPS = [
   { collectionName: 'chapters', label: 'Chapters', pathPrefix: '/chapters' },
 ]
 
+/**
+ * Path prefix a project's "program" page lives at, keyed by the Firestore
+ * collection that program document lives in. Used to build a working link
+ * back to a project's parent program (comment mentions, history, etc.)
+ * regardless of which category page (`programs`, `academy`, `chapters`, ...)
+ * that program actually belongs to.
+ */
+export const PROGRAM_PATH_PREFIX_BY_COLLECTION = PROJECT_DESTINATION_GROUPS.reduce(
+  (acc, group) => {
+    acc[group.collectionName] = group.pathPrefix
+    return acc
+  },
+  {},
+)
+
 export const WHERE_TO_POST_OPTIONS = [
   "Regina's LinkedIn",
   'Instagram',

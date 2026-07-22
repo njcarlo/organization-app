@@ -28,6 +28,7 @@ function isComplete(task) {
 export default function ProjectCard({
   project,
   program,
+  programPath,
   tasks,
   onChanged,
   dense = false,
@@ -281,6 +282,7 @@ export default function ProjectCard({
               parentId={project.id}
               parentName={project.name}
               programId={project.programId || program?.id}
+              programPath={programPath}
             />
           </div>
           <div className="border-t border-hae-line/60 pt-3">

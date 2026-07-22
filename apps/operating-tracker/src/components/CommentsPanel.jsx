@@ -16,9 +16,9 @@ import { useAuth } from '../context/AuthContext'
 import { useStaffUsers } from '../hooks/useStaffUsers'
 import { logHistory } from '../utils/activityLog'
 
-function mentionDeepLink({ parentType, parentId, programId }) {
-  if (parentType === 'projects' && programId) {
-    return `https://tracker-hae.web.app/programs/${programId}`
+function mentionDeepLink({ parentType, parentId, programId, programPath }) {
+  if (parentType === 'projects' && (programPath || programId)) {
+    return `https://tracker-hae.web.app${programPath || `/programs/${programId}`}`
   }
   if (parentId) {
     return `https://tracker-hae.web.app/my-tasks?task=${encodeURIComponent(parentId)}`
@@ -80,7 +80,7 @@ function renderTextWithMentions(text, users) {
 }
 
 /** Comments + @mention thread for a task or project doc (Monday.com-style updates). */
-export default function CommentsPanel({ parentType, parentId, parentName, programId }) {
+export default function CommentsPanel({ parentType, parentId, parentName, programId, programPath }) {
   const { user, userProfile } = useAuth()
   const users = useStaffUsers()
   const [comments, setComments] = useState([])
@@ -161,7 +161,7 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
         createdAt: serverTimestamp(),
       })
       const notifyTargets = mentionedPeople.filter((m) => m.id !== user?.uid)
-      const link = mentionDeepLink({ parentType, parentId, programId })
+      const link = mentionDeepLink({ parentType, parentId, programId, programPath })
       await Promise.all(
         notifyTargets.map((m) => {
           const profile = users.find((u) => u.id === m.id)
@@ -175,6 +175,7 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
               parentId,
               parentName: parentName || '',
               programId: programId || null,
+              programPath: programPath || null,
               commentText: trimmed,
               fromName: authorName,
               read: false,
