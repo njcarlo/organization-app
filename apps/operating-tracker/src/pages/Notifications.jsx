@@ -1,10 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore'
+import { Link, useNavigate } from 'react-router-dom'
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { moduleUrl } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import { PROJECT_DESTINATION_GROUPS } from '../constants'
 import { formatDate, sortByPriorityThenDue, toNameList } from '../utils'
+
+const TASK_FALLBACK_PATH = (parentId) => (parentId ? `/my-tasks?task=${parentId}` : '/my-tasks')
+
+/**
+ * Older mention notifications were written before we started storing
+ * `programPath`, so all we have is a raw `programId` with no record of which
+ * collection (`programs`, `academyPrograms`, `chapters`, ...) it lives in.
+ * Probe each candidate collection for a matching doc and resolve the real
+ * page instead of guessing `/programs/:id`.
+ */
+async function resolveLegacyProgramPath(programId) {
+  for (const { collectionName, pathPrefix } of PROJECT_DESTINATION_GROUPS) {
+    const snap = await getDoc(doc(db, collectionName, programId))
+    if (snap.exists()) return `${pathPrefix}/${programId}`
+  }
+  return null
+}
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
@@ -28,10 +46,12 @@ function addDaysIso(days) {
 
 export default function Notifications() {
   const { user, userProfile, isStaff } = useAuth()
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [checkIns, setCheckIns] = useState([])
   const [mentions, setMentions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [resolvingMentionId, setResolvingMentionId] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -68,6 +88,29 @@ export default function Notifications() {
   const markMentionRead = async (id) => {
     setMentions((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)))
     await updateDoc(doc(db, 'notifications', id), { read: true })
+  }
+
+  const openMention = async (m) => {
+    if (!m.read) markMentionRead(m.id)
+    if (m.parentType !== 'projects') {
+      navigate(TASK_FALLBACK_PATH(m.parentId))
+      return
+    }
+    if (m.programPath) {
+      navigate(m.programPath)
+      return
+    }
+    if (!m.programId) {
+      navigate(TASK_FALLBACK_PATH(m.parentId))
+      return
+    }
+    setResolvingMentionId(m.id)
+    try {
+      const resolved = await resolveLegacyProgramPath(m.programId)
+      navigate(resolved || TASK_FALLBACK_PATH(m.parentId))
+    } finally {
+      setResolvingMentionId(null)
+    }
   }
 
   useEffect(() => {
@@ -199,22 +242,18 @@ export default function Notifications() {
       <DigestSection title="Mentions" count={mentions.length} empty="No one has tagged you yet.">
         {mentions.map((m) => (
           <li key={m.id}>
-            <Link
-              to={
-                m.parentType === 'projects' && (m.programPath || m.programId)
-                  ? m.programPath || `/programs/${m.programId}`
-                  : m.parentId
-                    ? `/my-tasks?task=${m.parentId}`
-                    : '/my-tasks'
-              }
-              onClick={() => !m.read && markMentionRead(m.id)}
-              className="flex flex-wrap items-baseline justify-between gap-2 py-2 text-sm"
+            <button
+              type="button"
+              onClick={() => openMention(m)}
+              disabled={resolvingMentionId === m.id}
+              className="flex w-full flex-wrap items-baseline justify-between gap-2 py-2 text-left text-sm disabled:opacity-60"
             >
               <span className={m.read ? 'font-medium text-hae-ink' : 'font-semibold text-hae-crimson'}>
                 {m.fromName || 'Someone'} mentioned you in {m.parentName || 'a task'}
+                {resolvingMentionId === m.id ? '…' : ''}
               </span>
               <span className="text-xs text-hae-slate">{formatTimestamp(m.createdAt)}</span>
-            </Link>
+            </button>
             <p className="pb-1 text-xs text-hae-slate/90">“{m.commentText}”</p>
           </li>
         ))}
