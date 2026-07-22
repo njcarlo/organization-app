@@ -321,6 +321,7 @@ export default function ProgramPage() {
               <ProjectCard
                 project={project}
                 program={program}
+                programPath={`/programs/${programId}`}
                 tasks={tasksByProject[project.id] || []}
                 onChanged={load}
                 dense={dense}

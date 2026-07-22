@@ -21,7 +21,11 @@ import LeadSelect from '../components/LeadSelect'
 import DraggableList from '../components/DraggableList'
 import SelectionToolbar from '../components/SelectionToolbar'
 import MoveCopyProjectModal from '../components/MoveCopyProjectModal'
-import { EVENT_FORMAT_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import {
+  EVENT_FORMAT_OPTIONS,
+  HEALTH_OPTIONS,
+  PROGRAM_PATH_PREFIX_BY_COLLECTION,
+} from '../constants'
 import {
   customProgramStatusBadgeClass,
   formatDate,
@@ -54,6 +58,7 @@ const emptyProject = {
 export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const { itemId } = useParams()
   const navigate = useNavigate()
+  const programPath = `${PROGRAM_PATH_PREFIX_BY_COLLECTION[collectionName] || '/programs'}/${itemId}`
   const { user, userProfile } = useAuth()
   const [program, setProgram] = useState(null)
   const [projects, setProjects] = useState([])
@@ -944,6 +949,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 <ProjectCard
                   project={project}
                   program={program}
+                  programPath={programPath}
                   tasks={tasksByProject[project.id] || []}
                   onChanged={load}
                   dense={dense}
