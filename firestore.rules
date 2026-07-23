@@ -407,6 +407,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // —— Daily Briefing (EA + President editable digest) ——
+    match /dailyBriefingItems/{id} {
+      allow read, write: if isExecInboxUser();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
