@@ -269,7 +269,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const deleteEvent = async () => {
     if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, collectionName, itemId))
-    navigate('/events-dashboard')
+    navigate(
+      collectionName === 'customSectionItems'
+        ? `/custom-sections/${program.sectionId}`
+        : '/events-dashboard'
+    )
   }
 
   const startEditAcademy = () => {
@@ -351,6 +355,17 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   if (!program)
     return <p className="text-sm text-hae-red">{categoryLabel} item not found.</p>
 
+  // customSectionItems shares one generic collection for every custom-section item, so
+  // Documents/Events "template" mode is carried on the item's own `kind` field rather than
+  // being distinguishable by collectionName the way trackerDocuments/trackerEvents are.
+  const isDocumentsMode =
+    collectionName === 'trackerDocuments' ||
+    (collectionName === 'customSectionItems' && program.kind === 'documents')
+  const isEventsMode =
+    collectionName === 'trackerEvents' ||
+    (collectionName === 'customSectionItems' && program.kind === 'events')
+  const noProjects = NO_PROJECTS_COLLECTIONS.includes(collectionName) || isDocumentsMode || isEventsMode
+
   const activeProjects = projects.filter((p) => normalizeHealth(p.health) !== 'completed')
   const completedProjects = projects.filter((p) => normalizeHealth(p.health) === 'completed')
   const visibleProjects = showCompleted ? projects : activeProjects
@@ -365,14 +380,14 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-hae-ink sm:text-3xl">
             {program.name}
           </h1>
-          {collectionName === 'trackerEvents' || collectionName === 'chapters' ? null : (
+          {isEventsMode || collectionName === 'chapters' ? null : (
             <p className="mt-1 text-sm text-hae-slate">
               Overall lead: {namesLabel(program.lead) || '—'}
               {projects.length ? ` · ${projects.length} projects` : ''}
             </p>
           )}
 
-          {collectionName === 'trackerEvents' ? (
+          {isEventsMode ? (
             <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
@@ -530,7 +545,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          {!NO_PROJECTS_COLLECTIONS.includes(collectionName) ? (
+          {!noProjects ? (
             <>
               <button
                 type="button"
@@ -545,7 +560,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               </button>
             </>
           ) : null}
-          {collectionName === 'trackerEvents' ? (
+          {isEventsMode ? (
             <>
               <button type="button" onClick={startEditEvent} className="hae-btn-secondary">
                 Edit
@@ -729,7 +744,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </Modal>
       ) : null}
 
-      {collectionName === 'trackerEvents' ? (
+      {isEventsMode ? (
         <Modal
           open={editEventOpen}
           onClose={closeEditEvent}
@@ -839,7 +854,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </Modal>
       ) : null}
 
-      {collectionName === 'trackerDocuments' ? (
+      {isDocumentsMode ? (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Documents
@@ -848,7 +863,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </section>
       ) : null}
 
-      {collectionName === 'trackerEvents' ? (
+      {isEventsMode ? (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Checklist
@@ -922,7 +937,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         </form>
       </Modal>
 
-      {!NO_PROJECTS_COLLECTIONS.includes(collectionName) ? (
+      {!noProjects ? (
         <div className="space-y-3">
           {projects.length === 0 ? (
             <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
