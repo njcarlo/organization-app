@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { Modal, NavIcon } from '@hae/ui'
 import { db } from '../firebase'
 import DocumentLinksTable from './DocumentLinksTable'
 
@@ -154,13 +154,18 @@ export default function DocumentGroupsSection({ programId, showNotes = false }) 
                   className="rounded border border-hae-crimson bg-white px-2 py-1 text-sm font-semibold text-hae-ink outline-none"
                 />
               ) : (
-                <h3
-                  onClick={() => startEditGroupName(group)}
-                  title="Click to rename"
-                  className="cursor-text rounded px-1 -mx-1 text-sm font-semibold text-hae-ink hover:bg-hae-mist/60"
-                >
-                  {group.name}
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm font-semibold text-hae-ink">{group.name}</h3>
+                  <button
+                    type="button"
+                    onClick={() => startEditGroupName(group)}
+                    title="Edit group name"
+                    aria-label="Edit group name"
+                    className="rounded p-0.5 text-hae-slate hover:bg-hae-mist/60 hover:text-hae-crimson"
+                  >
+                    <NavIcon name="edit" className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               )}
               <button
                 type="button"
