@@ -24,6 +24,13 @@ import { formatDate, namesLabel, toNameList } from '../utils'
 
 const CUSTOM_PROGRAM_STATUS_OPTIONS = ['Prospect', 'Approved']
 
+const SECTION_TEMPLATE_OPTIONS = [
+  { value: '', label: 'No template' },
+  { value: 'documents', label: 'Links Directory (Documents & Assets)' },
+  { value: 'tasks', label: 'Task Board (Programs)' },
+  { value: 'events', label: 'Events Tracker (Events & Programs Dashboard)' },
+]
+
 const CATEGORY_META = {
   programs: { label: 'Program', pathPrefix: '/programs' },
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
@@ -86,6 +93,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [addSectionOpen, setAddSectionOpen] = useState(false)
   const [newSectionLabel, setNewSectionLabel] = useState('')
+  const [newSectionTemplate, setNewSectionTemplate] = useState('')
   const [addingSection, setAddingSection] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sectionConfig, setSectionConfig] = useState({ order: [], labels: {} })
@@ -438,12 +446,57 @@ export default function Sidebar({ open = false, onClose }) {
 
   const openAddSection = () => {
     setNewSectionLabel('')
+    setNewSectionTemplate('')
     setAddSectionOpen(true)
   }
 
   const closeAddSection = () => {
     if (addingSection) return
     setAddSectionOpen(false)
+  }
+
+  // Seeds one starter customSectionItems "page" so a new section immediately
+  // shows the pattern the user picked, instead of landing on an empty section.
+  const seedSectionTemplate = async (sectionId, template) => {
+    const itemRef = await addDoc(collection(db, 'customSectionItems'), {
+      name: template === 'events' ? 'First event' : template === 'documents' ? 'Links' : 'First project',
+      lead: [],
+      sectionId,
+      ...(template === 'documents' ? { kind: 'documents' } : {}),
+      ...(template === 'events'
+        ? {
+            kind: 'events',
+            eventDate: '',
+            eventTime: '',
+            marketingDate: '',
+            venue: '',
+            format: '',
+            health: 'not-started',
+          }
+        : {}),
+      createdAt: serverTimestamp(),
+    })
+    if (template === 'documents') {
+      await addDoc(collection(db, 'trackerDocumentGroups'), {
+        name: 'Links',
+        programId: itemRef.id,
+        order: 1,
+        createdAt: serverTimestamp(),
+      })
+    } else if (template === 'tasks') {
+      await addDoc(collection(db, 'projects'), {
+        name: 'First project',
+        lead: [],
+        promise: '',
+        health: 'ongoing',
+        targetDate: '',
+        notes: '',
+        programId: itemRef.id,
+        order: 0,
+        createdAt: serverTimestamp(),
+      })
+    }
+    return itemRef
   }
 
   const submitAddSection = async (e) => {
@@ -453,13 +506,19 @@ export default function Sidebar({ open = false, onClose }) {
     setAddingSection(true)
     try {
       const maxOrder = customSections.reduce((max, s) => Math.max(max, s.order ?? 0), -1)
-      await addDoc(collection(db, 'customSections'), {
+      const sectionRef = await addDoc(collection(db, 'customSections'), {
         label,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
       })
       reload('customSections')
+      let itemRef = null
+      if (newSectionTemplate) {
+        itemRef = await seedSectionTemplate(sectionRef.id, newSectionTemplate)
+        reload('customSectionItems')
+      }
       setAddSectionOpen(false)
+      if (itemRef) navigate(`/custom-sections/${sectionRef.id}/${itemRef.id}`)
     } catch (err) {
       console.error('Failed to add section', err)
       alert(err.message || 'Failed to add section')
@@ -843,7 +902,7 @@ export default function Sidebar({ open = false, onClose }) {
           </>
         }
       >
-        <form id="sidebar-add-section-form" onSubmit={submitAddSection}>
+        <form id="sidebar-add-section-form" onSubmit={submitAddSection} className="space-y-3">
           <input
             required
             autoFocus
@@ -852,6 +911,20 @@ export default function Sidebar({ open = false, onClose }) {
             onChange={(e) => setNewSectionLabel(e.target.value)}
             className="w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
           />
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Starter template (optional)</span>
+            <select
+              value={newSectionTemplate}
+              onChange={(e) => setNewSectionTemplate(e.target.value)}
+              className="w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            >
+              {SECTION_TEMPLATE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </form>
       </Modal>
 
