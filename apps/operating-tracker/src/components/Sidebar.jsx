@@ -549,6 +549,11 @@ export default function Sidebar({ open = false, onClose }) {
         label: 'Executive Inbox',
         icon: 'message',
       })
+      workspaceItems.push({
+        to: '/daily-briefing',
+        label: 'Daily Briefing',
+        icon: 'calendar',
+      })
     }
     if (!isSurveysHidden() && isEnabled(FEATURES.SURVEYS)) {
       workspaceItems.push({ to: '/surveys', label: 'Surveys', icon: 'survey' })

@@ -20,6 +20,7 @@ import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
 import ExecutiveInbox from './pages/ExecutiveInbox'
+import DailyBriefing from './pages/DailyBriefing'
 import Admin from './pages/Admin'
 import Help from './pages/Help'
 import RestrictedHome from './pages/RestrictedHome'
@@ -140,6 +141,14 @@ export default function App() {
                   element={
                     <ExecInboxRoute>
                       <ExecutiveInbox />
+                    </ExecInboxRoute>
+                  }
+                />
+                <Route
+                  path="/daily-briefing"
+                  element={
+                    <ExecInboxRoute>
+                      <DailyBriefing />
                     </ExecInboxRoute>
                   }
                 />
