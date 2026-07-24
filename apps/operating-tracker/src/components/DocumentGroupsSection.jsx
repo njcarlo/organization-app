@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import DocumentLinksTable from './DocumentLinksTable'
@@ -15,6 +23,8 @@ export default function DocumentGroupsSection({ programId, showNotes = false }) 
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [editingGroupId, setEditingGroupId] = useState(null)
+  const [editingName, setEditingName] = useState('')
 
   const load = useCallback(async () => {
     setError('')
@@ -65,6 +75,33 @@ export default function DocumentGroupsSection({ programId, showNotes = false }) 
     }
   }
 
+  const startEditGroupName = (group) => {
+    setEditingGroupId(group.id)
+    setEditingName(group.name)
+  }
+
+  const cancelEditGroupName = () => {
+    setEditingGroupId(null)
+    setEditingName('')
+  }
+
+  const commitEditGroupName = async () => {
+    const trimmed = editingName.trim()
+    const group = groups.find((g) => g.id === editingGroupId)
+    if (!trimmed || !group || trimmed === group.name) {
+      cancelEditGroupName()
+      return
+    }
+    try {
+      await updateDoc(doc(db, 'trackerDocumentGroups', editingGroupId), { name: trimmed })
+      setGroups((prev) => prev.map((g) => (g.id === editingGroupId ? { ...g, name: trimmed } : g)))
+    } catch (err) {
+      setError(err.message || 'Failed to rename group')
+    } finally {
+      cancelEditGroupName()
+    }
+  }
+
   const removeGroup = async (groupId) => {
     if (
       !confirm('Delete this group? Its links are not cascade-deleted. This action cannot be undone.')
@@ -100,7 +137,31 @@ export default function DocumentGroupsSection({ programId, showNotes = false }) 
         groups.map((group) => (
           <div key={group.id} className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-hae-ink">{group.name}</h3>
+              {editingGroupId === group.id ? (
+                <input
+                  autoFocus
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={commitEditGroupName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      commitEditGroupName()
+                    } else if (e.key === 'Escape') {
+                      cancelEditGroupName()
+                    }
+                  }}
+                  className="rounded border border-hae-crimson bg-white px-2 py-1 text-sm font-semibold text-hae-ink outline-none"
+                />
+              ) : (
+                <h3
+                  onClick={() => startEditGroupName(group)}
+                  title="Click to rename"
+                  className="cursor-text rounded px-1 -mx-1 text-sm font-semibold text-hae-ink hover:bg-hae-mist/60"
+                >
+                  {group.name}
+                </h3>
+              )}
               <button
                 type="button"
                 onClick={() => removeGroup(group.id)}

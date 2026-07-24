@@ -7,6 +7,7 @@ import {
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
@@ -31,6 +32,8 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
   const [newRow, setNewRow] = useState(emptyRow)
   const [editRow, setEditRow] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [selected, setSelected] = useState(new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const newNameRef = useRef(null)
 
   const byName = userProfile?.name || user?.email || 'Someone'
@@ -128,20 +131,79 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
     commitNewRow()
   }
 
+  const toggleRow = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    setSelected((prev) => (prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id))))
+  }
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return
+    if (
+      !confirm(
+        `Delete ${selected.size} selected link${selected.size === 1 ? '' : 's'}? This action cannot be undone.`
+      )
+    ) {
+      return
+    }
+    setBulkDeleting(true)
+    setError('')
+    try {
+      const batch = writeBatch(db)
+      selected.forEach((id) => batch.delete(doc(db, 'trackerDocumentFiles', id)))
+      await batch.commit()
+      setSelected(new Set())
+      await load()
+    } catch (err) {
+      setError(err.message || 'Failed to delete selected links')
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading links…</p>
 
   return (
     <div className="space-y-2">
       {error && <p className="text-sm text-hae-red">{error}</p>}
+      {selected.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-hae-crimson/30 bg-hae-crimson/5 px-3 py-2">
+          <span className="text-xs font-medium text-hae-ink">{selected.size} selected</span>
+          <button
+            type="button"
+            onClick={deleteSelected}
+            disabled={bulkDeleting}
+            className="text-xs font-semibold text-hae-red hover:underline disabled:opacity-50"
+          >
+            {bulkDeleting ? 'Deleting…' : 'Delete selected'}
+          </button>
+        </div>
+      )}
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
         <table className="w-full min-w-[720px] text-left">
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
+              <th className="px-3 py-2 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={rows.length > 0 && selected.size === rows.length}
+                  onChange={toggleAll}
+                  aria-label="Select all links"
+                />
+              </th>
               <th className="px-3 py-2 font-semibold">Name of Link</th>
               <th className="px-3 py-2 font-semibold">Link</th>
               <th className="px-3 py-2 font-semibold">Created by</th>
               <th className="px-3 py-2 font-semibold">File Path</th>
               {showNotes && <th className="px-3 py-2 font-semibold">Notes</th>}
+              <th className="px-3 py-2 font-semibold" />
             </tr>
           </thead>
           <tbody>
@@ -151,6 +213,14 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                 onClick={() => openEdit(row)}
                 className="cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40"
               >
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(row.id)}
+                    onChange={() => toggleRow(row.id)}
+                    aria-label={`Select ${row.name || 'link'}`}
+                  />
+                </td>
                 <td className="px-3 py-2 text-sm font-medium text-hae-ink">{row.name || '—'}</td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
                   {row.url ? (
@@ -172,9 +242,11 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                 {showNotes && (
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
                 )}
+                <td className="px-3 py-2" />
               </tr>
             ))}
             <tr className="border-b border-hae-line/70">
+              <td className="px-1 py-1" />
               <td className="px-1 py-1">
                 <input
                   ref={newNameRef}
@@ -223,10 +295,28 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                   />
                 </td>
               )}
+              <td className="px-1 py-1">
+                <button
+                  type="button"
+                  onClick={commitNewRow}
+                  disabled={!newRow.name.trim()}
+                  className="hae-btn-secondary px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <button
+        type="button"
+        onClick={() => newNameRef.current?.focus()}
+        className="text-xs font-medium text-hae-crimson hover:underline"
+      >
+        + Add a new row
+      </button>
 
       <Modal
         open={!!editRow}
