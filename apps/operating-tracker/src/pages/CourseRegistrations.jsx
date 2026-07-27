@@ -71,6 +71,8 @@ export default function CourseRegistrations() {
   const [registrations, setRegistrations] = useState([])
   const [participantCounts, setParticipantCounts] = useState({})
   const [participantDrafts, setParticipantDrafts] = useState({})
+  const [enrollmentCounts, setEnrollmentCounts] = useState({})
+  const [enrollmentDrafts, setEnrollmentDrafts] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [form, setForm] = useState(emptyForm)
@@ -81,6 +83,7 @@ export default function CourseRegistrations() {
   const [sortKey, setSortKey] = useState('createdAt')
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState('summary')
 
   const load = useCallback(async () => {
     setError('')
@@ -97,6 +100,20 @@ export default function CourseRegistrations() {
         if (data.course) counts[data.course] = Number(data.participants) || 0
       })
       setParticipantCounts(counts)
+
+      const enrollmentSnap = await getDocs(collection(db, 'courseEnrollmentCounts'))
+      const enrollment = {}
+      enrollmentSnap.docs.forEach((d) => {
+        const data = d.data()
+        if (data.course) {
+          enrollment[data.course] = {
+            paid: Number(data.paid) || 0,
+            promotional: Number(data.promotional) || 0,
+            free: Number(data.free) || 0,
+          }
+        }
+      })
+      setEnrollmentCounts(enrollment)
     } catch (err) {
       setError(err.message || 'Failed to load registrations')
     } finally {
@@ -135,6 +152,33 @@ export default function CourseRegistrations() {
     }
     return Array.from(map.values())
   }, [registrations])
+
+  const enrollmentByCourse = useMemo(() => {
+    const courses = new Set([
+      ...registrations.map((r) => r.course || 'Untitled course'),
+      ...Object.keys(enrollmentCounts),
+    ])
+    return Array.from(courses)
+      .map((course) => {
+        const counts = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
+        return { course, ...counts, total: counts.paid + counts.promotional + counts.free }
+      })
+      .sort((a, b) => a.course.localeCompare(b.course))
+  }, [registrations, enrollmentCounts])
+
+  const enrollmentGrandTotal = useMemo(
+    () =>
+      enrollmentByCourse.reduce(
+        (sum, e) => ({
+          paid: sum.paid + e.paid,
+          promotional: sum.promotional + e.promotional,
+          free: sum.free + e.free,
+          total: sum.total + e.total,
+        }),
+        { paid: 0, promotional: 0, free: 0, total: 0 }
+      ),
+    [enrollmentByCourse]
+  )
 
   const grandTotal = useMemo(
     () => registrations.reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0),
@@ -244,6 +288,28 @@ export default function CourseRegistrations() {
     }
   }
 
+  const saveEnrollmentCount = async (course, field, value) => {
+    const cleaned = Math.max(0, Number(value) || 0)
+    const existing = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
+    const next = { ...existing, [field]: cleaned }
+    setError('')
+    try {
+      await setDoc(doc(db, 'courseEnrollmentCounts', encodeURIComponent(course)), {
+        course,
+        ...next,
+      })
+      setEnrollmentCounts((prev) => ({ ...prev, [course]: next }))
+    } catch (err) {
+      setError(err.message || 'Failed to save enrollment count')
+    } finally {
+      setEnrollmentDrafts((prev) => {
+        const next = { ...prev }
+        delete next[`${course}:${field}`]
+        return next
+      })
+    }
+  }
+
   const removeRegistration = async (id) => {
     if (!confirm('Delete this registration? This action cannot be undone.')) return
     setError('')
@@ -266,29 +332,134 @@ export default function CourseRegistrations() {
             Manually enter enrollees and payments for Academy courses.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowImport((v) => !v)}
-          className="hae-btn-secondary rounded-md border border-hae-line px-3 py-2 text-xs font-semibold uppercase text-hae-ink"
-        >
-          {showImport ? 'Hide import' : 'Import registrations'}
-        </button>
+        {activeTab === 'registrations' && (
+          <button
+            type="button"
+            onClick={() => setShowImport((v) => !v)}
+            className="hae-btn-secondary rounded-md border border-hae-line px-3 py-2 text-xs font-semibold uppercase text-hae-ink"
+          >
+            {showImport ? 'Hide import' : 'Import registrations'}
+          </button>
+        )}
       </div>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
 
-      {showImport && (
-        <ModuleImportPanel
-          moduleIds={['courseRegistrations']}
-          defaultModuleId="courseRegistrations"
-          onImported={load}
-          compact
-        />
+      <div className="flex gap-2 border-b border-hae-line">
+        {[
+          { key: 'summary', label: 'Enrollment Summary' },
+          { key: 'registrations', label: 'Registrations & Payments' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={`-mb-px border-b-2 px-3 py-2 text-xs font-semibold uppercase ${
+              activeTab === tab.key
+                ? 'border-hae-crimson text-hae-crimson'
+                : 'border-transparent text-hae-slate hover:text-hae-ink'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'summary' && (
+        <div className="rounded-xl border border-hae-line bg-white p-4">
+          <h2 className="text-sm font-semibold text-hae-ink">Enrollment by course</h2>
+          <p className="mt-1 text-xs text-hae-slate">
+            Count of registrations per course, broken out by enrollment type.
+          </p>
+          <div className="hae-table-scroll mt-4 rounded-lg border border-hae-line">
+            <table className="w-full text-left">
+              <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Academy</th>
+                  <th className="px-3 py-2 font-semibold">Paid Enrollment</th>
+                  <th className="px-3 py-2 font-semibold">Promotional Enrollment</th>
+                  <th className="px-3 py-2 font-semibold">Free enrollment</th>
+                  <th className="px-3 py-2 font-semibold">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {enrollmentByCourse.map((e) => {
+                  const liveValues = ['paid', 'promotional', 'free'].map((field) => {
+                    const draftKey = `${e.course}:${field}`
+                    const raw = draftKey in enrollmentDrafts ? enrollmentDrafts[draftKey] : e[field]
+                    return Number(raw) || 0
+                  })
+                  const liveTotal = liveValues.reduce((sum, v) => sum + v, 0)
+                  return (
+                    <tr key={e.course} className="border-b border-hae-line/70">
+                      <td className="px-3 py-2 text-sm font-medium text-hae-ink">{e.course}</td>
+                      {['paid', 'promotional', 'free'].map((field) => {
+                        const draftKey = `${e.course}:${field}`
+                        return (
+                          <td key={field} className="px-3 py-2 text-sm text-hae-slate">
+                            <input
+                              type="number"
+                              min="0"
+                              value={draftKey in enrollmentDrafts ? enrollmentDrafts[draftKey] : e[field]}
+                              onChange={(ev) =>
+                                setEnrollmentDrafts((prev) => ({ ...prev, [draftKey]: ev.target.value }))
+                              }
+                              onBlur={(ev) => saveEnrollmentCount(e.course, field, ev.target.value)}
+                              className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                            />
+                          </td>
+                        )
+                      })}
+                      <td className="px-3 py-2 text-sm font-semibold text-hae-ink">{liveTotal}</td>
+                    </tr>
+                  )
+                })}
+                {enrollmentByCourse.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
+                      No registrations yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {enrollmentByCourse.length > 0 && (
+                <tfoot>
+                  <tr className="bg-hae-mist/40">
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">All courses</td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
+                      {enrollmentGrandTotal.paid}
+                    </td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
+                      {enrollmentGrandTotal.promotional}
+                    </td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
+                      {enrollmentGrandTotal.free}
+                    </td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
+                      {enrollmentGrandTotal.total}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
       )}
 
-      {/* Dashboard: totals by program type + overall, then courses tabulated */}
-      <div className="rounded-xl border border-hae-line bg-white p-4">
-        <h2 className="text-sm font-semibold text-hae-ink">Payments dashboard</h2>
+      {activeTab === 'registrations' && (
+        <>
+          {showImport && (
+            <ModuleImportPanel
+              moduleIds={['courseRegistrations']}
+              defaultModuleId="courseRegistrations"
+              onImported={load}
+              compact
+            />
+          )}
+
+          {/* Dashboard: totals by program type + overall, then courses tabulated */}
+          <div className="rounded-xl border border-hae-line bg-white p-4">
+            <h2 className="text-sm font-semibold text-hae-ink">Payments dashboard</h2>
         <div className="mt-3 space-y-2">
           {totalsByProgramType.map((t) => (
             <div
@@ -745,6 +916,8 @@ export default function CourseRegistrations() {
             Next
           </button>
         </div>
+      )}
+        </>
       )}
     </div>
   )
