@@ -6,6 +6,7 @@ import {
   programNameOf,
   projectNameOf,
 } from '../utils'
+import CommentIndicator from './CommentIndicator'
 import TaskDetailPopup from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
@@ -41,6 +42,7 @@ export default function AttentionSection({
           leadershipAction: '—',
           owner: namesLabel(project.lead) || '—',
           dueDate: project.targetDate || '',
+          commentCount: project.commentCount,
         })
       }
     }
@@ -63,6 +65,7 @@ export default function AttentionSection({
           leadershipAction: task.leadershipAttention,
           owner: namesLabel(task.owner) || '—',
           dueDate: task.dueDate || '',
+          commentCount: task.commentCount,
         })
       }
     }
@@ -98,7 +101,10 @@ export default function AttentionSection({
                 className="hae-mobile-card"
                 onClick={() => setSelected(row)}
               >
-                <div className="hae-mobile-card__title">{row.taskName}</div>
+                <div className="hae-mobile-card__title flex items-center gap-1.5">
+                  <span className="min-w-0">{row.taskName}</span>
+                  <CommentIndicator count={row.commentCount} />
+                </div>
                 <div className="hae-mobile-card__meta">
                   <span>{row.issue}</span>
                   <span>Needed by {formatDate(row.dueDate)}</span>
@@ -140,7 +146,12 @@ export default function AttentionSection({
                   <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {row.projectName}
                   </td>
-                  <td className="px-3 py-2 text-sm font-medium">{row.taskName}</td>
+                  <td className="px-3 py-2 text-sm font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      {row.taskName}
+                      <CommentIndicator count={row.commentCount} />
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.owner}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {formatDate(row.dueDate)}

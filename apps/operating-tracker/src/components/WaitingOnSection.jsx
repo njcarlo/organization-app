@@ -7,6 +7,7 @@ import {
   programNameOf,
   projectNameOf,
 } from '../utils'
+import CommentIndicator from './CommentIndicator'
 import TaskDetailPopup from './TaskDetailPopup'
 
 const PAGE_SIZE = 5
@@ -61,7 +62,10 @@ export default function WaitingOnSection({ tasks, programsById, projectsById, on
                 onClick={() => setSelected(task)}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
+                  <div className="hae-mobile-card__title flex min-w-0 flex-1 items-center gap-1.5">
+                    <span className="min-w-0">{task.name}</span>
+                    <CommentIndicator count={task.commentCount} />
+                  </div>
                   <PriorityCell task={task} />
                 </div>
                 <div className="hae-mobile-card__meta">
@@ -110,7 +114,12 @@ export default function WaitingOnSection({ tasks, programsById, projectsById, on
                   <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                     {projectNameOf(task, projectsById)}
                   </td>
-                  <td className="px-3 py-2 text-sm font-medium">{task.name}</td>
+                  <td className="px-3 py-2 text-sm font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      {task.name}
+                      <CommentIndicator count={task.commentCount} />
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     <Linkify text={task.waitingOn} />
                   </td>

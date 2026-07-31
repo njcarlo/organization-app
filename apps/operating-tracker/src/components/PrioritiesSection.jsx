@@ -9,6 +9,7 @@ import {
   daysUntil,
 } from '../utils'
 import { useMemo, useState } from 'react'
+import CommentIndicator from './CommentIndicator'
 import TaskDetailPopup from './TaskDetailPopup'
 
 function PriorityCell({ task }) {
@@ -40,7 +41,10 @@ function MobileTaskCards({ tasks, programsById, projectsById, emptyLabel, onOpen
           onClick={() => onOpen?.(task)}
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="hae-mobile-card__title min-w-0 flex-1">{task.name}</div>
+            <div className="hae-mobile-card__title flex min-w-0 flex-1 items-center gap-1.5">
+              <span className="min-w-0">{task.name}</span>
+              <CommentIndicator count={task.commentCount} />
+            </div>
             <PriorityCell task={task} />
           </div>
           <div className="hae-mobile-card__meta">
@@ -95,7 +99,12 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel, onOpe
                 <td className="hae-col-lg-hide px-3 py-2 text-sm text-hae-slate">
                   {projectNameOf(task, projectsById)}
                 </td>
-                <td className="px-3 py-2 text-sm font-medium text-hae-ink">{task.name}</td>
+                <td className="px-3 py-2 text-sm font-medium text-hae-ink">
+                  <span className="inline-flex items-center gap-1.5">
+                    {task.name}
+                    <CommentIndicator count={task.commentCount} />
+                  </span>
+                </td>
                 <td className="hae-col-sm-hide px-3 py-2 text-sm text-hae-slate">
                   {namesLabel(task.owner) || '—'}
                 </td>

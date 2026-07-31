@@ -11,9 +11,9 @@ import {
 import { downloadIcs, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import ActivityLog from '../components/ActivityLog'
 import AddTaskModal from '../components/AddTaskModal'
-import CommentsPanel from '../components/CommentsPanel'
+import CommentIndicator from '../components/CommentIndicator'
+import CommentsDrawer from '../components/CommentsDrawer'
 import LeadSelect from '../components/LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import { diffTaskFields, logHistory } from '../utils/activityLog'
@@ -63,6 +63,7 @@ export default function MyTasks() {
   const [statusFilter, setStatusFilter] = useState('Active')
   const [page, setPage] = useState(0)
   const [editingId, setEditingId] = useState(null)
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
@@ -206,6 +207,7 @@ export default function MyTasks() {
   const cancelEdit = () => {
     setEditingId(null)
     setDraft(null)
+    setCommentsOpen(false)
   }
 
   const saveEdit = async () => {
@@ -379,6 +381,7 @@ export default function MyTasks() {
                       {task.subtasks.length}
                     </span>
                   ) : null}
+                  <CommentIndicator count={task.commentCount} />
                 </div>
                 <span
                   className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
@@ -447,6 +450,18 @@ export default function MyTasks() {
             >
               Delete
             </button>
+            {editingId ? (
+              <button
+                type="button"
+                className="hae-btn-secondary inline-flex items-center gap-1.5"
+                onClick={() => setCommentsOpen(true)}
+              >
+                Comments
+                <CommentIndicator
+                  count={tasks.find((t) => t.id === editingId)?.commentCount}
+                />
+              </button>
+            ) : null}
             <button
               type="button"
               className="hae-btn-secondary"
@@ -466,7 +481,7 @@ export default function MyTasks() {
           </>
         }
       >
-        <div className={editingId ? 'grid gap-6 lg:grid-cols-[1fr_20rem]' : ''}>
+        <div>
           {draft ? (
             <div className="grid gap-3 sm:grid-cols-2" onKeyDown={onEditKeyDown}>
               <Field label="Task" className="sm:col-span-2">
@@ -556,16 +571,16 @@ export default function MyTasks() {
               </Field>
             </div>
           ) : null}
-          {editingId ? (
-            <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
-              <CommentsPanel parentType="tasks" parentId={editingId} parentName={draft?.name} />
-              <div className="border-t border-hae-line/60 pt-4">
-                <ActivityLog parentType="tasks" parentId={editingId} />
-              </div>
-            </div>
-          ) : null}
         </div>
       </Modal>
+
+      <CommentsDrawer
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        parentType="tasks"
+        parentId={editingId}
+        parentName={draft?.name}
+      />
 
       {/* Desktop: scrollable table with sticky first columns */}
       <div className="hae-desktop-only overflow-hidden rounded-xl border border-hae-line bg-white">
@@ -634,6 +649,7 @@ export default function MyTasks() {
                                   {task.subtasks.length}
                                 </span>
                               ) : null}
+                              <CommentIndicator count={task.commentCount} />
                             </div>
                           </div>
                         </div>
