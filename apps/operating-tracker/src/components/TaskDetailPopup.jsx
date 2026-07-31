@@ -3,8 +3,8 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { Modal, Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import ActivityLog from './ActivityLog'
-import CommentsPanel from './CommentsPanel'
+import CommentIndicator from './CommentIndicator'
+import CommentsDrawer from './CommentsDrawer'
 import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import { diffTaskFields, logHistory } from '../utils/activityLog'
@@ -83,6 +83,7 @@ export default function TaskDetailPopup({
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(null)
+  const [commentsOpen, setCommentsOpen] = useState(false)
 
   useEffect(() => {
     setSaved(null)
@@ -181,6 +182,16 @@ export default function TaskDetailPopup({
         ) : (
           footer || (
             <>
+              {task?.id ? (
+                <button
+                  type="button"
+                  className="hae-btn-secondary mr-auto inline-flex items-center gap-1.5"
+                  onClick={() => setCommentsOpen(true)}
+                >
+                  Comments
+                  <CommentIndicator count={effectiveTask?.commentCount} />
+                </button>
+              ) : null}
               {canEdit ? (
                 <button type="button" className="hae-btn-secondary" onClick={startEdit}>
                   Edit
@@ -287,38 +298,35 @@ export default function TaskDetailPopup({
           </Field>
         </div>
       ) : (
-        <div className={task?.id ? 'grid gap-6 lg:grid-cols-[1fr_20rem]' : ''}>
-          <dl className="-my-1">
-            {displayRows.map((row) =>
-              row.label === 'Status' ? (
-                <BadgeRow
-                  key={row.label}
-                  label="Status"
-                  value={row.value}
-                  className={statusBadgeClass(row.value)}
-                />
-              ) : row.label === 'Priority' ? (
-                <BadgeRow
-                  key={row.label}
-                  label="Priority"
-                  value={row.value}
-                  className={priorityBadgeClass(row.value)}
-                />
-              ) : (
-                <Row key={row.label} label={row.label} value={row.value} />
-              )
-            )}
-          </dl>
-          {task?.id ? (
-            <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
-              <CommentsPanel parentType="tasks" parentId={task.id} parentName={task.name} />
-              <div className="border-t border-hae-line/60 pt-4">
-                <ActivityLog parentType="tasks" parentId={task.id} />
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <dl className="-my-1">
+          {displayRows.map((row) =>
+            row.label === 'Status' ? (
+              <BadgeRow
+                key={row.label}
+                label="Status"
+                value={row.value}
+                className={statusBadgeClass(row.value)}
+              />
+            ) : row.label === 'Priority' ? (
+              <BadgeRow
+                key={row.label}
+                label="Priority"
+                value={row.value}
+                className={priorityBadgeClass(row.value)}
+              />
+            ) : (
+              <Row key={row.label} label={row.label} value={row.value} />
+            )
+          )}
+        </dl>
       )}
+      <CommentsDrawer
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        parentType="tasks"
+        parentId={task?.id}
+        parentName={task?.name}
+      />
     </Modal>
   )
 }

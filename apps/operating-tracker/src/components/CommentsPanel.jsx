@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  increment,
   orderBy,
   query,
   serverTimestamp,
@@ -104,6 +105,8 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
       .then((snap) => {
         if (cancelled) return
         setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+        // Self-heal the denormalized count used for list indicators (covers docs from before it existed).
+        updateDoc(doc(db, parentType, parentId), { commentCount: snap.size }).catch(() => {})
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -151,7 +154,9 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
     setPosting(true)
     setError(null)
     try {
-      const mentionedPeople = mentioned.filter((m) => trimmed.includes(`@${m.name}`))
+      const mentionedPeople = mentioned.filter((m) =>
+        new RegExp(`@${escapeRegExp(m.name)}(?!\\w)`).test(trimmed)
+      )
       const mentionedIds = mentionedPeople.map((m) => m.id)
       await addDoc(collection(db, parentType, parentId, 'comments'), {
         text: trimmed,
@@ -160,6 +165,7 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
         mentionedUserIds: mentionedIds,
         createdAt: serverTimestamp(),
       })
+      updateDoc(doc(db, parentType, parentId), { commentCount: increment(1) }).catch(() => {})
       const notifyTargets = mentionedPeople.filter((m) => m.id !== user?.uid)
       const link = mentionDeepLink({ parentType, parentId, programId, programPath })
       await Promise.all(
@@ -261,6 +267,7 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
   const deleteComment = async (c) => {
     if (!confirm('Delete this comment? This action cannot be undone.')) return
     await deleteDoc(doc(db, parentType, parentId, 'comments', c.id))
+    updateDoc(doc(db, parentType, parentId), { commentCount: increment(-1) }).catch(() => {})
     setComments((prev) => prev.filter((x) => x.id !== c.id))
     logHistory({
       parentType,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { projectNameOf } from '../utils'
+import CommentIndicator from './CommentIndicator'
 import TaskDetailPopup from './TaskDetailPopup'
 
 export default function WinsSection({ tasks, programsById, projectsById, onDataChanged }) {
@@ -27,7 +28,10 @@ export default function WinsSection({ tasks, programsById, projectsById, onDataC
               className="border-l-2 border-hae-green pl-3 text-left"
               onClick={() => setSelected(task)}
             >
-              <div className="text-sm font-medium text-hae-ink">{task.name}</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-hae-ink">{task.name}</span>
+                <CommentIndicator count={task.commentCount} />
+              </div>
               <div className="text-xs text-hae-slate">
                 {projectNameOf(task, projectsById)}
               </div>

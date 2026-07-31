@@ -15,8 +15,8 @@ import {
 import { diffProjectFields, logHistory } from '../utils/activityLog'
 import TaskTable from './TaskTable'
 import LeadSelect from './LeadSelect'
-import CommentsPanel from './CommentsPanel'
-import ActivityLog from './ActivityLog'
+import CommentIndicator from './CommentIndicator'
+import CommentsDrawer from './CommentsDrawer'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -37,6 +37,7 @@ export default function ProjectCard({
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const tableRef = useRef(null)
 
   const summary = useMemo(() => {
@@ -208,6 +209,7 @@ export default function ProjectCard({
                     {tasks.length}
                   </span>
                 ) : null}
+                <CommentIndicator count={project.commentCount} />
                 <span className="text-xs text-hae-slate/70">{open ? '▾' : '▸'}</span>
               </div>
               <p className="mt-1.5 text-xs text-hae-slate">
@@ -245,6 +247,14 @@ export default function ProjectCard({
             </button>
             <button
               type="button"
+              onClick={() => setCommentsOpen(true)}
+              className="hae-btn-secondary inline-flex items-center gap-1.5"
+            >
+              Comments
+              <CommentIndicator count={project.commentCount} />
+            </button>
+            <button
+              type="button"
               onClick={startEdit}
               className="hae-btn-secondary"
             >
@@ -276,20 +286,18 @@ export default function ProjectCard({
               dense={dense}
             />
           </div>
-          <div className="border-t border-hae-line/60 pt-3">
-            <CommentsPanel
-              parentType="projects"
-              parentId={project.id}
-              parentName={project.name}
-              programId={project.programId || program?.id}
-              programPath={programPath}
-            />
-          </div>
-          <div className="border-t border-hae-line/60 pt-3">
-            <ActivityLog parentType="projects" parentId={project.id} />
-          </div>
         </div>
       )}
+
+      <CommentsDrawer
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        parentType="projects"
+        parentId={project.id}
+        parentName={project.name}
+        programId={project.programId || program?.id}
+        programPath={programPath}
+      />
     </div>
   )
 }
