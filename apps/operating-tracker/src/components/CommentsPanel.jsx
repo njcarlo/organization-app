@@ -151,7 +151,9 @@ export default function CommentsPanel({ parentType, parentId, parentName, progra
     setPosting(true)
     setError(null)
     try {
-      const mentionedPeople = mentioned.filter((m) => trimmed.includes(`@${m.name}`))
+      const mentionedPeople = mentioned.filter((m) =>
+        new RegExp(`@${escapeRegExp(m.name)}(?!\\w)`).test(trimmed)
+      )
       const mentionedIds = mentionedPeople.map((m) => m.id)
       await addDoc(collection(db, parentType, parentId, 'comments'), {
         text: trimmed,
