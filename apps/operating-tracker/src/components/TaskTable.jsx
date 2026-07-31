@@ -1,4 +1,4 @@
-import { Fragment, forwardRef, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import {
   addDoc,
   collection,
@@ -376,7 +376,6 @@ const TaskTable = forwardRef(function TaskTable(
     program,
     onChanged,
     showOwner = true,
-    dense = false,
   },
   ref
 ) {
@@ -454,7 +453,6 @@ const TaskTable = forwardRef(function TaskTable(
   })
 
   const visible = showCompleted ? [...active, ...completed] : active
-  const colCount = dense ? (showOwner ? 10 : 9) : showOwner ? 5 : 4
 
   const startAdd = () => {
     setAdding(true)
@@ -709,173 +707,6 @@ const TaskTable = forwardRef(function TaskTable(
             ? 'No tasks yet'
             : 'No active tasks — show completed below if needed'}
         </p>
-      ) : dense ? (
-        <div className="hae-table-scroll rounded-lg border border-hae-line/70 bg-white/80">
-          <table className="w-full min-w-[640px] text-left lg:min-w-[960px]">
-            <thead className="text-[10px] tracking-wide text-hae-slate/80 uppercase">
-              <tr className="border-b border-hae-line/80 bg-hae-mist/50">
-                <th className="w-6 px-1 py-2" />
-                <th className="px-3 py-2 font-semibold">Task</th>
-                {showOwner ? (
-                  <th className="hae-col-sm-hide px-3 py-2 font-semibold">Owner</th>
-                ) : null}
-                <th className="px-3 py-2 font-semibold">Due</th>
-                <th className="px-3 py-2 font-semibold">Status</th>
-                <th className="hae-col-sm-hide px-3 py-2 font-semibold">Priority</th>
-                <th className="hae-col-lg-hide px-3 py-2 font-semibold">Waiting</th>
-                <th className="hae-col-lg-hide px-3 py-2 font-semibold">Leadership</th>
-                <th className="hae-col-sm-hide px-3 py-2 font-semibold">Next</th>
-                <th className="px-3 py-2 font-semibold" />
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((task) =>
-                editingId === task.id && draft ? (
-                  <tr key={task.id} className="bg-amber-50/60">
-                    <td colSpan={colCount} className="p-2">
-                      <TaskEditForm
-                        draft={draft}
-                        setDraft={setDraft}
-                        onSave={saveEdit}
-                        onCancel={cancelEdit}
-                        saving={saving}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <Fragment key={task.id}>
-                  <tr
-                    {...(isComplete(task) ? {} : dragHandlers(task.id))}
-                    className={`group border-b border-hae-line/50 ${
-                      isComplete(task) ? 'opacity-60' : ''
-                    } ${draggedId === task.id ? 'opacity-40' : ''} ${
-                      dragOverId === task.id && draggedId && draggedId !== task.id
-                        ? 'bg-hae-mist/60'
-                        : ''
-                    }`}
-                  >
-                    <td className="px-1 py-2.5 text-hae-slate/50">
-                      {isComplete(task) ? null : (
-                        <span className="cursor-grab select-none" aria-hidden="true">
-                          ⠿
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 text-sm font-medium text-hae-ink">
-                      <button
-                        type="button"
-                        onClick={() => toggleExpand(task.id)}
-                        className="flex items-center gap-1.5 text-left"
-                        aria-expanded={expandedId === task.id}
-                        aria-label={
-                          expandedId === task.id ? 'Collapse subtasks' : 'Expand subtasks'
-                        }
-                      >
-                        <span className="shrink-0 text-hae-slate">
-                          {expandedId === task.id ? '▾' : '▸'}
-                        </span>
-                        <span className="line-clamp-2">{task.name}</span>
-                        {task.subtasks?.length ? (
-                          <span
-                            className="shrink-0 rounded-full bg-hae-mist px-1.5 py-0.5 text-[10px] font-semibold text-hae-slate"
-                            title={`${task.subtasks.length} subtask${task.subtasks.length === 1 ? '' : 's'}`}
-                          >
-                            {task.subtasks.length}
-                          </span>
-                        ) : null}
-                      </button>
-                    </td>
-                    {showOwner ? (
-                      <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
-                        {namesLabel(task.owner) || '—'}
-                      </td>
-                    ) : null}
-                    <td className="whitespace-nowrap px-3 py-2.5 text-sm text-hae-slate">
-                      {formatDate(task.dueDate)}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        <StatusPill status={task.status} waitingOn={isWaitingOn(task)} />
-                      </div>
-                    </td>
-                    <td className="hae-col-sm-hide px-3 py-2.5">
-                      <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
-                          effectivePriority(task)
-                        )}`}
-                      >
-                        {effectivePriority(task)}
-                      </span>
-                    </td>
-                    <td className="hae-col-lg-hide px-3 py-2.5 text-sm text-hae-slate">
-                      <span className="line-clamp-1">{task.waitingOn || '—'}</span>
-                    </td>
-                    <td className="hae-col-lg-hide px-3 py-2.5 text-sm text-hae-slate">
-                      <span className="line-clamp-1">
-                        {task.leadershipAttention || 'None'}
-                      </span>
-                    </td>
-                    <td className="hae-col-sm-hide px-3 py-2.5 text-sm text-hae-slate">
-                      <span className="line-clamp-1">{task.nextAction || '—'}</span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right">
-                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(task)}
-                          className="text-xs text-hae-slate hover:text-hae-crimson"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeTask(task.id)}
-                          className="text-xs text-hae-slate hover:text-hae-red"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedId === task.id ? (
-                    <tr className="border-b border-hae-line/50 bg-hae-mist/30">
-                      <td colSpan={colCount} className="px-3 py-3">
-                        {task.notes ? (
-                          <div className="mb-3">
-                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
-                              Notes
-                            </div>
-                            <p className="mt-0.5 whitespace-pre-wrap text-xs text-hae-slate">
-                              <Linkify text={task.notes} />
-                            </p>
-                          </div>
-                        ) : null}
-                        <SubtaskList
-                          task={task}
-                          editingSubtaskId={editingSubtask}
-                          subtaskDraft={subtaskDraft}
-                          setSubtaskDraft={setSubtaskDraft}
-                          onStartEdit={startEditSubtask}
-                          onSaveEdit={() => saveEditSubtask(task)}
-                          onCancelEdit={cancelEditSubtask}
-                          onDelete={(subId) => removeSubtask(task, subId)}
-                          adding={addingSubtaskFor === task.id}
-                          newSubtask={newSubtask}
-                          setNewSubtask={setNewSubtask}
-                          onStartAdd={() => startAddSubtask(task.id)}
-                          onSaveNew={() => saveNewSubtask(task)}
-                          onCancelAdd={cancelAddSubtask}
-                          saving={subtaskSaving}
-                        />
-                      </td>
-                    </tr>
-                  ) : null}
-                  </Fragment>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
       ) : (
         <ul className="space-y-2">
           {visible.map((task) => {

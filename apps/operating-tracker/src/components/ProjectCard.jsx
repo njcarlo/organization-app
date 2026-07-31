@@ -17,6 +17,7 @@ import TaskTable from './TaskTable'
 import LeadSelect from './LeadSelect'
 import CommentIndicator from './CommentIndicator'
 import CommentsDrawer from './CommentsDrawer'
+import { CommentIcon, EditIcon, PlusIcon, TrashIcon } from './ActionIcons'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -31,7 +32,6 @@ export default function ProjectCard({
   programPath,
   tasks,
   onChanged,
-  dense = false,
 }) {
   const { user, userProfile } = useAuth()
   const [open, setOpen] = useState(false)
@@ -241,31 +241,42 @@ export default function ProjectCard({
         </button>
 
         {!editing && (
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={handleAddTask} className="hae-btn">
-              + Add Task
+          <div className="flex flex-wrap items-center gap-1">
+            <button
+              type="button"
+              onClick={handleAddTask}
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              Add task
             </button>
             <button
               type="button"
               onClick={() => setCommentsOpen(true)}
-              className="hae-btn-secondary inline-flex items-center gap-1.5"
+              className="inline-flex items-center gap-1 rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+              aria-label="Comments"
+              title="Comments"
             >
-              Comments
+              <CommentIcon className="h-4 w-4" />
               <CommentIndicator count={project.commentCount} />
             </button>
             <button
               type="button"
               onClick={startEdit}
-              className="hae-btn-secondary"
+              className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+              aria-label="Edit project"
+              title="Edit"
             >
-              Edit
+              <EditIcon className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={removeProject}
-              className="text-xs text-hae-slate hover:text-hae-red"
+              className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-red"
+              aria-label="Delete project"
+              title="Delete"
             >
-              Delete
+              <TrashIcon className="h-4 w-4" />
             </button>
           </div>
         )}
@@ -283,7 +294,6 @@ export default function ProjectCard({
               project={project}
               program={program}
               onChanged={onChanged}
-              dense={dense}
             />
           </div>
         </div>

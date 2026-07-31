@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import CommentIndicator from './CommentIndicator'
 import CommentsDrawer from './CommentsDrawer'
+import { CommentIcon, EditIcon } from './ActionIcons'
 import LeadSelect from './LeadSelect'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import { diffTaskFields, logHistory } from '../utils/activityLog'
@@ -185,16 +186,24 @@ export default function TaskDetailPopup({
               {task?.id ? (
                 <button
                   type="button"
-                  className="hae-btn-secondary mr-auto inline-flex items-center gap-1.5"
+                  className="mr-auto inline-flex items-center gap-1 rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
                   onClick={() => setCommentsOpen(true)}
+                  aria-label="Comments"
+                  title="Comments"
                 >
-                  Comments
+                  <CommentIcon className="h-4 w-4" />
                   <CommentIndicator count={effectiveTask?.commentCount} />
                 </button>
               ) : null}
               {canEdit ? (
-                <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-                  Edit
+                <button
+                  type="button"
+                  className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+                  onClick={startEdit}
+                  aria-label="Edit task"
+                  title="Edit"
+                >
+                  <EditIcon className="h-4 w-4" />
                 </button>
               ) : null}
               <button type="button" className="hae-btn-secondary" onClick={handleClose}>
