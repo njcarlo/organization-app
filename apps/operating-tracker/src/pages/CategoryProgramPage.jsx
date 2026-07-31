@@ -67,7 +67,6 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [dense, setDense] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
   const [editEventOpen, setEditEventOpen] = useState(false)
@@ -546,19 +545,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
             </button>
           ) : null}
           {!noProjects ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setDense((v) => !v)}
-                className="hae-btn-secondary"
-                title={dense ? 'Switch to compact list' : 'Show full table'}
-              >
-                {dense ? 'Compact list' : 'Dense table'}
-              </button>
-              <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-                + Add Project
-              </button>
-            </>
+            <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+              + Add Project
+            </button>
           ) : null}
           {isEventsMode ? (
             <>
@@ -967,7 +956,6 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   programPath={programPath}
                   tasks={tasksByProject[project.id] || []}
                   onChanged={load}
-                  dense={dense}
                 />
               )}
             />

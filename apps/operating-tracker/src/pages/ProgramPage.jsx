@@ -40,7 +40,6 @@ export default function ProgramPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [dense, setDense] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const [newProject, setNewProject] = useState(emptyProject)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
@@ -216,14 +215,6 @@ export default function ProgramPage() {
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setDense((v) => !v)}
-            className="hae-btn-secondary"
-            title={dense ? 'Switch to compact list' : 'Show full table'}
-          >
-            {dense ? 'Compact list' : 'Dense table'}
-          </button>
           <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
             + Add Project
           </button>
@@ -324,7 +315,6 @@ export default function ProgramPage() {
                 programPath={`/programs/${programId}`}
                 tasks={tasksByProject[project.id] || []}
                 onChanged={load}
-                dense={dense}
               />
             )}
           />
