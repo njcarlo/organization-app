@@ -89,25 +89,6 @@ export const MEMBERSHIP_STATUS_OPTIONS = [
   'Expired',
 ]
 
-/** Standing Advancement Committee KPIs — seeded once when the collection is empty. */
-export const ADVANCEMENT_KPI_DEFAULTS = [
-  'Membership Growth',
-  'Startup World Cup Revenue',
-  'Sponsorship Pipeline',
-  'Major Gifts & Philanthropy',
-  'Strategic Partnerships',
-  'Custom Executive Education & Academy Programs',
-  'Investor Network Engagement',
-  'Board Introductions',
-  'Revenue Against Annual Goals',
-]
-
-export const KPI_UNIT_OPTIONS = [
-  { value: 'currency', label: 'Dollars ($)' },
-  { value: 'number', label: 'Count (#)' },
-  { value: 'percent', label: 'Percent (%)' },
-]
-
 /**
  * Top-level collections that host projects (via a project's `programId`),
  * used by the "Move / copy project" picker. `customSectionItems` (user-
