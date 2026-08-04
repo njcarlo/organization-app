@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import EventsDashboard from './pages/EventsDashboard'
 import GraphicsDashboard from './pages/GraphicsDashboard'
 import ChapterLeaderDashboard from './pages/ChapterLeaderDashboard'
+import AdvancementDashboard from './pages/AdvancementDashboard'
 import Activity from './pages/Activity'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
@@ -125,6 +126,14 @@ export default function App() {
                   element={
                     <SectionRoute sectionId="chapters">
                       <ChapterLeaderDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/advancement-dashboard"
+                  element={
+                    <SectionRoute sectionId="advancement">
+                      <AdvancementDashboard />
                     </SectionRoute>
                   }
                 />
