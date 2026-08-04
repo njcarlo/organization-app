@@ -167,7 +167,7 @@ export default function SideNav({
           end={section.end}
           onClick={close}
           className={({ isActive }) =>
-            `relative flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
+            `relative flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-xs font-medium transition-colors ${
               isActive
                 ? 'bg-hae-crimson text-white shadow-[0_4px_12px_rgba(184,0,40,0.25)]'
                 : 'text-hae-ink/80 hover:bg-hae-mist hover:text-hae-ink'
@@ -246,14 +246,14 @@ export default function SideNav({
                   cancelRename()
                 }
               }}
-              className="min-w-0 flex-1 rounded-xl border border-hae-crimson/40 bg-white px-2.5 py-2 text-sm font-semibold text-hae-ink outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-hae-crimson/40 bg-white px-2.5 py-2 text-xs font-semibold text-hae-ink outline-none"
             />
           ) : (
             <button
               type="button"
               onClick={() => toggle(section.id)}
               aria-expanded={isOpen}
-              className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl py-2.5 pl-3 pr-3 text-left text-sm font-semibold transition-colors ${
+              className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl py-2.5 pl-3 pr-3 text-left text-xs font-semibold transition-colors ${
                 groupActive || isOpen
                   ? 'text-hae-crimson'
                   : 'text-hae-ink hover:bg-hae-mist'
@@ -519,7 +519,7 @@ function NavItemRow({
         end={item.end}
         onClick={close}
         title={item.description || item.label}
-        className={`relative flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl py-2 pl-3 text-sm transition-colors ${
+        className={`relative flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl py-2 pl-3 text-xs transition-colors ${
           hasActions ? 'pr-9' : 'pr-3'
         } ${
           active

@@ -41,6 +41,8 @@ import { logHistory } from '../utils/activityLog'
 
 const NO_PROJECTS_COLLECTIONS = ['trackerDocuments', 'trackerEvents']
 
+const CUSTOM_PROGRAM_STATUS_OPTIONS = ['Prospect', 'Approved']
+
 const emptyProject = {
   name: '',
   lead: [],
@@ -78,6 +80,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [editChapterOpen, setEditChapterOpen] = useState(false)
   const [chapterSaving, setChapterSaving] = useState(false)
   const [chapterForm, setChapterForm] = useState(null)
+  const [editGenericOpen, setEditGenericOpen] = useState(false)
+  const [genericSaving, setGenericSaving] = useState(false)
+  const [genericForm, setGenericForm] = useState(null)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [moveModal, setMoveModal] = useState(null)
 
@@ -349,6 +354,43 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     }
   }
 
+  const startEditGeneric = () => {
+    setGenericForm({
+      name: program.name || '',
+      lead: toNameList(program.lead),
+      ...(collectionName === 'customPrograms'
+        ? { startDate: program.startDate || '', status: program.status || '' }
+        : {}),
+    })
+    setEditGenericOpen(true)
+  }
+
+  const closeEditGeneric = () => {
+    if (genericSaving) return
+    setEditGenericOpen(false)
+    setGenericForm(null)
+  }
+
+  const saveEditGeneric = async (e) => {
+    e.preventDefault()
+    if (!genericForm?.name.trim() || genericSaving) return
+    setGenericSaving(true)
+    try {
+      await updateDoc(doc(db, collectionName, itemId), {
+        name: genericForm.name.trim(),
+        lead: genericForm.lead,
+        ...(collectionName === 'customPrograms'
+          ? { startDate: genericForm.startDate, status: genericForm.status }
+          : {}),
+      })
+      setEditGenericOpen(false)
+      setGenericForm(null)
+      load()
+    } finally {
+      setGenericSaving(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
   if (error) return <p className="text-sm text-hae-red">{error}</p>
   if (!program)
@@ -364,6 +406,8 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     collectionName === 'trackerEvents' ||
     (collectionName === 'customSectionItems' && program.kind === 'events')
   const noProjects = NO_PROJECTS_COLLECTIONS.includes(collectionName) || isDocumentsMode || isEventsMode
+  const isGenericEditable =
+    !isEventsMode && collectionName !== 'academyPrograms' && collectionName !== 'chapters'
 
   const activeProjects = projects.filter((p) => normalizeHealth(p.health) !== 'completed')
   const completedProjects = projects.filter((p) => normalizeHealth(p.health) === 'completed')
@@ -573,6 +617,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               Edit
             </button>
           ) : null}
+          {isGenericEditable ? (
+            <button type="button" onClick={startEditGeneric} className="hae-btn-secondary">
+              Edit
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -728,6 +777,84 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
                 />
               </label>
+            </form>
+          ) : null}
+        </Modal>
+      ) : null}
+
+      {isGenericEditable ? (
+        <Modal
+          open={editGenericOpen}
+          onClose={closeEditGeneric}
+          title={`Edit ${categoryLabel}`}
+          busy={genericSaving}
+          footer={
+            <>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEditGeneric}
+                disabled={genericSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-generic-form"
+                className="hae-btn"
+                disabled={genericSaving}
+              >
+                {genericSaving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          }
+        >
+          {genericForm ? (
+            <form id="edit-generic-form" onSubmit={saveEditGeneric} className="grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                <span className="text-xs font-medium text-hae-slate">Name</span>
+                <input
+                  required
+                  value={genericForm.name}
+                  onChange={(e) => setGenericForm({ ...genericForm, name: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Overall lead</span>
+                <LeadSelect
+                  value={genericForm.lead}
+                  onChange={(lead) => setGenericForm({ ...genericForm, lead })}
+                />
+              </label>
+              {collectionName === 'customPrograms' ? (
+                <>
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="text-xs font-medium text-hae-slate">Start date</span>
+                    <input
+                      type="date"
+                      value={genericForm.startDate}
+                      onChange={(e) => setGenericForm({ ...genericForm, startDate: e.target.value })}
+                      className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="text-xs font-medium text-hae-slate">Status</span>
+                    <select
+                      value={genericForm.status}
+                      onChange={(e) => setGenericForm({ ...genericForm, status: e.target.value })}
+                      className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                    >
+                      <option value="">Select status</option>
+                      {CUSTOM_PROGRAM_STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              ) : null}
             </form>
           ) : null}
         </Modal>
