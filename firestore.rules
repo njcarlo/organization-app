@@ -149,6 +149,12 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff();
     }
+    match /advancementKpis/{id} {
+      allow read, write: if isStaff();
+    }
+    match /advancementDashboardConfig/{id} {
+      allow read, write: if isStaff();
+    }
     // Per-user sidebar section order (personal chrome; doc id == uid).
     match /sidebarOrder/{uid} {
       allow read, write: if isStaff() && request.auth.uid == uid;

@@ -70,6 +70,7 @@ const DEFAULT_SECTION_ORDER = [
   'data',
   'board-commitments',
   'chapters',
+  'advancement',
 ]
 
 /** Tracker sidenav — expandable chrome; platform switch lives in the header. */
@@ -775,6 +776,14 @@ export default function Sidebar({ open = false, onClose }) {
         })),
       ],
       emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
+    })
+
+    next.push({
+      id: 'advancement',
+      label: 'Advancement',
+      items: [
+        { to: '/advancement-dashboard', label: 'Standing Advancement Dashboard', icon: 'chart' },
+      ],
     })
 
     // User-created sections, one per `customSections` doc; items live in the
