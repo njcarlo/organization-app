@@ -8,6 +8,7 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
+  updateDoc,
   writeBatch,
 } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
@@ -19,7 +20,7 @@ import DraggableList from '../components/DraggableList'
 import SelectionToolbar from '../components/SelectionToolbar'
 import MoveCopyProjectModal from '../components/MoveCopyProjectModal'
 import { HEALTH_OPTIONS } from '../constants'
-import { namesLabel, normalizeHealth, sortByOrder } from '../utils'
+import { namesLabel, normalizeHealth, sortByOrder, toNameList } from '../utils'
 import { logHistory } from '../utils/activityLog'
 
 const emptyProject = {
@@ -44,6 +45,9 @@ export default function ProgramPage() {
   const [newProject, setNewProject] = useState(emptyProject)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [moveModal, setMoveModal] = useState(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editForm, setEditForm] = useState(null)
 
   const load = useCallback(async () => {
     const [programSnap, projectSnap, taskSnap] = await Promise.all([
@@ -181,6 +185,34 @@ export default function ProgramPage() {
     load()
   }
 
+  const startEdit = () => {
+    setEditForm({ name: program.name || '', lead: toNameList(program.lead) })
+    setEditOpen(true)
+  }
+
+  const closeEdit = () => {
+    if (editSaving) return
+    setEditOpen(false)
+    setEditForm(null)
+  }
+
+  const saveEdit = async (e) => {
+    e.preventDefault()
+    if (!editForm?.name.trim() || editSaving) return
+    setEditSaving(true)
+    try {
+      await updateDoc(doc(db, 'programs', programId), {
+        name: editForm.name.trim(),
+        lead: editForm.lead,
+      })
+      setEditOpen(false)
+      setEditForm(null)
+      load()
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading program…</p>
   if (!program) return <p className="text-sm text-hae-red">Program not found.</p>
 
@@ -218,8 +250,49 @@ export default function ProgramPage() {
           <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
             + Add Project
           </button>
+          <button type="button" onClick={startEdit} className="hae-btn-secondary">
+            Edit
+          </button>
         </div>
       </header>
+
+      <Modal
+        open={editOpen}
+        onClose={closeEdit}
+        title="Edit Program"
+        busy={editSaving}
+        footer={
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={closeEdit} disabled={editSaving}>
+              Cancel
+            </button>
+            <button type="submit" form="edit-program-form" className="hae-btn" disabled={editSaving}>
+              {editSaving ? 'Saving…' : 'Save'}
+            </button>
+          </>
+        }
+      >
+        {editForm ? (
+          <form id="edit-program-form" onSubmit={saveEdit} className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+              <span className="text-xs font-medium text-hae-slate">Name</span>
+              <input
+                required
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs font-medium text-hae-slate">Overall lead</span>
+              <LeadSelect
+                value={editForm.lead}
+                onChange={(lead) => setEditForm({ ...editForm, lead })}
+              />
+            </label>
+          </form>
+        ) : null}
+      </Modal>
 
       <Modal
         open={open}
