@@ -32,9 +32,11 @@ export default function ProjectCard({
   programPath,
   tasks,
   onChanged,
+  defaultOpen = false,
+  showProgramTag = false,
 }) {
   const { user, userProfile } = useAuth()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
   const [commentsOpen, setCommentsOpen] = useState(false)
@@ -201,6 +203,11 @@ export default function ProjectCard({
                 >
                   {healthLabel(project.health)}
                 </span>
+                {showProgramTag && program?.name ? (
+                  <span className="rounded-full bg-hae-mist px-2 py-0.5 text-[10px] font-semibold text-hae-slate">
+                    {program.name}
+                  </span>
+                ) : null}
                 {tasks.length ? (
                   <span
                     className="rounded-full bg-hae-mist px-2 py-0.5 text-[10px] font-semibold text-hae-slate"

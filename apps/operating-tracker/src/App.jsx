@@ -18,6 +18,7 @@ import CustomSectionItemPage from './pages/CustomSectionItemPage'
 import CourseRegistrations from './pages/CourseRegistrations'
 import AcademyLinks from './pages/AcademyLinks'
 import MyTasks from './pages/MyTasks'
+import TaskBoard from './pages/TaskBoard'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
 import ExecutiveInbox from './pages/ExecutiveInbox'
@@ -104,6 +105,14 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
+                <Route
+                  path="/board"
+                  element={
+                    <UnrestrictedRoute>
+                      <TaskBoard />
+                    </UnrestrictedRoute>
+                  }
+                />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route
                   path="/events-dashboard"
