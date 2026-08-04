@@ -600,7 +600,6 @@ export default function Sidebar({ open = false, onClose }) {
       : [
           { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-          { to: '/board', label: 'Task Board', icon: 'grid' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/activity', label: 'Activity', icon: 'history' },
         ]
