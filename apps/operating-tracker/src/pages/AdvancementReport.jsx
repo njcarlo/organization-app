@@ -4,6 +4,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, s
 import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
 import AdvancementEditableList from '../components/AdvancementEditableList'
+import AdvancementCustomSection from '../components/AdvancementCustomSection'
 import {
   ADVANCEMENT_MEMBERSHIP_TYPES,
   ADVANCEMENT_PIPELINE_STAGE_OPTIONS,
@@ -210,35 +211,6 @@ function KpiTile({ label, value, goalLabel, status, goalValue, onCommitGoal }) {
   )
 }
 
-function CustomKpiTile({ label, value, onCommitLabel, onCommitValue, onDelete }) {
-  return (
-    <div className="kpi-tile relative rounded-lg border border-hae-line bg-white p-4 print:break-inside-avoid">
-      <button
-        type="button"
-        className="absolute top-2 right-2 text-hae-slate/50 hover:text-hae-red print:hidden"
-        title="Remove KPI"
-        onClick={onDelete}
-      >
-        ×
-      </button>
-      <InlineEdit
-        value={label}
-        display={label || 'New KPI'}
-        className="pr-4 text-[10px] font-semibold tracking-wide text-hae-slate uppercase"
-        onCommit={onCommitLabel}
-      />
-      <InlineEdit
-        value={value}
-        display={Number(value) || 0}
-        type="number"
-        className="kpi-value mt-1 block font-display text-2xl text-hae-ink"
-        inputClassName="w-24"
-        onCommit={onCommitValue}
-      />
-    </div>
-  )
-}
-
 function Sparkline({ values }) {
   if (!values.length) return <p className="text-xs text-hae-slate">No data yet.</p>
   const w = 220
@@ -269,7 +241,7 @@ export default function AdvancementReport() {
   const [wins, setWins] = useState([])
   const [tasks, setTasks] = useState([])
   const [events, setEvents] = useState([])
-  const [customKpis, setCustomKpis] = useState([])
+  const [customSections, setCustomSections] = useState([])
   const [loadError, setLoadError] = useState('')
   const programsRef = useRef(null)
 
@@ -286,7 +258,7 @@ export default function AdvancementReport() {
         winsSnap,
         tasksSnap,
         eventsSnap,
-        customKpisSnap,
+        customSectionsSnap,
       ] = await Promise.all([
         getDoc(doc(db, 'trackerAdvancementSummary', 'main')),
         getDoc(doc(db, 'trackerAdvancementMembership', 'main')),
@@ -296,7 +268,7 @@ export default function AdvancementReport() {
         getDocs(collection(db, 'trackerAdvancementWins')),
         getDocs(collection(db, 'tasks')),
         getDocs(collection(db, 'trackerEvents')),
-        getDocs(collection(db, 'trackerAdvancementCustomKpis')),
+        getDocs(collection(db, 'trackerAdvancementCustomSections')),
       ])
       setSummary(summarySnap.exists() ? summarySnap.data() : {})
       setMembership(membershipSnap.exists() ? membershipSnap.data() : {})
@@ -306,7 +278,7 @@ export default function AdvancementReport() {
       setWins(sortByOrder(winsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setTasks(tasksSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setEvents(eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-      setCustomKpis(sortByOrder(customKpisSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+      setCustomSections(sortByOrder(customSectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
     } catch (err) {
       setLoadError(err.message || 'Failed to load the Advancement report')
     } finally {
@@ -456,23 +428,17 @@ export default function AdvancementReport() {
     await deleteDoc(doc(db, 'trackerAdvancementWins', rowId))
   }
 
-  const updateCustomKpiField = async (rowId, key, raw, numeric = false) => {
-    const value = numeric ? Number(raw) || 0 : String(raw).trim()
-    setCustomKpis((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
-    await updateDoc(doc(db, 'trackerAdvancementCustomKpis', rowId), { [key]: value })
+  const addCustomSection = async () => {
+    const maxOrder = customSections.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
+    const payload = { title: 'New Section', columns: [{ id: 'col_1', label: 'Column 1', type: 'text' }], order: maxOrder + 1 }
+    const ref = await addDoc(collection(db, 'trackerAdvancementCustomSections'), { ...payload, createdAt: serverTimestamp() })
+    setCustomSections((rows) => [...rows, { id: ref.id, ...payload }])
   }
 
-  const addCustomKpi = async () => {
-    const maxOrder = customKpis.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
-    const payload = { label: 'New KPI', value: 0, order: maxOrder + 1 }
-    const ref = await addDoc(collection(db, 'trackerAdvancementCustomKpis'), { ...payload, createdAt: serverTimestamp() })
-    setCustomKpis((rows) => [...rows, { id: ref.id, ...payload }])
-  }
-
-  const removeCustomKpi = async (rowId) => {
-    if (!confirm('Remove this KPI? This action cannot be undone.')) return
-    setCustomKpis((rows) => rows.filter((r) => r.id !== rowId))
-    await deleteDoc(doc(db, 'trackerAdvancementCustomKpis', rowId))
+  const removeCustomSection = async (sectionId) => {
+    if (!confirm('Delete this section? This action cannot be undone.')) return
+    setCustomSections((rows) => rows.filter((r) => r.id !== sectionId))
+    await deleteDoc(doc(db, 'trackerAdvancementCustomSections', sectionId))
   }
 
   if (loading) return <p className="text-sm text-hae-slate">Loading report…</p>
@@ -549,20 +515,7 @@ export default function AdvancementReport() {
           goalLabel={healthStatus || '—'}
           status={healthStatus}
         />
-        {customKpis.map((k) => (
-          <CustomKpiTile
-            key={k.id}
-            label={k.label}
-            value={k.value}
-            onCommitLabel={(v) => updateCustomKpiField(k.id, 'label', v, false)}
-            onCommitValue={(v) => updateCustomKpiField(k.id, 'value', v, true)}
-            onDelete={() => removeCustomKpi(k.id)}
-          />
-        ))}
       </div>
-      <button type="button" className="hae-btn print:hidden" onClick={addCustomKpi}>
-        + Add KPI
-      </button>
 
       <AdvancementEditableList
         title="Financial Summary (YTD)"
@@ -838,6 +791,13 @@ export default function AdvancementReport() {
           View All Events →
         </Link>
       </SectionCard>
+
+      {customSections.map((s) => (
+        <AdvancementCustomSection key={s.id} section={s} onDeleted={() => removeCustomSection(s.id)} />
+      ))}
+      <button type="button" className="hae-btn print:hidden" onClick={addCustomSection}>
+        + Add Section
+      </button>
 
       <p className="text-[11px] text-hae-slate print:hidden">
         Action Items and Coming Up are pulled live from the Tracker — manage them in{' '}

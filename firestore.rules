@@ -155,7 +155,10 @@ service cloud.firestore {
     match /trackerAdvancementWins/{id} {
       allow read, write: if isStaff();
     }
-    match /trackerAdvancementCustomKpis/{id} {
+    match /trackerAdvancementCustomSections/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementCustomSections/{id}/rows/{rowId} {
       allow read, write: if isStaff();
     }
     match /boardCommitments/{id} {
