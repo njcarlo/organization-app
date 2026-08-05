@@ -89,6 +89,12 @@ export const MEMBERSHIP_STATUS_OPTIONS = [
   'Expired',
 ]
 
+export const ADVANCEMENT_PROGRAM_STATUS_OPTIONS = [
+  'On Track',
+  'At Risk',
+  'Behind',
+]
+
 /**
  * Top-level collections that host projects (via a project's `programId`),
  * used by the "Move / copy project" picker. `customSectionItems` (user-
