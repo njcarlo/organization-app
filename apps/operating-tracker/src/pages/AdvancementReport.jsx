@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
+import { ADVANCEMENT_MEMBERSHIP_TYPES } from '../constants'
 import {
   advancementProgramStatusDotClass,
   daysUntil,
@@ -48,6 +49,13 @@ function statusFromPct(pct) {
   if (pct == null) return null
   if (pct >= 100) return 'On Track'
   if (pct >= 75) return 'At Risk'
+  return 'Behind'
+}
+
+function healthStatusFromScore(score) {
+  if (score == null) return null
+  if (score >= 80) return 'On Track'
+  if (score >= 50) return 'At Risk'
   return 'Behind'
 }
 
@@ -220,11 +228,11 @@ export default function AdvancementReport() {
     [partnerships]
   )
 
-  const membersPct = pctToGoal(summary.totalMembers, summary.totalMembersGoal)
-  const revenuePct = pctToGoal(financialTotals.current, financialTotals.goal)
-  const pipelinePct = pctToGoal(pipelineTotal, summary.pipelineGoal)
-  const partnershipsPct = pctToGoal(partnershipsCount, summary.partnershipsGoal)
-  const growthSeries = useMemo(
+  const totalMembers = useMemo(
+    () => ADVANCEMENT_MEMBERSHIP_TYPES.reduce((sum, t) => sum + (Number(membership[t.id]) || 0), 0),
+    [membership]
+  )
+  const growthHistory = useMemo(
     () =>
       String(membership.growthSeries || '')
         .split(',')
@@ -232,6 +240,29 @@ export default function AdvancementReport() {
         .filter((v) => Number.isFinite(v)),
     [membership.growthSeries]
   )
+  const growthSeries = useMemo(() => [...growthHistory, totalMembers], [growthHistory, totalMembers])
+  const previousTotalMembers = growthHistory.length ? growthHistory[growthHistory.length - 1] : null
+  const growthRate =
+    previousTotalMembers != null && previousTotalMembers > 0
+      ? Math.round(((totalMembers - previousTotalMembers) / previousTotalMembers) * 1000) / 10
+      : null
+
+  const membersPct = pctToGoal(totalMembers, summary.totalMembersGoal)
+  const revenuePct = pctToGoal(financialTotals.current, financialTotals.goal)
+  const pipelinePct = pctToGoal(pipelineTotal, summary.pipelineGoal)
+  const partnershipsPct = pctToGoal(partnershipsCount, summary.partnershipsGoal)
+
+  const healthScore = useMemo(() => {
+    const scores = []
+    if (membersPct != null) scores.push(Math.min(100, membersPct))
+    if (revenuePct != null) scores.push(Math.min(100, revenuePct))
+    if (pipelinePct != null) scores.push(Math.min(100, pipelinePct))
+    if (partnershipsPct != null) scores.push(Math.min(100, partnershipsPct))
+    if (growthRate != null) scores.push(Math.max(0, Math.min(100, 50 + growthRate * 2)))
+    if (!scores.length) return null
+    return Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
+  }, [membersPct, revenuePct, pipelinePct, partnershipsPct, growthRate])
+  const healthStatus = healthStatusFromScore(healthScore)
 
   if (loading) return <p className="text-sm text-hae-slate">Loading report…</p>
 
@@ -257,7 +288,7 @@ export default function AdvancementReport() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 print:grid-cols-6 print:gap-2">
         <KpiTile
           label="Total Members"
-          value={summary.totalMembers ?? '—'}
+          value={totalMembers}
           goalLabel={summary.totalMembersGoal ? `Goal ${summary.totalMembersGoal}` : 'No goal set'}
           status={statusFromPct(membersPct)}
         />
@@ -287,9 +318,9 @@ export default function AdvancementReport() {
         />
         <KpiTile
           label="Overall Health Score"
-          value={summary.healthScore != null && summary.healthScore !== '' ? `${summary.healthScore} / 100` : '—'}
-          goalLabel={summary.healthStatus || '—'}
-          status={summary.healthStatus}
+          value={healthScore != null ? `${healthScore} / 100` : '—'}
+          goalLabel={healthStatus || '—'}
+          status={healthStatus}
         />
       </div>
 
@@ -359,25 +390,27 @@ export default function AdvancementReport() {
 
       <SectionCard title="Membership Snapshot" tone="green">
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          {ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => (
+            <div key={t.id}>
+              <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">{t.label}</p>
+              <p className="font-display text-xl text-hae-ink">{Number(membership[t.id]) || 0}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-hae-line pt-3 text-sm sm:grid-cols-4">
           <div>
-            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">New This Month</p>
-            <p className="font-display text-xl text-hae-ink">{membership.newThisMonth ?? '—'}</p>
+            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Total Members</p>
+            <p className="font-display text-xl text-hae-ink">{totalMembers}</p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Renewal Rate</p>
-            <p className="font-display text-xl text-hae-ink">{membership.renewalRate != null && membership.renewalRate !== '' ? `${membership.renewalRate}%` : '—'}</p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Lifetime Members</p>
-            <p className="font-display text-xl text-hae-ink">{membership.lifetimeMembers ?? '—'}</p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Corporate Members</p>
-            <p className="font-display text-xl text-hae-ink">{membership.corporateMembers ?? '—'}</p>
+            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Growth Rate</p>
+            <p className={`font-display text-xl ${growthRate == null ? 'text-hae-ink' : growthRate >= 0 ? 'text-green-700' : 'text-hae-crimson'}`}>
+              {growthRate != null ? `${growthRate > 0 ? '+' : ''}${growthRate}%` : '—'}
+            </p>
           </div>
         </div>
         <div className="mt-3">
-          <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Growth (Last 12 Months)</p>
+          <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Total Members — Trend</p>
           <Sparkline values={growthSeries} />
         </div>
       </SectionCard>

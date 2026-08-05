@@ -4,7 +4,11 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
 import AdvancementEditableList from '../components/AdvancementEditableList'
-import { ADVANCEMENT_PIPELINE_STAGE_OPTIONS, ADVANCEMENT_PROGRAM_STATUS_OPTIONS } from '../constants'
+import {
+  ADVANCEMENT_MEMBERSHIP_TYPES,
+  ADVANCEMENT_PIPELINE_STAGE_OPTIONS,
+  ADVANCEMENT_PROGRAM_STATUS_OPTIONS,
+} from '../constants'
 
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
@@ -22,22 +26,13 @@ function Field({ label, children, className = '' }) {
 
 const emptySummary = {
   asOfDate: '',
-  totalMembers: '',
   totalMembersGoal: '',
   pipelineGoal: '',
   partnershipsGoal: '',
-  healthScore: '',
-  healthStatus: ADVANCEMENT_PROGRAM_STATUS_OPTIONS[0],
 }
 
 const emptyMembership = {
-  newThisMonth: '',
-  renewalRate: '',
-  retentionRate: '',
-  lifetimeMembers: '',
-  corporateMembers: '',
-  studentMembers: '',
-  membersInPipeline: '',
+  ...Object.fromEntries(ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => [t.id, ''])),
   growthSeries: '',
 }
 
@@ -144,18 +139,15 @@ export default function AdvancementDataEntry() {
 
       <DocForm
         title="Dashboard Summary"
-        subtitle="Header KPI tile values shown on the Report tab."
+        subtitle="Header KPI tile values shown on the Report tab. Total Members and the Health Score are computed automatically from the Membership Snapshot below."
         docPath={['trackerAdvancementSummary', 'main']}
         empty={emptySummary}
-        numericKeys={new Set(['totalMembers', 'totalMembersGoal', 'pipelineGoal', 'partnershipsGoal', 'healthScore'])}
+        numericKeys={new Set(['totalMembersGoal', 'pipelineGoal', 'partnershipsGoal'])}
         fields={[
           { id: 'asOfDate', label: 'As Of Date', type: 'date' },
-          { id: 'totalMembers', label: 'Total Members', type: 'number' },
           { id: 'totalMembersGoal', label: 'Total Members Goal', type: 'number' },
           { id: 'pipelineGoal', label: 'Revenue Pipeline Goal ($)', type: 'number' },
           { id: 'partnershipsGoal', label: 'Strategic Partnerships Goal', type: 'number' },
-          { id: 'healthScore', label: 'Overall Health Score (/100)', type: 'number' },
-          { id: 'healthStatus', label: 'Health Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
         ]}
       />
 
@@ -189,19 +181,13 @@ export default function AdvancementDataEntry() {
 
       <DocForm
         title="Membership Snapshot"
-        subtitle="Enter the last 12 months of member counts (comma-separated) for the growth sparkline."
+        subtitle="Enter the current count for each member type. Total Members, Growth Rate, and the Health Score are computed automatically on the Report tab. Growth Rate compares Total Members against the last value in the history field below."
         docPath={['trackerAdvancementMembership', 'main']}
         empty={emptyMembership}
-        numericKeys={new Set(['newThisMonth', 'renewalRate', 'retentionRate', 'lifetimeMembers', 'corporateMembers', 'studentMembers', 'membersInPipeline'])}
+        numericKeys={new Set(ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => t.id))}
         fields={[
-          { id: 'newThisMonth', label: 'New This Month', type: 'number' },
-          { id: 'renewalRate', label: 'Renewal Rate (%)', type: 'number' },
-          { id: 'retentionRate', label: 'Retention (%)', type: 'number' },
-          { id: 'lifetimeMembers', label: 'Lifetime Members', type: 'number' },
-          { id: 'corporateMembers', label: 'Corporate Members', type: 'number' },
-          { id: 'studentMembers', label: 'Student Members', type: 'number' },
-          { id: 'membersInPipeline', label: 'Members in Pipeline', type: 'number' },
-          { id: 'growthSeries', label: 'Growth (Last 12 Months) — comma-separated', wide: true },
+          ...ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => ({ id: t.id, label: t.label, type: 'number' })),
+          { id: 'growthSeries', label: 'Total Members History (Last 12 Months) — comma-separated', wide: true },
         ]}
       />
 
