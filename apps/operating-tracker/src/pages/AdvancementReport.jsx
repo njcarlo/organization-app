@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
 import AdvancementEditableList from '../components/AdvancementEditableList'
 import AdvancementCustomSection from '../components/AdvancementCustomSection'
+import { DownloadIcon, PrinterIcon } from '../components/ActionIcons'
 import {
   ADVANCEMENT_MEMBERSHIP_TYPES,
   ADVANCEMENT_PIPELINE_STAGE_OPTIONS,
@@ -15,6 +16,7 @@ import {
   daysUntil,
   effectivePriority,
   formatDate,
+  formatLongDate,
   formatMoney,
   namesLabel,
   normalizeTaskStatus,
@@ -448,27 +450,44 @@ export default function AdvancementReport() {
     <div className="advancement-report space-y-4 print:space-y-1.5 print:text-black print:[color-adjust:exact] print:[-webkit-print-color-adjust:exact]">
       <style>{PRINT_STYLES}</style>
 
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-hae-line bg-white px-5 py-4 print:break-inside-avoid">
+        <div>
+          <h1 className="report-title font-display text-2xl text-hae-ink">{REPORT_TITLE}</h1>
+          <p className="report-tagline text-sm text-hae-slate">Driving Growth. Building Community. Creating Impact.</p>
+        </div>
+        <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" className="h-12 w-auto object-contain" />
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <span className="inline-flex items-center gap-1 text-sm text-hae-slate">
           As of
           <InlineEdit
             value={summary.asOfDate || ''}
-            display={summary.asOfDate ? formatDate(summary.asOfDate) : 'Set date'}
+            display={summary.asOfDate ? formatLongDate(summary.asOfDate) : 'Set date'}
             type="date"
             className="text-hae-ink underline decoration-dotted"
             onCommit={(v) => updateSummaryField('asOfDate', v)}
           />
         </span>
-        <button type="button" className="hae-btn" onClick={() => window.print()}>
-          Print / Export
-        </button>
-      </div>
-
-      <div className="flex items-center gap-3 rounded-lg border border-hae-line bg-white px-5 py-4 print:break-inside-avoid">
-        <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" className="h-12 w-auto object-contain" />
-        <div>
-          <h1 className="report-title font-display text-2xl text-hae-ink">{REPORT_TITLE}</h1>
-          <p className="report-tagline text-sm text-hae-slate">Driving Growth. Building Community. Creating Impact.</p>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            className="rounded-md border border-hae-line p-2 text-hae-slate hover:border-hae-crimson hover:text-hae-crimson"
+            title="Print"
+            aria-label="Print"
+            onClick={() => window.print()}
+          >
+            <PrinterIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-hae-line p-2 text-hae-slate hover:border-hae-crimson hover:text-hae-crimson"
+            title="Export"
+            aria-label="Export"
+            onClick={() => window.print()}
+          >
+            <DownloadIcon className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

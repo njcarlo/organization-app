@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import { TrashIcon } from './ActionIcons'
 import { ADVANCEMENT_PROGRAM_STATUS_OPTIONS } from '../constants'
 import {
   advancementProgramStatusBadgeClass,
@@ -128,8 +129,14 @@ export default function AdvancementProgramDetailCard({ program, readOnly = false
         ) : (
           <>
             {!readOnly && (
-              <button type="button" className="hae-btn-secondary" onClick={removeProgram}>
-                Delete
+              <button
+                type="button"
+                className="hae-btn-secondary px-2.5 text-hae-slate hover:text-hae-red"
+                title="Delete"
+                aria-label="Delete"
+                onClick={removeProgram}
+              >
+                <TrashIcon className="h-4 w-4" />
               </button>
             )}
             {!readOnly && (
