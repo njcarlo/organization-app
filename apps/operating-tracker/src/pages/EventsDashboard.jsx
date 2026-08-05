@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
 import { Modal, timeOfDayGreeting } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
@@ -39,6 +40,7 @@ const COLUMN_COUNT = 14
 
 export default function EventsDashboard() {
   const { userProfile } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -59,6 +61,22 @@ export default function EventsDashboard() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    const eventId = searchParams.get('event')
+    if (!eventId || !events.length) return
+    const target = events.find((e) => e.id === eventId)
+    if (target) setExpandedId(target.id)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('event')
+        return next
+      },
+      { replace: true }
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events, searchParams])
 
   const sortedEvents = useMemo(
     () =>
