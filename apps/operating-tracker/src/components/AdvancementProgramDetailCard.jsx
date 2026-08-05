@@ -38,7 +38,7 @@ function Row({ label, value }) {
  * Purpose, and a Financial Report (Revenue / Goal / Forecast / % to Goal /
  * Status); staff can Edit in place or Delete. Mirrors GraphicDetailCard.
  */
-export default function AdvancementProgramDetailCard({ program, onClose, onChanged, onDeleted }) {
+export default function AdvancementProgramDetailCard({ program, readOnly = false, onClose, onChanged, onDeleted }) {
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
@@ -127,12 +127,16 @@ export default function AdvancementProgramDetailCard({ program, onClose, onChang
           </>
         ) : (
           <>
-            <button type="button" className="hae-btn-secondary" onClick={removeProgram}>
-              Delete
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-              Edit
-            </button>
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={removeProgram}>
+                Delete
+              </button>
+            )}
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={startEdit}>
+                Edit
+              </button>
+            )}
             <button type="button" className="hae-btn-secondary" onClick={handleClose}>
               Close
             </button>
