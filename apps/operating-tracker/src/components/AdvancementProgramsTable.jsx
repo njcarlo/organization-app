@@ -367,9 +367,9 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
         )}
 
         {loading ? (
-          <p className={`text-sm text-hae-slate ${bare ? '' : 'px-4 py-6'}`}>Loading…</p>
+          <p className="px-4 py-6 text-sm text-hae-slate">Loading…</p>
         ) : rows.length === 0 ? (
-          <p className={`text-sm text-hae-slate ${bare ? '' : 'px-4 py-6'}`}>
+          <p className="px-4 py-6 text-sm text-hae-slate">
             {readOnly ? 'No programs yet.' : 'No programs yet. Use "+ Add Program" to create the first one.'}
           </p>
         ) : (
