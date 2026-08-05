@@ -154,6 +154,36 @@ export function membershipStatusBadgeClass(status) {
   return 'bg-gray-200 text-black'
 }
 
+export function advancementProgramStatusDotClass(status) {
+  if (status === 'On Track') return 'bg-green-600'
+  if (status === 'At Risk') return 'bg-amber-500'
+  if (status === 'Behind') return 'bg-hae-crimson'
+  return 'bg-gray-300'
+}
+
+export function advancementProgramStatusBadgeClass(status) {
+  if (status === 'On Track') return 'bg-green-900 text-green-400'
+  if (status === 'At Risk') return 'bg-amber-200 text-amber-900'
+  if (status === 'Behind') return 'bg-hae-crimson text-white'
+  return 'bg-gray-200 text-black'
+}
+
+export function formatMoney(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '$0'
+  const abs = Math.abs(n)
+  const sign = n < 0 ? '-' : ''
+  if (abs >= 1000) return `${sign}$${Math.round(abs / 1000)}K`
+  return `${sign}$${abs.toLocaleString()}`
+}
+
+export function pctToGoal(current, goal) {
+  const c = Number(current)
+  const g = Number(goal)
+  if (!Number.isFinite(c) || !Number.isFinite(g) || g <= 0) return null
+  return Math.round((c / g) * 100)
+}
+
 /** Derived status shown alongside the actual task status — not selectable in the dropdown. */
 export const WAITING_ON_BADGE_CLASS = 'bg-purple-600 text-white'
 
