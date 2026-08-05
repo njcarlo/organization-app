@@ -131,6 +131,30 @@ service cloud.firestore {
     match /trackerAdvancementColumns/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerAdvancementSummary/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementMembership/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementFinancials/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementPipeline/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementPartnerships/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementMissionPrograms/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementBoard/{id} {
+      allow read, write: if isStaff();
+    }
+    match /trackerAdvancementWins/{id} {
+      allow read, write: if isStaff();
+    }
     match /boardCommitments/{id} {
       allow read, write: if isStaff();
     }

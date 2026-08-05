@@ -95,6 +95,14 @@ export const ADVANCEMENT_PROGRAM_STATUS_OPTIONS = [
   'Behind',
 ]
 
+export const ADVANCEMENT_PIPELINE_STAGE_OPTIONS = [
+  'Prospect',
+  'Qualifying',
+  'Proposal',
+  'Negotiation',
+  'Committed',
+]
+
 /**
  * Top-level collections that host projects (via a project's `programId`),
  * used by the "Move / copy project" picker. `customSectionItems` (user-
