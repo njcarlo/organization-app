@@ -103,6 +103,17 @@ export const ADVANCEMENT_PIPELINE_STAGE_OPTIONS = [
   'Committed',
 ]
 
+export const ADVANCEMENT_MEMBERSHIP_TYPES = [
+  { id: 'fullMember', label: 'Full Member' },
+  { id: 'lifetimeMember', label: 'Lifetime Member' },
+  { id: 'currentHarvardStudentMember', label: 'Current Harvard Student Member' },
+  { id: 'affiliateMember', label: 'Affiliate Member' },
+  { id: 'legacyMemberPatron', label: 'Legacy Member - Patron' },
+  { id: 'legacyMemberBenefactor', label: 'Legacy Member - Benefactor' },
+  { id: 'supporterLeadershipMember', label: 'Supporter Leadership Member' },
+  { id: 'vip', label: 'VIP' },
+]
+
 /**
  * Top-level collections that host projects (via a project's `programId`),
  * used by the "Move / copy project" picker. `customSectionItems` (user-
