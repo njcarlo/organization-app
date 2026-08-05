@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
-import { ADVANCEMENT_MEMBERSHIP_TYPES } from '../constants'
+import AdvancementEditableList from '../components/AdvancementEditableList'
+import {
+  ADVANCEMENT_MEMBERSHIP_TYPES,
+  ADVANCEMENT_PIPELINE_STAGE_OPTIONS,
+  ADVANCEMENT_PROGRAM_STATUS_OPTIONS,
+} from '../constants'
 import {
   advancementProgramStatusDotClass,
   daysUntil,
@@ -59,7 +64,7 @@ function healthStatusFromScore(score) {
   return 'Behind'
 }
 
-function SectionCard({ title, subtitle, tone = 'ink', children, className = '' }) {
+function SectionCard({ title, subtitle, tone = 'ink', headerAction, children, className = '' }) {
   const toneClass =
     {
       navy: 'bg-blue-900',
@@ -71,24 +76,165 @@ function SectionCard({ title, subtitle, tone = 'ink', children, className = '' }
     }[tone] || 'bg-hae-ink'
   return (
     <section className={`overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid ${className}`}>
-      <div className={`section-header px-4 py-2.5 ${toneClass}`}>
-        <h2 className="section-title font-display text-sm font-semibold tracking-wide text-white uppercase">{title}</h2>
-        {subtitle && <p className="text-[11px] text-white/80 print:hidden">{subtitle}</p>}
+      <div className={`section-header flex items-center justify-between gap-3 px-4 py-2.5 ${toneClass}`}>
+        <div>
+          <h2 className="section-title font-display text-sm font-semibold tracking-wide text-white uppercase">{title}</h2>
+          {subtitle && <p className="text-[11px] text-white/80 print:hidden">{subtitle}</p>}
+        </div>
+        {headerAction && <div className="shrink-0 print:hidden">{headerAction}</div>}
       </div>
       <div className="section-body p-4">{children}</div>
     </section>
   )
 }
 
-function KpiTile({ label, value, goalLabel, status }) {
+// Small bordered add button used in colored SectionCard/list headers —
+// mirrors AdvancementEditableList's tone-header add button.
+function HeaderAddButton({ onClick, children }) {
+  return (
+    <button
+      type="button"
+      className="shrink-0 rounded border border-white/40 px-2 py-1 text-[10px] font-semibold whitespace-nowrap text-white uppercase hover:bg-white/10 print:hidden"
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  )
+}
+
+// Click-to-edit primitive shared by every editable value on the Report —
+// mirrors AdvancementEditableList's inline cell editing so the whole page
+// (not just list sections) uses one consistent edit interaction.
+function InlineEdit({ value, display, type = 'text', options, onCommit, className = '', inputClassName = '' }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value ?? '')
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? '')
+  }, [value, editing])
+
+  const commit = () => {
+    setEditing(false)
+    if (String(draft) !== String(value ?? '')) onCommit(draft)
+  }
+
+  if (editing) {
+    if (type === 'select') {
+      return (
+        <select
+          autoFocus
+          className={`rounded border border-hae-crimson px-1.5 py-0.5 text-sm outline-none ${inputClassName}`}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+        >
+          {options.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      )
+    }
+    if (type === 'textarea') {
+      return (
+        <textarea
+          autoFocus
+          rows={2}
+          className={`w-full rounded border border-hae-crimson px-1.5 py-0.5 text-sm outline-none ${inputClassName}`}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setDraft(value ?? '')
+              setEditing(false)
+            }
+          }}
+        />
+      )
+    }
+    return (
+      <input
+        autoFocus
+        type={type}
+        className={`rounded border border-hae-crimson px-1.5 py-0.5 text-sm outline-none ${inputClassName}`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.target.blur()
+          if (e.key === 'Escape') {
+            setDraft(value ?? '')
+            setEditing(false)
+          }
+        }}
+      />
+    )
+  }
+  return (
+    <button
+      type="button"
+      className={`text-left hover:text-hae-crimson print:pointer-events-none ${className}`}
+      onClick={() => setEditing(true)}
+    >
+      {display}
+    </button>
+  )
+}
+
+function KpiTile({ label, value, goalLabel, status, goalValue, onCommitGoal }) {
   return (
     <div className="kpi-tile rounded-lg border border-hae-line bg-white p-4 print:break-inside-avoid">
       <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">{label}</p>
       <p className="kpi-value mt-1 font-display text-2xl text-hae-ink">{value}</p>
       <div className="mt-1 flex items-center gap-1.5 text-xs text-hae-slate">
         {status && <span className={`inline-block h-2 w-2 rounded-full ${advancementProgramStatusDotClass(status)}`} />}
-        <span>{goalLabel}</span>
+        {onCommitGoal ? (
+          <span className="inline-flex items-center gap-1">
+            Goal
+            <InlineEdit
+              value={goalValue}
+              display={goalLabel}
+              type="number"
+              className="text-hae-slate underline decoration-dotted"
+              inputClassName="w-20"
+              onCommit={onCommitGoal}
+            />
+          </span>
+        ) : (
+          <span>{goalLabel}</span>
+        )}
       </div>
+    </div>
+  )
+}
+
+function CustomKpiTile({ label, value, onCommitLabel, onCommitValue, onDelete }) {
+  return (
+    <div className="kpi-tile relative rounded-lg border border-hae-line bg-white p-4 print:break-inside-avoid">
+      <button
+        type="button"
+        className="absolute top-2 right-2 text-hae-slate/50 hover:text-hae-red print:hidden"
+        title="Remove KPI"
+        onClick={onDelete}
+      >
+        ×
+      </button>
+      <InlineEdit
+        value={label}
+        display={label || 'New KPI'}
+        className="pr-4 text-[10px] font-semibold tracking-wide text-hae-slate uppercase"
+        onCommit={onCommitLabel}
+      />
+      <InlineEdit
+        value={value}
+        display={Number(value) || 0}
+        type="number"
+        className="kpi-value mt-1 block font-display text-2xl text-hae-ink"
+        inputClassName="w-24"
+        onCommit={onCommitValue}
+      />
     </div>
   )
 }
@@ -110,10 +256,6 @@ function Sparkline({ values }) {
   )
 }
 
-function EmptyRow({ children }) {
-  return <p className="text-sm text-hae-slate">{children}</p>
-}
-
 const emptySummary = {}
 const emptyMembership = {}
 
@@ -124,48 +266,52 @@ export default function AdvancementReport() {
   const [financials, setFinancials] = useState([])
   const [pipeline, setPipeline] = useState([])
   const [partnerships, setPartnerships] = useState([])
-  const [missionPrograms, setMissionPrograms] = useState([])
-  const [board, setBoard] = useState([])
   const [wins, setWins] = useState([])
   const [tasks, setTasks] = useState([])
   const [events, setEvents] = useState([])
+  const [customKpis, setCustomKpis] = useState([])
+  const [loadError, setLoadError] = useState('')
+  const programsRef = useRef(null)
 
   const load = useCallback(async () => {
+    setLoadError('')
     const sortByOrder = (list) => [...list].sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-    const [
-      summarySnap,
-      membershipSnap,
-      financialsSnap,
-      pipelineSnap,
-      partnershipsSnap,
-      missionSnap,
-      boardSnap,
-      winsSnap,
-      tasksSnap,
-      eventsSnap,
-    ] = await Promise.all([
-      getDoc(doc(db, 'trackerAdvancementSummary', 'main')),
-      getDoc(doc(db, 'trackerAdvancementMembership', 'main')),
-      getDocs(collection(db, 'trackerAdvancementFinancials')),
-      getDocs(collection(db, 'trackerAdvancementPipeline')),
-      getDocs(collection(db, 'trackerAdvancementPartnerships')),
-      getDocs(collection(db, 'trackerAdvancementMissionPrograms')),
-      getDocs(collection(db, 'trackerAdvancementBoard')),
-      getDocs(collection(db, 'trackerAdvancementWins')),
-      getDocs(collection(db, 'tasks')),
-      getDocs(collection(db, 'trackerEvents')),
-    ])
-    setSummary(summarySnap.exists() ? summarySnap.data() : {})
-    setMembership(membershipSnap.exists() ? membershipSnap.data() : {})
-    setFinancials(sortByOrder(financialsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setPipeline(sortByOrder(pipelineSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setPartnerships(sortByOrder(partnershipsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setMissionPrograms(sortByOrder(missionSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setBoard(sortByOrder(boardSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setWins(sortByOrder(winsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-    setTasks(tasksSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setEvents(eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setLoading(false)
+    try {
+      const [
+        summarySnap,
+        membershipSnap,
+        financialsSnap,
+        pipelineSnap,
+        partnershipsSnap,
+        winsSnap,
+        tasksSnap,
+        eventsSnap,
+        customKpisSnap,
+      ] = await Promise.all([
+        getDoc(doc(db, 'trackerAdvancementSummary', 'main')),
+        getDoc(doc(db, 'trackerAdvancementMembership', 'main')),
+        getDocs(collection(db, 'trackerAdvancementFinancials')),
+        getDocs(collection(db, 'trackerAdvancementPipeline')),
+        getDocs(collection(db, 'trackerAdvancementPartnerships')),
+        getDocs(collection(db, 'trackerAdvancementWins')),
+        getDocs(collection(db, 'tasks')),
+        getDocs(collection(db, 'trackerEvents')),
+        getDocs(collection(db, 'trackerAdvancementCustomKpis')),
+      ])
+      setSummary(summarySnap.exists() ? summarySnap.data() : {})
+      setMembership(membershipSnap.exists() ? membershipSnap.data() : {})
+      setFinancials(sortByOrder(financialsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+      setPipeline(sortByOrder(pipelineSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+      setPartnerships(sortByOrder(partnershipsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+      setWins(sortByOrder(winsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+      setTasks(tasksSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setEvents(eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setCustomKpis(sortByOrder(customKpisSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+    } catch (err) {
+      setLoadError(err.message || 'Failed to load the Advancement report')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -223,10 +369,6 @@ export default function AdvancementReport() {
     () => partnerships.reduce((s, r) => s + (Number(r.activeOpportunities) || 0), 0),
     [partnerships]
   )
-  const partnershipsPipeline = useMemo(
-    () => partnerships.reduce((s, r) => s + (Number(r.pipelineValue) || 0), 0),
-    [partnerships]
-  )
 
   const totalMembers = useMemo(
     () => ADVANCEMENT_MEMBERSHIP_TYPES.reduce((sum, t) => sum + (Number(membership[t.id]) || 0), 0),
@@ -264,14 +406,93 @@ export default function AdvancementReport() {
   }, [membersPct, revenuePct, pipelinePct, partnershipsPct, growthRate])
   const healthStatus = healthStatusFromScore(healthScore)
 
+  const updateSummaryField = async (key, raw, numeric = false) => {
+    const value = numeric ? Number(raw) || 0 : raw
+    setSummary((s) => ({ ...s, [key]: value }))
+    await setDoc(doc(db, 'trackerAdvancementSummary', 'main'), { [key]: value, updatedAt: serverTimestamp() }, { merge: true })
+  }
+
+  const updateMembershipField = async (key, raw, numeric = true) => {
+    const value = numeric ? Number(raw) || 0 : raw
+    setMembership((m) => ({ ...m, [key]: value }))
+    await setDoc(doc(db, 'trackerAdvancementMembership', 'main'), { [key]: value, updatedAt: serverTimestamp() }, { merge: true })
+  }
+
+  const updatePipelineField = async (rowId, key, raw, numeric = false) => {
+    const value = numeric ? Number(raw) || 0 : String(raw).trim()
+    setPipeline((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
+    await updateDoc(doc(db, 'trackerAdvancementPipeline', rowId), { [key]: value })
+  }
+
+  const addPipelineRow = async () => {
+    const maxOrder = pipeline.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
+    const payload = { source: 'New Source', value: 0, stage: ADVANCEMENT_PIPELINE_STAGE_OPTIONS[0], order: maxOrder + 1 }
+    const ref = await addDoc(collection(db, 'trackerAdvancementPipeline'), { ...payload, createdAt: serverTimestamp() })
+    setPipeline((rows) => [...rows, { id: ref.id, ...payload }])
+  }
+
+  const removePipelineRow = async (rowId) => {
+    if (!confirm('Delete this pipeline source? This action cannot be undone.')) return
+    setPipeline((rows) => rows.filter((r) => r.id !== rowId))
+    await deleteDoc(doc(db, 'trackerAdvancementPipeline', rowId))
+  }
+
+  const updateWinField = async (rowId, key, raw, numeric = false) => {
+    const value = numeric ? Number(raw) || 0 : String(raw).trim()
+    setWins((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
+    await updateDoc(doc(db, 'trackerAdvancementWins', rowId), { [key]: value })
+  }
+
+  const addWinRow = async () => {
+    const maxOrder = wins.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
+    const payload = { title: 'New win', date: todayStr, order: maxOrder + 1 }
+    const ref = await addDoc(collection(db, 'trackerAdvancementWins'), { ...payload, createdAt: serverTimestamp() })
+    setWins((rows) => [...rows, { id: ref.id, ...payload }])
+  }
+
+  const removeWinRow = async (rowId) => {
+    if (!confirm('Delete this win? This action cannot be undone.')) return
+    setWins((rows) => rows.filter((r) => r.id !== rowId))
+    await deleteDoc(doc(db, 'trackerAdvancementWins', rowId))
+  }
+
+  const updateCustomKpiField = async (rowId, key, raw, numeric = false) => {
+    const value = numeric ? Number(raw) || 0 : String(raw).trim()
+    setCustomKpis((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
+    await updateDoc(doc(db, 'trackerAdvancementCustomKpis', rowId), { [key]: value })
+  }
+
+  const addCustomKpi = async () => {
+    const maxOrder = customKpis.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
+    const payload = { label: 'New KPI', value: 0, order: maxOrder + 1 }
+    const ref = await addDoc(collection(db, 'trackerAdvancementCustomKpis'), { ...payload, createdAt: serverTimestamp() })
+    setCustomKpis((rows) => [...rows, { id: ref.id, ...payload }])
+  }
+
+  const removeCustomKpi = async (rowId) => {
+    if (!confirm('Remove this KPI? This action cannot be undone.')) return
+    setCustomKpis((rows) => rows.filter((r) => r.id !== rowId))
+    await deleteDoc(doc(db, 'trackerAdvancementCustomKpis', rowId))
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading report…</p>
+  if (loadError) return <p className="text-sm text-hae-red">{loadError}</p>
 
   return (
     <div className="advancement-report space-y-4 print:space-y-1.5 print:text-black print:[color-adjust:exact] print:[-webkit-print-color-adjust:exact]">
       <style>{PRINT_STYLES}</style>
 
-      <div className="flex items-center justify-between gap-3 print:hidden">
-        <span className="text-sm text-hae-slate">As of {summary.asOfDate ? formatDate(summary.asOfDate) : '—'}</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <span className="inline-flex items-center gap-1 text-sm text-hae-slate">
+          As of
+          <InlineEdit
+            value={summary.asOfDate || ''}
+            display={summary.asOfDate ? formatDate(summary.asOfDate) : 'Set date'}
+            type="date"
+            className="text-hae-ink underline decoration-dotted"
+            onCommit={(v) => updateSummaryField('asOfDate', v)}
+          />
+        </span>
         <button type="button" className="hae-btn" onClick={() => window.print()}>
           Print / Export
         </button>
@@ -289,26 +510,32 @@ export default function AdvancementReport() {
         <KpiTile
           label="Total Members"
           value={totalMembers}
-          goalLabel={summary.totalMembersGoal ? `Goal ${summary.totalMembersGoal}` : 'No goal set'}
+          goalLabel={summary.totalMembersGoal || 'No goal set'}
+          goalValue={summary.totalMembersGoal}
           status={statusFromPct(membersPct)}
+          onCommitGoal={(v) => updateSummaryField('totalMembersGoal', v, true)}
         />
         <KpiTile
           label="Total Revenue (YTD)"
           value={formatMoney(financialTotals.current)}
-          goalLabel={financialTotals.goal ? `Goal ${formatMoney(financialTotals.goal)}` : 'No goal set'}
+          goalLabel={financialTotals.goal ? formatMoney(financialTotals.goal) : 'No goal set'}
           status={statusFromPct(revenuePct)}
         />
         <KpiTile
           label="Revenue Pipeline"
           value={formatMoney(pipelineTotal)}
-          goalLabel={summary.pipelineGoal ? `Goal ${formatMoney(summary.pipelineGoal)}` : 'No goal set'}
+          goalLabel={summary.pipelineGoal ? formatMoney(summary.pipelineGoal) : 'No goal set'}
+          goalValue={summary.pipelineGoal}
           status={statusFromPct(pipelinePct)}
+          onCommitGoal={(v) => updateSummaryField('pipelineGoal', v, true)}
         />
         <KpiTile
           label="Strategic Partnerships"
           value={partnershipsCount}
-          goalLabel={summary.partnershipsGoal ? `Goal ${summary.partnershipsGoal}` : 'No goal set'}
+          goalLabel={summary.partnershipsGoal || 'No goal set'}
+          goalValue={summary.partnershipsGoal}
           status={statusFromPct(partnershipsPct)}
+          onCommitGoal={(v) => updateSummaryField('partnershipsGoal', v, true)}
         />
         <KpiTile
           label="Open Action Items"
@@ -322,61 +549,82 @@ export default function AdvancementReport() {
           goalLabel={healthStatus || '—'}
           status={healthStatus}
         />
+        {customKpis.map((k) => (
+          <CustomKpiTile
+            key={k.id}
+            label={k.label}
+            value={k.value}
+            onCommitLabel={(v) => updateCustomKpiField(k.id, 'label', v, false)}
+            onCommitValue={(v) => updateCustomKpiField(k.id, 'value', v, true)}
+            onDelete={() => removeCustomKpi(k.id)}
+          />
+        ))}
       </div>
+      <button type="button" className="hae-btn print:hidden" onClick={addCustomKpi}>
+        + Add KPI
+      </button>
 
-      <SectionCard title="Financial Summary (YTD)" tone="navy">
-        {financials.length === 0 ? (
-          <EmptyRow>No financial summary entered yet.</EmptyRow>
-        ) : (
-          <div className="hae-table-scroll">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
-                  <th className="py-1.5 pr-2">Source</th>
-                  <th className="py-1.5 pr-2 text-right">Current</th>
-                  <th className="py-1.5 pr-2 text-right">Goal</th>
-                  <th className="py-1.5 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {financials.map((r) => (
-                  <tr key={r.id} className="border-b border-hae-line/60 last:border-0">
-                    <td className="py-1.5 pr-2">{r.source}</td>
-                    <td className="py-1.5 pr-2 text-right">{formatMoney(r.current)}</td>
-                    <td className="py-1.5 pr-2 text-right">{formatMoney(r.goal)}</td>
-                    <td className="py-1.5 text-center">
-                      <span className={`inline-block h-2 w-2 rounded-full ${advancementProgramStatusDotClass(r.status)}`} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-hae-line font-semibold text-hae-ink">
-                  <td className="py-1.5 pr-2">TOTAL</td>
-                  <td className="py-1.5 pr-2 text-right">{formatMoney(financialTotals.current)}</td>
-                  <td className="py-1.5 pr-2 text-right">{formatMoney(financialTotals.goal)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </SectionCard>
+      <AdvancementEditableList
+        title="Financial Summary (YTD)"
+        subtitle="Revenue by source — current, goal, forecast, and status."
+        addLabel="+ Add Revenue Source"
+        collectionPath="trackerAdvancementFinancials"
+        tone="navy"
+        totals
+        columns={[
+          { id: 'source', label: 'Revenue Source', type: 'text' },
+          { id: 'current', label: 'Current', type: 'currency' },
+          { id: 'goal', label: 'Goal', type: 'currency' },
+          { id: 'forecast', label: 'Forecast', type: 'currency' },
+          { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
+        ]}
+      />
 
-      <SectionCard title="Revenue Pipeline (by Source)" tone="purple">
+      <SectionCard
+        title="Revenue Pipeline (by Source)"
+        tone="purple"
+        headerAction={<HeaderAddButton onClick={addPipelineRow}>+ Add Pipeline Source</HeaderAddButton>}
+      >
         {pipeline.length === 0 ? (
-          <EmptyRow>No pipeline entered yet.</EmptyRow>
+          <p className="text-sm text-hae-slate">No pipeline entered yet.</p>
         ) : (
           <div className="space-y-2">
             {pipeline.map((r) => {
               const pct = pipelineTotal > 0 ? Math.max(4, Math.round(((Number(r.value) || 0) / pipelineTotal) * 100)) : 0
               return (
                 <div key={r.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-24 shrink-0 truncate text-hae-slate">{r.source}</span>
+                  <InlineEdit
+                    value={r.source}
+                    display={r.source || '—'}
+                    className="w-24 shrink-0 truncate text-hae-slate"
+                    onCommit={(v) => updatePipelineField(r.id, 'source', v)}
+                  />
                   <div className="h-3 flex-1 rounded bg-hae-mist">
                     <div className={`h-3 rounded ${STAGE_COLORS[r.stage] || 'bg-gray-400'}`} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="w-14 shrink-0 text-right font-medium text-hae-ink">{formatMoney(r.value)}</span>
+                  <InlineEdit
+                    value={r.stage}
+                    display={r.stage || '—'}
+                    type="select"
+                    options={ADVANCEMENT_PIPELINE_STAGE_OPTIONS}
+                    className="w-20 shrink-0 text-right text-hae-slate"
+                    onCommit={(v) => updatePipelineField(r.id, 'stage', v)}
+                  />
+                  <InlineEdit
+                    value={r.value}
+                    display={formatMoney(r.value)}
+                    type="number"
+                    className="w-14 shrink-0 text-right font-medium text-hae-ink"
+                    onCommit={(v) => updatePipelineField(r.id, 'value', v, true)}
+                  />
+                  <button
+                    type="button"
+                    className="shrink-0 text-hae-slate/50 hover:text-hae-red print:hidden"
+                    title="Delete row"
+                    onClick={() => removePipelineRow(r.id)}
+                  >
+                    ×
+                  </button>
                 </div>
               )
             })}
@@ -393,7 +641,14 @@ export default function AdvancementReport() {
           {ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => (
             <div key={t.id}>
               <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">{t.label}</p>
-              <p className="font-display text-xl text-hae-ink">{Number(membership[t.id]) || 0}</p>
+              <InlineEdit
+                value={membership[t.id]}
+                display={Number(membership[t.id]) || 0}
+                type="number"
+                className="font-display text-xl text-hae-ink"
+                inputClassName="w-20"
+                onCommit={(v) => updateMembershipField(t.id, v)}
+              />
             </div>
           ))}
         </div>
@@ -412,80 +667,61 @@ export default function AdvancementReport() {
         <div className="mt-3">
           <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Total Members — Trend</p>
           <Sparkline values={growthSeries} />
+          <p className="mt-2 text-[11px] text-hae-slate print:hidden">
+            History (comma-separated, oldest → most recent before today):{' '}
+            <InlineEdit
+              value={membership.growthSeries || ''}
+              display={membership.growthSeries || 'Set history'}
+              className="text-hae-ink underline decoration-dotted"
+              inputClassName="w-64"
+              onCommit={(v) => updateMembershipField('growthSeries', v, false)}
+            />
+          </p>
         </div>
       </SectionCard>
 
-      <SectionCard title="Revenue Generating Programs" subtitle="Financial impact — click a program for its full financial report." tone="navy">
-        <AdvancementProgramsTable readOnly bare />
+      <SectionCard
+        title="Revenue Generating Programs"
+        subtitle="Financial impact — click a program for its full financial report, a cell to edit it, or a column header to rename/reorder."
+        tone="navy"
+        headerAction={<HeaderAddButton onClick={() => programsRef.current?.openAdd()}>+ Add Program</HeaderAddButton>}
+      >
+        <AdvancementProgramsTable ref={programsRef} bare />
       </SectionCard>
 
-      <SectionCard title="Strategic Partnerships &amp; Custom Programs (Pipeline)" tone="purple">
-        {partnerships.length === 0 ? (
-          <EmptyRow>No partnerships entered yet.</EmptyRow>
-        ) : (
-          <div className="hae-table-scroll">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
-                  <th className="py-1.5 pr-2">Type</th>
-                  <th className="py-1.5 pr-2 text-right">Active</th>
-                  <th className="py-1.5 pr-2 text-right">Pipeline Value</th>
-                  <th className="py-1.5">Next Steps</th>
-                </tr>
-              </thead>
-              <tbody>
-                {partnerships.map((r) => (
-                  <tr key={r.id} className="border-b border-hae-line/60 last:border-0">
-                    <td className="py-1.5 pr-2">{r.type}</td>
-                    <td className="py-1.5 pr-2 text-right">{r.activeOpportunities}</td>
-                    <td className="py-1.5 pr-2 text-right">{formatMoney(r.pipelineValue)}</td>
-                    <td className="py-1.5 text-hae-slate">{r.nextSteps || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-hae-line font-semibold text-hae-ink">
-                  <td className="py-1.5 pr-2">TOTAL</td>
-                  <td className="py-1.5 pr-2 text-right">{partnershipsCount}</td>
-                  <td className="py-1.5 pr-2 text-right">{formatMoney(partnershipsPipeline)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </SectionCard>
+      <AdvancementEditableList
+        title="Strategic Partnerships & Custom Programs (Pipeline)"
+        subtitle="Active opportunities and pipeline value by partnership type."
+        addLabel="+ Add Partnership Type"
+        collectionPath="trackerAdvancementPartnerships"
+        tone="purple"
+        totals
+        columns={[
+          { id: 'type', label: 'Type', type: 'text' },
+          { id: 'activeOpportunities', label: 'Active', type: 'number' },
+          { id: 'pipelineValue', label: 'Pipeline Value', type: 'currency' },
+          { id: 'nextSteps', label: 'Next Steps', type: 'textarea' },
+        ]}
+      />
 
-      <SectionCard title="Mission Critical / Non-Revenue Programs" tone="ink">
-        {missionPrograms.length === 0 ? (
-          <EmptyRow>No mission-critical programs entered yet.</EmptyRow>
-        ) : (
-          <div className="hae-table-scroll">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
-                  <th className="py-1.5 pr-2">Program</th>
-                  <th className="py-1.5 pr-2 text-right">Reach</th>
-                  <th className="py-1.5">Impact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {missionPrograms.map((r) => (
-                  <tr key={r.id} className="border-b border-hae-line/60 last:border-0">
-                    <td className="py-1.5 pr-2 font-medium">{r.name}</td>
-                    <td className="py-1.5 pr-2 text-right">{r.reach || '—'}</td>
-                    <td className="py-1.5 text-hae-slate">{r.impactHighlights || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SectionCard>
+      <AdvancementEditableList
+        title="Mission Critical / Non-Revenue Programs"
+        addLabel="+ Add Program"
+        collectionPath="trackerAdvancementMissionPrograms"
+        tone="ink"
+        columns={[
+          { id: 'name', label: 'Program', type: 'text' },
+          { id: 'purpose', label: 'Purpose', type: 'textarea' },
+          { id: 'reach', label: 'Reach', type: 'number' },
+          { id: 'eventsSessions', label: 'Events/Sessions', type: 'number' },
+          { id: 'participantsBeneficiaries', label: 'Participants/Beneficiaries', type: 'number' },
+          { id: 'impactHighlights', label: 'Impact', type: 'textarea' },
+        ]}
+      />
 
       <SectionCard title="Quick View — High Priority Action Items" tone="orange">
         {highPriorityTasks.length === 0 ? (
-          <EmptyRow>No high-priority action items.</EmptyRow>
+          <p className="text-sm text-hae-slate">No high-priority action items.</p>
         ) : (
           <ul className="space-y-1.5 text-sm">
             {highPriorityTasks.slice(0, 5).map((t) => (
@@ -505,7 +741,7 @@ export default function AdvancementReport() {
 
       <SectionCard title={`Overdue Items (${overdueTasks.length})`} tone="crimson">
         {overdueTasks.length === 0 ? (
-          <EmptyRow>Nothing overdue.</EmptyRow>
+          <p className="text-sm text-hae-slate">Nothing overdue.</p>
         ) : (
           <ul className="space-y-1.5 text-sm">
             {overdueTasks.slice(0, 5).map((t) => (
@@ -525,55 +761,65 @@ export default function AdvancementReport() {
         </Link>
       </SectionCard>
 
-      <SectionCard title="Board Engagement &amp; Contributions (YTD)" tone="navy">
-        {board.length === 0 ? (
-          <EmptyRow>No board engagement entered yet.</EmptyRow>
-        ) : (
-          <div className="hae-table-scroll">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
-                  <th className="py-1.5 pr-2">Board Member</th>
-                  <th className="py-1.5 pr-2 text-right">Meetings</th>
-                  <th className="py-1.5 pr-2 text-right">Opportunities</th>
-                  <th className="py-1.5 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {board.map((r) => (
-                  <tr key={r.id} className="border-b border-hae-line/60 last:border-0">
-                    <td className="py-1.5 pr-2">{r.member}</td>
-                    <td className="py-1.5 pr-2 text-right">{r.meetings || 0}</td>
-                    <td className="py-1.5 pr-2 text-right">{r.opportunitiesCreated || 0}</td>
-                    <td className="py-1.5 text-center">
-                      <span className={`inline-block h-2 w-2 rounded-full ${advancementProgramStatusDotClass(r.status)}`} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SectionCard>
+      <AdvancementEditableList
+        title="Board Engagement & Contributions (YTD)"
+        subtitle="Introductions, meetings, and opportunities created per board member."
+        addLabel="+ Add Board Member"
+        collectionPath="trackerAdvancementBoard"
+        tone="navy"
+        columns={[
+          { id: 'member', label: 'Board Member', type: 'text' },
+          { id: 'sponsorIntro', label: 'Sponsor Intro', type: 'number' },
+          { id: 'donorIntro', label: 'Donor Intro', type: 'number' },
+          { id: 'partnerIntro', label: 'Partner Intro', type: 'number' },
+          { id: 'meetings', label: 'Meetings', type: 'number' },
+          { id: 'opportunitiesCreated', label: 'Opportunities', type: 'number' },
+          { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
+        ]}
+      />
 
       <SectionCard title="Recent Wins" tone="ink">
         {wins.length === 0 ? (
-          <EmptyRow>No recent wins entered yet.</EmptyRow>
+          <p className="text-sm text-hae-slate">No recent wins entered yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 print:grid-cols-4">
             {wins.map((w) => (
               <div key={w.id} className="rounded-md border border-hae-line p-2 text-xs">
-                <p className="text-hae-ink">{w.title}</p>
-                <p className="mt-1 text-hae-slate">{w.date}</p>
+                <div className="flex items-start justify-between gap-1">
+                  <InlineEdit
+                    value={w.title}
+                    display={w.title || '—'}
+                    type="textarea"
+                    className="min-w-0 flex-1 text-hae-ink"
+                    onCommit={(v) => updateWinField(w.id, 'title', v, false)}
+                  />
+                  <button
+                    type="button"
+                    className="shrink-0 text-hae-slate/50 hover:text-hae-red print:hidden"
+                    title="Delete win"
+                    onClick={() => removeWinRow(w.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <InlineEdit
+                  value={w.date}
+                  display={w.date || '—'}
+                  className="mt-1 text-hae-slate"
+                  onCommit={(v) => updateWinField(w.id, 'date', v, false)}
+                />
               </div>
             ))}
           </div>
         )}
+        <button type="button" className="mt-3 text-xs text-hae-crimson hover:underline print:hidden" onClick={addWinRow}>
+          + Add Win
+        </button>
       </SectionCard>
 
       <SectionCard title="Coming Up" tone="ink">
         {comingUpEvents.length === 0 ? (
-          <EmptyRow>No upcoming events scheduled.</EmptyRow>
+          <p className="text-sm text-hae-slate">No upcoming events scheduled.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 print:grid-cols-4">
             {comingUpEvents.map((e) => (
@@ -592,6 +838,18 @@ export default function AdvancementReport() {
           View All Events →
         </Link>
       </SectionCard>
+
+      <p className="text-[11px] text-hae-slate print:hidden">
+        Action Items and Coming Up are pulled live from the Tracker — manage them in{' '}
+        <Link to="/my-tasks" className="text-hae-crimson hover:underline">
+          My Tasks
+        </Link>{' '}
+        and{' '}
+        <Link to="/events-dashboard" className="text-hae-crimson hover:underline">
+          Events Dashboard
+        </Link>
+        .
+      </p>
     </div>
   )
 }
