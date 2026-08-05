@@ -128,6 +128,9 @@ service cloud.firestore {
     match /trackerAdvancementPrograms/{id} {
       allow read, write: if isStaff();
     }
+    match /trackerAdvancementColumns/{id} {
+      allow read, write: if isStaff();
+    }
     match /boardCommitments/{id} {
       allow read, write: if isStaff();
     }
