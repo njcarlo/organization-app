@@ -196,8 +196,8 @@ export default function AdvancementCustomSection({ section, onDeleted }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid">
-      <div className="flex items-center justify-between gap-3 border-b border-hae-line px-4 py-3">
+    <section className="rounded-lg border border-hae-line bg-white print:break-inside-avoid">
+      <div className="rounded-t-lg flex items-center justify-between gap-3 border-b border-hae-line px-4 py-3">
         {editingTitle ? (
           <input
             autoFocus
@@ -237,6 +237,7 @@ export default function AdvancementCustomSection({ section, onDeleted }) {
       ) : rows.length === 0 ? (
         <p className="px-4 py-6 text-sm text-hae-slate">No rows yet. Use "+ Add Row" to create the first one.</p>
       ) : (
+        <div className="overflow-hidden rounded-b-lg">
         <div className="hae-table-scroll print:block print:overflow-visible">
           <table className="w-full text-sm">
             <thead>
@@ -334,6 +335,7 @@ export default function AdvancementCustomSection({ section, onDeleted }) {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
 

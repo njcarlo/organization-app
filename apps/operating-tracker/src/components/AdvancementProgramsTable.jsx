@@ -341,7 +341,7 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
 
   const Wrapper = bare ? 'div' : 'section'
   const wrapperClass = bare ? '' : 'rounded-lg border border-hae-line bg-white print:break-inside-avoid'
-  const tableScrollClass = bare ? 'overflow-x-auto' : 'hae-table-scroll'
+  const tableScrollClass = 'hae-table-scroll'
 
   return (
     <div className="print:text-black">
