@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
@@ -77,7 +77,7 @@ function columnTotalDisplay(col, rows, totals, totalPct) {
  * Column layout persists in `trackerAdvancementColumns/programColumns`; rows
  * live in `trackerAdvancementPrograms`.
  */
-export default function AdvancementProgramsTable({ readOnly = false, bare = false }) {
+const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ readOnly = false, bare = false }, ref) {
   const [rows, setRows] = useState([])
   const [columns, setColumns] = useState(DEFAULT_COLUMNS)
   const [loading, setLoading] = useState(true)
@@ -209,12 +209,15 @@ export default function AdvancementProgramsTable({ readOnly = false, bare = fals
   }
 
   const openAdd = () => {
+    if (readOnly) return
     const customFields = {}
     columns.filter((c) => !c.builtin).forEach((c) => {
       customFields[c.id] = ''
     })
     setAddModal({ form: { ...emptyForm, customFields } })
   }
+
+  useImperativeHandle(ref, () => ({ openAdd }))
   const closeAddModal = () => {
     if (saving) return
     setAddModal(null)
@@ -706,4 +709,6 @@ export default function AdvancementProgramsTable({ readOnly = false, bare = fals
       )}
     </div>
   )
-}
+})
+
+export default AdvancementProgramsTable

@@ -10,6 +10,15 @@ const fieldClass =
 const NUMERIC_TYPES = new Set(['currency', 'number', 'percent'])
 const RIGHT_ALIGN_TYPES = new Set(['currency', 'number', 'percent'])
 
+const TONE_CLASSES = {
+  navy: 'bg-blue-900',
+  green: 'bg-green-800',
+  purple: 'bg-purple-800',
+  crimson: 'bg-hae-crimson',
+  orange: 'bg-amber-700',
+  ink: 'bg-hae-ink',
+}
+
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block ${className}`}>
@@ -52,6 +61,7 @@ export default function AdvancementEditableList({
   collectionPath,
   columns,
   totals = false,
+  tone = null,
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -185,13 +195,35 @@ export default function AdvancementEditableList({
   }
 
   return (
-    <section className="rounded-lg border border-hae-line bg-white print:break-inside-avoid">
-      <div className="flex items-center justify-between gap-3 border-b border-hae-line px-4 py-3">
+    <section className="overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid">
+      <div
+        className={`flex items-center justify-between gap-3 ${
+          tone
+            ? `section-header px-4 py-2.5 ${TONE_CLASSES[tone] || TONE_CLASSES.ink}`
+            : 'border-b border-hae-line px-4 py-3'
+        }`}
+      >
         <div>
-          <h2 className="font-display text-lg text-hae-ink">{title}</h2>
-          {subtitle && <p className="text-xs text-hae-slate">{subtitle}</p>}
+          <h2
+            className={
+              tone
+                ? 'section-title font-display text-sm font-semibold tracking-wide text-white uppercase'
+                : 'font-display text-lg text-hae-ink'
+            }
+          >
+            {title}
+          </h2>
+          {subtitle && <p className={`text-[11px] ${tone ? 'text-white/80 print:hidden' : 'text-xs text-hae-slate'}`}>{subtitle}</p>}
         </div>
-        <button type="button" className="hae-btn shrink-0 print:hidden" onClick={openAdd}>
+        <button
+          type="button"
+          className={
+            tone
+              ? 'shrink-0 rounded border border-white/40 px-2 py-1 text-[10px] font-semibold whitespace-nowrap text-white uppercase hover:bg-white/10 print:hidden'
+              : 'hae-btn shrink-0 print:hidden'
+          }
+          onClick={openAdd}
+        >
           {addLabel}
         </button>
       </div>
