@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import { TrashIcon } from './ActionIcons'
 import { formatMoney } from '../utils'
 
 const fieldClass =
@@ -221,8 +222,8 @@ export default function AdvancementCustomSection({ section, onDeleted }) {
           <button type="button" className="hae-btn" onClick={openAdd} disabled={!columns.length}>
             + Add Row
           </button>
-          <button type="button" className="text-xs text-hae-slate hover:text-hae-red" onClick={deleteSection}>
-            Delete Section
+          <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete Section" aria-label="Delete Section" onClick={deleteSection}>
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -325,8 +326,8 @@ export default function AdvancementCustomSection({ section, onDeleted }) {
                     )
                   })}
                   <td className="px-2 py-2 text-center print:hidden">
-                    <button type="button" className="text-xs text-hae-slate hover:text-hae-red" onClick={() => removeRow(r.id)}>
-                      Delete
+                    <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
+                      <TrashIcon className="h-4 w-4" />
                     </button>
                   </td>
                 </tr>

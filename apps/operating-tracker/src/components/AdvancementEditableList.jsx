@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
+import { TrashIcon } from './ActionIcons'
 import { formatMoney } from '../utils'
 
 const fieldClass =
@@ -310,8 +311,8 @@ export default function AdvancementEditableList({
               <div key={r.id} className="hae-mobile-card">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <span className="hae-mobile-card__title min-w-0 flex-1">{displayValue(columns[0], r[columns[0].id])}</span>
-                  <button type="button" className="text-xs text-hae-slate hover:text-hae-red" onClick={() => removeRow(r.id)}>
-                    Delete
+                  <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
+                    <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="hae-mobile-card__meta">
@@ -380,8 +381,8 @@ export default function AdvancementEditableList({
                       </td>
                     ))}
                     <td className="px-2 py-2 text-center print:hidden">
-                      <button type="button" className="text-xs text-hae-slate hover:text-hae-red" onClick={() => removeRow(r.id)}>
-                        Delete
+                      <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
+                        <TrashIcon className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>

@@ -50,3 +50,23 @@ export function PlusIcon({ className }) {
     </Svg>
   )
 }
+
+export function PrinterIcon({ className }) {
+  return (
+    <Svg className={className}>
+      <path d="M6 9V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v5" />
+      <path d="M6 18H4.5A1.5 1.5 0 0 1 3 16.5v-5A1.5 1.5 0 0 1 4.5 10h15a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H18" />
+      <path d="M6 14h12v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-7z" />
+    </Svg>
+  )
+}
+
+export function DownloadIcon({ className }) {
+  return (
+    <Svg className={className}>
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M4 19h16" />
+    </Svg>
+  )
+}
