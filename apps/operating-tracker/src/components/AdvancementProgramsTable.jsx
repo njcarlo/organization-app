@@ -32,9 +32,8 @@ const COLUMN_TYPE_OPTIONS = [
   { value: 'status', label: 'Status (text)' },
 ]
 
-const RIGHT_ALIGN_TYPES = new Set(['currency', 'number', 'percent', 'computed'])
 const NUMERIC_TYPES = new Set(['currency', 'number', 'percent'])
-const alignClass = (type) => (RIGHT_ALIGN_TYPES.has(type) ? 'text-right' : '')
+const alignClass = (idx) => (idx === 0 ? 'text-left' : 'text-center')
 
 const emptyForm = {
   name: '',
@@ -332,7 +331,7 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
     return (
       <button
         type="button"
-        className="w-full text-left hover:text-hae-crimson print:pointer-events-none"
+        className="w-full text-center hover:text-hae-crimson print:pointer-events-none"
         onClick={() => startEditCell(row, col)}
       >
         {display}
@@ -431,21 +430,22 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
             <div className={`hae-desktop-only ${tableScrollClass} print:block print:overflow-visible`}>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
-                  {columns.map((col) => (
+                <tr className="border-b border-hae-line/80 text-center text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
+                  {columns.map((col, idx) => {
+                    const draggableCol = !readOnly && idx !== 0
+                    return (
                     <th
                       key={col.id}
-                      draggable={!readOnly}
-                      onDragStart={readOnly ? undefined : handleDragStart(col.id)}
-                      onDragOver={readOnly ? undefined : handleDragOver(col.id)}
-                      onDrop={readOnly ? undefined : handleDrop(col.id)}
-                      onDragEnd={readOnly ? undefined : handleDragEnd}
-                      className={`group px-4 py-2 select-none ${readOnly ? '' : 'cursor-grab'} ${alignClass(col.type)} ${
+                      draggable={draggableCol}
+                      onDragStart={draggableCol ? handleDragStart(col.id) : undefined}
+                      onDragOver={draggableCol ? handleDragOver(col.id) : undefined}
+                      onDrop={draggableCol ? handleDrop(col.id) : undefined}
+                      onDragEnd={draggableCol ? handleDragEnd : undefined}
+                      className={`group px-4 py-2 select-none ${draggableCol ? 'cursor-grab' : ''} ${alignClass(idx)} ${
                         dragOverColId === col.id ? 'bg-hae-mist' : ''
                       } ${draggedColId === col.id ? 'opacity-40' : ''}`}
                     >
                       <span className="inline-flex items-center gap-1">
-                        {!readOnly && <span className="text-hae-slate/40 print:hidden">⋮⋮</span>}
                         {!readOnly && editingHeaderId === col.id ? (
                           <input
                             autoFocus
@@ -481,7 +481,7 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
                         )}
                       </span>
                     </th>
-                  ))}
+                  )})}
                   {!readOnly && (
                     <th className="px-2 py-2 print:hidden">
                       <button
@@ -499,10 +499,10 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="border-b border-hae-line/60 last:border-0 hover:bg-hae-mist/50">
-                    {columns.map((col) => (
+                    {columns.map((col, idx) => (
                       <td
                         key={col.id}
-                        className={`px-4 py-2 ${alignClass(col.type)} ${
+                        className={`px-4 py-2 ${alignClass(idx)} ${
                           col.id === 'name' ? 'font-medium' : ''
                         } ${col.id === 'purpose' ? 'max-w-[16rem] text-hae-slate' : ''}`}
                       >
@@ -516,7 +516,7 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
               <tfoot>
                 <tr className="border-t-2 border-hae-line font-semibold text-hae-ink">
                   {columns.map((col, idx) => (
-                    <td key={col.id} className={`px-4 py-2 ${alignClass(col.type)}`}>
+                    <td key={col.id} className={`px-4 py-2 ${alignClass(idx)}`}>
                       {idx === 0 ? 'TOTAL REVENUE PROGRAMS' : columnTotalDisplay(col, rows, totals, totalPct)}
                     </td>
                   ))}

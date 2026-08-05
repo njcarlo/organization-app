@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { formatMoney } from '../utils'
@@ -8,7 +8,6 @@ const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
 
 const NUMERIC_TYPES = new Set(['currency', 'number', 'percent'])
-const RIGHT_ALIGN_TYPES = new Set(['currency', 'number', 'percent'])
 
 const TONE_CLASSES = {
   navy: 'bg-blue-900',
@@ -59,16 +58,20 @@ export default function AdvancementEditableList({
   subtitle,
   addLabel = '+ Add Row',
   collectionPath,
-  columns,
+  columns: columnsProp,
   totals = false,
   tone = null,
 }) {
   const [rows, setRows] = useState([])
+  const [columns, setColumns] = useState(columnsProp)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingCell, setEditingCell] = useState(null) // { rowId, colId, value }
   const [addForm, setAddForm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [editingHeaderId, setEditingHeaderId] = useState(null)
+  const [draggedColId, setDraggedColId] = useState(null)
+  const [dragOverColId, setDragOverColId] = useState(null)
 
   const load = useCallback(async () => {
     setError('')
@@ -84,9 +87,75 @@ export default function AdvancementEditableList({
     }
   }, [collectionPath, title])
 
+  const loadColumnLayout = useCallback(async () => {
+    try {
+      const snap = await getDoc(doc(db, 'trackerAdvancementColumns', collectionPath))
+      const saved = snap.exists() ? snap.data().columns : null
+      if (!Array.isArray(saved) || !saved.length) return
+      const byId = new Map(columnsProp.map((c) => [c.id, c]))
+      const ordered = saved
+        .filter((s) => byId.has(s.id))
+        .map((s) => ({ ...byId.get(s.id), label: s.label || byId.get(s.id).label }))
+      columnsProp.forEach((c) => {
+        if (!ordered.some((o) => o.id === c.id)) ordered.push(c)
+      })
+      setColumns(ordered)
+    } catch {
+      // fall back silently to columnsProp
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionPath])
+
   useEffect(() => {
     load()
-  }, [load])
+    loadColumnLayout()
+  }, [load, loadColumnLayout])
+
+  const persistColumnLayout = async (next) => {
+    setColumns(next)
+    try {
+      await setDoc(doc(db, 'trackerAdvancementColumns', collectionPath), {
+        columns: next.map((c) => ({ id: c.id, label: c.label })),
+        updatedAt: serverTimestamp(),
+      })
+    } catch (err) {
+      setError(err.message || 'Failed to save column layout')
+    }
+  }
+
+  const commitHeaderLabel = async (colId, label) => {
+    setEditingHeaderId(null)
+    const trimmed = label.trim()
+    const current = columns.find((c) => c.id === colId)
+    if (!trimmed || trimmed === current?.label) return
+    await persistColumnLayout(columns.map((c) => (c.id === colId ? { ...c, label: trimmed } : c)))
+  }
+
+  const handleDragStart = (colId) => (e) => {
+    setDraggedColId(colId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  const handleDragOver = (colId) => (e) => {
+    e.preventDefault()
+    if (colId !== draggedColId) setDragOverColId(colId)
+  }
+  const handleDragEnd = () => {
+    setDraggedColId(null)
+    setDragOverColId(null)
+  }
+  const handleDrop = (colId) => async (e) => {
+    e.preventDefault()
+    const from = draggedColId
+    handleDragEnd()
+    if (!from || from === colId) return
+    const next = [...columns]
+    const fromIdx = next.findIndex((c) => c.id === from)
+    const toIdx = next.findIndex((c) => c.id === colId)
+    if (fromIdx === -1 || toIdx === -1) return
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    await persistColumnLayout(next)
+  }
 
   const startEditCell = (row, col) => setEditingCell({ rowId: row.id, colId: col.id, value: row[col.id] ?? '' })
 
@@ -148,7 +217,7 @@ export default function AdvancementEditableList({
     return col.type === 'currency' ? formatMoney(sum) : sum.toLocaleString()
   }
 
-  const renderCell = (row, col) => {
+  const renderCell = (row, col, align = 'text-center') => {
     const isEditing = editingCell?.rowId === row.id && editingCell?.colId === col.id
     if (isEditing) {
       if (col.type === 'select') {
@@ -186,7 +255,7 @@ export default function AdvancementEditableList({
     return (
       <button
         type="button"
-        className="w-full text-left hover:text-hae-crimson print:pointer-events-none"
+        className={`w-full ${align} hover:text-hae-crimson print:pointer-events-none`}
         onClick={() => startEditCell(row, col)}
       >
         {displayValue(col, row[col.id])}
@@ -260,12 +329,45 @@ export default function AdvancementEditableList({
           <div className="hae-desktop-only hae-table-scroll print:block print:overflow-visible">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-hae-line/80 text-left text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
-                  {columns.map((col) => (
-                    <th key={col.id} className={`px-4 py-2 ${RIGHT_ALIGN_TYPES.has(col.type) ? 'text-right' : ''}`}>
-                      {col.label}
-                    </th>
-                  ))}
+                <tr className="border-b border-hae-line/80 text-center text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
+                  {columns.map((col, idx) => {
+                    const draggableCol = idx !== 0
+                    return (
+                      <th
+                        key={col.id}
+                        draggable={draggableCol}
+                        onDragStart={draggableCol ? handleDragStart(col.id) : undefined}
+                        onDragOver={draggableCol ? handleDragOver(col.id) : undefined}
+                        onDrop={draggableCol ? handleDrop(col.id) : undefined}
+                        onDragEnd={draggableCol ? handleDragEnd : undefined}
+                        className={`select-none px-4 py-2 ${draggableCol ? 'cursor-grab' : ''} ${
+                          idx === 0 ? 'text-left' : 'text-center'
+                        } ${dragOverColId === col.id ? 'bg-hae-mist' : ''} ${draggedColId === col.id ? 'opacity-40' : ''}`}
+                      >
+                        {editingHeaderId === col.id ? (
+                          <input
+                            autoFocus
+                            defaultValue={col.label}
+                            className="w-28 rounded border border-hae-crimson bg-white px-1 py-0.5 text-[11px] font-semibold text-hae-ink normal-case outline-none"
+                            onClick={(e) => e.stopPropagation()}
+                            onBlur={(e) => commitHeaderLabel(col.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.target.blur()
+                              if (e.key === 'Escape') setEditingHeaderId(null)
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            className="hover:text-hae-crimson print:pointer-events-none"
+                            onClick={() => setEditingHeaderId(col.id)}
+                          >
+                            {col.label}
+                          </button>
+                        )}
+                      </th>
+                    )
+                  })}
                   <th className="px-2 py-2 print:hidden" />
                 </tr>
               </thead>
@@ -273,14 +375,11 @@ export default function AdvancementEditableList({
                 {rows.map((r) => (
                   <tr key={r.id} className="border-b border-hae-line/60 last:border-0 hover:bg-hae-mist/50">
                     {columns.map((col, idx) => (
-                      <td
-                        key={col.id}
-                        className={`px-4 py-2 ${RIGHT_ALIGN_TYPES.has(col.type) ? 'text-right' : ''} ${idx === 0 ? 'font-medium' : ''}`}
-                      >
-                        {renderCell(r, col)}
+                      <td key={col.id} className={`px-4 py-2 ${idx === 0 ? 'text-left font-medium' : 'text-center'}`}>
+                        {renderCell(r, col, idx === 0 ? 'text-left' : 'text-center')}
                       </td>
                     ))}
-                    <td className="px-2 py-2 text-right print:hidden">
+                    <td className="px-2 py-2 text-center print:hidden">
                       <button type="button" className="text-xs text-hae-slate hover:text-hae-red" onClick={() => removeRow(r.id)}>
                         Delete
                       </button>
@@ -292,7 +391,7 @@ export default function AdvancementEditableList({
                 <tfoot>
                   <tr className="border-t-2 border-hae-line font-semibold text-hae-ink">
                     {columns.map((col, idx) => (
-                      <td key={col.id} className={`px-4 py-2 ${RIGHT_ALIGN_TYPES.has(col.type) ? 'text-right' : ''}`}>
+                      <td key={col.id} className={`px-4 py-2 ${idx === 0 ? 'text-left' : 'text-center'}`}>
                         {idx === 0 ? 'TOTAL' : columnTotal(col)}
                       </td>
                     ))}
