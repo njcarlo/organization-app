@@ -130,11 +130,6 @@ body {
   box-shadow: 1px 0 0 var(--color-hae-line, #e7e7e7);
 }
 
-.hae-table-scroll thead th:first-child {
-  background: color-mix(in srgb, var(--color-hae-mist, #f6f6f6) 80%, #fff);
-  z-index: 2;
-}
-
 .hae-table-scroll tbody tr[class*='bg-amber'] td:first-child {
   background: #fffbeb;
 }
@@ -218,6 +213,30 @@ button.hae-mobile-card:active {
 
 @media (max-width: 767px) {
   .hae-desktop-only {
+    display: none !important;
+  }
+}
+
+/* Printing can report a narrow viewport (matching the mobile breakpoint
+   above) regardless of the on-screen layout, so force the desktop table
+   view for print and hide the mobile card view — same `!important` weight
+   as the breakpoint rules above, so it must come after them to win. */
+@media print {
+  .hae-mobile-only {
+    display: none !important;
+  }
+  .hae-desktop-only {
+    display: block !important;
+  }
+}
+
+/* This stylesheet loads after Tailwind, so any of the component classes
+   above (hae-btn, hae-mobile-cards, etc.) tie with Tailwind's print:hidden
+   on specificity and win on source order when both apply to the same
+   element. Force print:hidden to always win, regardless of what other
+   classes share the element — keep this rule last in the file. */
+@media print {
+  .print\:hidden {
     display: none !important;
   }
 }

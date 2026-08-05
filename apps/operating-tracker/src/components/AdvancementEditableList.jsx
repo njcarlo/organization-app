@@ -292,9 +292,9 @@ export default function AdvancementEditableList({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid">
+    <section className="rounded-lg border border-hae-line bg-white print:break-inside-avoid">
       <div
-        className={`flex items-center justify-between gap-3 ${
+        className={`rounded-t-lg flex items-center justify-between gap-3 ${
           tone
             ? `section-header px-4 py-2.5 ${TONE_CLASSES[tone] || TONE_CLASSES.ink}`
             : 'border-b border-hae-line px-4 py-3'
@@ -391,7 +391,8 @@ export default function AdvancementEditableList({
             ))}
           </div>
 
-          <div className="hae-desktop-only hae-table-scroll print:block print:overflow-visible">
+          <div className="hae-desktop-only overflow-hidden rounded-b-lg">
+          <div className="hae-table-scroll print:block print:overflow-visible">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-hae-line/80 text-center text-[11px] font-semibold tracking-wide text-hae-slate uppercase">
@@ -465,6 +466,7 @@ export default function AdvancementEditableList({
                 </tfoot>
               )}
             </table>
+          </div>
           </div>
         </>
       )}

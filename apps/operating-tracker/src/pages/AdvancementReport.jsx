@@ -40,16 +40,26 @@ const STAGE_COLORS = {
 const PRINT_STYLES = `
 @media print {
   @page { size: landscape; margin: 0.3in; }
-  .advancement-report { font-size: 9px; }
-  .advancement-report .report-title { font-size: 20px; }
-  .advancement-report .report-tagline { font-size: 11px; }
-  .advancement-report .section-header { padding: 3px 8px; }
-  .advancement-report .section-title { font-size: 9px; }
-  .advancement-report .section-body { padding: 6px 8px; }
-  .advancement-report .kpi-tile { padding: 6px 8px; }
-  .advancement-report .kpi-value { font-size: 15px; }
-  .advancement-report table { font-size: 8px; }
-  .advancement-report th, .advancement-report td { padding: 1px 4px; }
+  /* Rounded card corners that sit flush against the printable-area edge
+     (e.g. the last KPI tile in a row, or a full-width section's right
+     edge) get their border/corner sliced off by the page's clip boundary
+     due to print-time subpixel rounding. A small inset keeps every card
+     fully inside the page regardless of grid/column math. */
+  .advancement-report {
+    width: calc(100% - 6px);
+    margin-inline: auto;
+  }
+  /* border-hae-line (#e7e7e7) is a deliberately faint hairline for screen
+     use, but printers/PDF renderers compress light grays even further —
+     the row and card dividers become effectively invisible on paper.
+     Strengthen just the color/weight for print; sizing, padding, and font
+     stay exactly as the editing view renders them. */
+  .advancement-report table tr,
+  .advancement-report table th,
+  .advancement-report table td,
+  .advancement-report section {
+    border-color: #9a9a9a !important;
+  }
 }
 `
 
@@ -153,11 +163,11 @@ function EditableHeaderTitle({ value, onCommit, tone, onToneCommit }) {
   )
 }
 
-function SectionCard({ title, tone = 'ink', headerAction, children, className = '', onTitleCommit, onToneCommit }) {
+function SectionCard({ title, tone = 'ink', headerAction, children, className = '', bodyClassName = 'p-4', onTitleCommit, onToneCommit }) {
   const toneClass = toneClassFor(tone)
   return (
-    <section className={`overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid ${className}`}>
-      <div className={`section-header flex items-center justify-between gap-3 px-4 py-2.5 ${toneClass}`}>
+    <section className={`rounded-lg border border-hae-line bg-white print:break-inside-avoid ${className}`}>
+      <div className={`section-header rounded-t-lg flex items-center justify-between gap-3 px-4 py-2.5 ${toneClass}`}>
         <div className="min-w-0 flex-1">
           {onTitleCommit ? (
             <EditableHeaderTitle value={title} onCommit={onTitleCommit} tone={tone} onToneCommit={onToneCommit} />
@@ -167,7 +177,7 @@ function SectionCard({ title, tone = 'ink', headerAction, children, className = 
         </div>
         {headerAction && <div className="shrink-0 print:hidden">{headerAction}</div>}
       </div>
-      <div className="section-body p-4">{children}</div>
+      <div className={`section-body overflow-hidden rounded-b-lg ${bodyClassName}`}>{children}</div>
     </section>
   )
 }
@@ -665,18 +675,18 @@ export default function AdvancementReport() {
         <img src="/hae-logo.webp" alt="Harvard Alumni Entrepreneurs" className="h-12 w-auto object-contain" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <span className="inline-flex items-center gap-1 text-sm text-hae-slate">
+      <div className="flex flex-wrap items-center justify-between gap-3 print:justify-start">
+        <span className="report-as-of inline-flex items-center gap-1 text-sm text-hae-slate print:text-black">
           As of
           <InlineEdit
             value={summary.asOfDate || ''}
             display={summary.asOfDate ? formatLongDate(summary.asOfDate) : 'Set date'}
             type="date"
-            className="text-hae-ink underline decoration-dotted"
+            className="text-hae-ink underline decoration-dotted print:text-black print:no-underline"
             onCommit={(v) => updateSummaryField('asOfDate', v)}
           />
         </span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 print:hidden">
           <button
             type="button"
             className="rounded-md border border-hae-line p-2 text-hae-slate hover:border-hae-crimson hover:text-hae-crimson"
@@ -883,6 +893,7 @@ export default function AdvancementReport() {
         tone={sectionTone('revenuePrograms', 'navy')}
         onToneCommit={(t) => commitSectionTone('revenuePrograms', t)}
         headerAction={<HeaderAddButton onClick={() => programsRef.current?.openAdd()}>+ Add Program</HeaderAddButton>}
+        bodyClassName="p-0"
       >
         <AdvancementProgramsTable ref={programsRef} bare />
       </SectionCard>
@@ -1098,9 +1109,11 @@ export default function AdvancementReport() {
         ))
       })()}
 
-      <button type="button" className="hae-btn print:hidden" onClick={addCustomSection}>
-        + Add Section
-      </button>
+      <div className="print:hidden">
+        <button type="button" className="hae-btn" onClick={addCustomSection}>
+          + Add Section
+        </button>
+      </div>
 
       <p className="text-[11px] text-hae-slate print:hidden">
         Action Items and Coming Up are pulled live from the Tracker — manage them in{' '}
