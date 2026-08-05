@@ -67,27 +67,159 @@ function healthStatusFromScore(score) {
   return 'Behind'
 }
 
-function SectionCard({ title, subtitle, tone = 'ink', headerAction, children, className = '' }) {
-  const toneClass =
-    {
-      navy: 'bg-blue-900',
-      green: 'bg-green-800',
-      purple: 'bg-purple-800',
-      crimson: 'bg-hae-crimson',
-      orange: 'bg-amber-700',
-      ink: 'bg-hae-ink',
-    }[tone] || 'bg-hae-ink'
+// Section header color options — shared by SectionCard and toned
+// AdvancementEditableList headers so both offer the same palette.
+const TONE_OPTIONS = [
+  { key: 'navy', label: 'Navy', class: 'bg-blue-900' },
+  { key: 'green', label: 'Green', class: 'bg-green-800' },
+  { key: 'purple', label: 'Purple', class: 'bg-purple-800' },
+  { key: 'crimson', label: 'Crimson', class: 'bg-hae-crimson' },
+  { key: 'orange', label: 'Orange', class: 'bg-amber-700' },
+  { key: 'ink', label: 'Ink', class: 'bg-hae-ink' },
+]
+
+function toneClassFor(tone) {
+  return TONE_OPTIONS.find((t) => t.key === tone)?.class || 'bg-hae-ink'
+}
+
+// Color swatches shown alongside a header title while it's being edited —
+// mousedown preventDefault keeps the title input focused (and edit mode open)
+// so picking a color doesn't immediately blur/close the editor.
+function ToneSwatches({ value, onChange }) {
+  return (
+    <div className="mt-1 flex items-center gap-1 print:hidden">
+      {TONE_OPTIONS.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          title={t.label}
+          aria-label={`Set header color to ${t.label}`}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onChange(t.key)}
+          className={`h-4 w-4 rounded-full ${t.class} ${
+            value === t.key ? 'ring-2 ring-white' : 'opacity-70 hover:opacity-100'
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Editable header title used by colored section headers (white text over a
+// tone background) — SectionCard and toned AdvancementEditableList headers.
+function EditableHeaderTitle({ value, onCommit, tone, onToneCommit }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+
+  useEffect(() => {
+    if (!editing) setDraft(value)
+  }, [value, editing])
+
+  const commit = () => {
+    setEditing(false)
+    const trimmed = draft.trim()
+    if (trimmed && trimmed !== value) onCommit(trimmed)
+  }
+
+  if (editing) {
+    return (
+      <div>
+        <input
+          autoFocus
+          className="section-title w-full rounded border border-white/60 bg-white/10 px-1.5 py-0.5 font-display text-sm font-semibold tracking-wide text-white uppercase outline-none"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.target.blur()
+            if (e.key === 'Escape') {
+              setDraft(value)
+              setEditing(false)
+            }
+          }}
+        />
+        {onToneCommit && <ToneSwatches value={tone} onChange={onToneCommit} />}
+      </div>
+    )
+  }
+  return (
+    <button
+      type="button"
+      className="section-title font-display text-sm font-semibold tracking-wide text-white uppercase hover:text-white/80 print:pointer-events-none"
+      onClick={() => setEditing(true)}
+    >
+      {value}
+    </button>
+  )
+}
+
+function SectionCard({ title, tone = 'ink', headerAction, children, className = '', onTitleCommit, onToneCommit }) {
+  const toneClass = toneClassFor(tone)
   return (
     <section className={`overflow-hidden rounded-lg border border-hae-line bg-white print:break-inside-avoid ${className}`}>
       <div className={`section-header flex items-center justify-between gap-3 px-4 py-2.5 ${toneClass}`}>
-        <div>
-          <h2 className="section-title font-display text-sm font-semibold tracking-wide text-white uppercase">{title}</h2>
-          {subtitle && <p className="text-[11px] text-white/80 print:hidden">{subtitle}</p>}
+        <div className="min-w-0 flex-1">
+          {onTitleCommit ? (
+            <EditableHeaderTitle value={title} onCommit={onTitleCommit} tone={tone} onToneCommit={onToneCommit} />
+          ) : (
+            <h2 className="section-title font-display text-sm font-semibold tracking-wide text-white uppercase">{title}</h2>
+          )}
         </div>
         {headerAction && <div className="shrink-0 print:hidden">{headerAction}</div>}
       </div>
       <div className="section-body p-4">{children}</div>
     </section>
+  )
+}
+
+// Small drag-handle bar rendered above each reorderable section — grabbing it
+// picks up the whole section; dropping on another section's handle/body swaps
+// their positions in `sectionOrder`.
+function GripIcon() {
+  return (
+    <svg width="14" height="8" viewBox="0 0 14 8" fill="currentColor" aria-hidden="true">
+      <circle cx="2" cy="2" r="1.3" />
+      <circle cx="7" cy="2" r="1.3" />
+      <circle cx="12" cy="2" r="1.3" />
+      <circle cx="2" cy="6" r="1.3" />
+      <circle cx="7" cy="6" r="1.3" />
+      <circle cx="12" cy="6" r="1.3" />
+    </svg>
+  )
+}
+
+function DraggableSection({ sectionKey, draggedKey, overKey, onDragStart, onDragOver, onDrop, onDragEnd, children }) {
+  const isOver = overKey === sectionKey && draggedKey !== sectionKey
+  const isDragging = draggedKey === sectionKey
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(sectionKey)
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(sectionKey)
+      }}
+      className={`rounded-lg transition ${isOver ? 'outline-2 outline-dashed outline-offset-2 outline-hae-crimson/50' : ''} ${
+        isDragging ? 'opacity-40' : ''
+      }`}
+    >
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = 'move'
+          onDragStart(sectionKey)
+        }}
+        onDragEnd={onDragEnd}
+        className="flex justify-center print:hidden"
+      >
+        <span className="flex h-4 w-9 cursor-grab items-center justify-center rounded-t-md border border-b-0 border-hae-line/60 bg-hae-mist/60 text-hae-slate/50 hover:text-hae-slate active:cursor-grabbing">
+          <GripIcon />
+        </span>
+      </div>
+      {children}
+    </div>
   )
 }
 
@@ -245,6 +377,8 @@ export default function AdvancementReport() {
   const [events, setEvents] = useState([])
   const [customSections, setCustomSections] = useState([])
   const [loadError, setLoadError] = useState('')
+  const [draggedSectionKey, setDraggedSectionKey] = useState(null)
+  const [dragOverSectionKey, setDragOverSectionKey] = useState(null)
   const programsRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -384,6 +518,79 @@ export default function AdvancementReport() {
     const value = numeric ? Number(raw) || 0 : raw
     setSummary((s) => ({ ...s, [key]: value }))
     await setDoc(doc(db, 'trackerAdvancementSummary', 'main'), { [key]: value, updatedAt: serverTimestamp() }, { merge: true })
+  }
+
+  const sectionTitle = (key, fallback) => summary.sectionTitles?.[key] || fallback
+
+  const commitSectionTitle = async (key, raw) => {
+    const trimmed = String(raw).trim()
+    if (!trimmed) return
+    setSummary((s) => ({ ...s, sectionTitles: { ...(s.sectionTitles || {}), [key]: trimmed } }))
+    await setDoc(
+      doc(db, 'trackerAdvancementSummary', 'main'),
+      { sectionTitles: { [key]: trimmed }, updatedAt: serverTimestamp() },
+      { merge: true }
+    )
+  }
+
+  const sectionTone = (key, fallback) => summary.sectionTones?.[key] || fallback
+
+  const commitSectionTone = async (key, tone) => {
+    setSummary((s) => ({ ...s, sectionTones: { ...(s.sectionTones || {}), [key]: tone } }))
+    await setDoc(
+      doc(db, 'trackerAdvancementSummary', 'main'),
+      { sectionTones: { [key]: tone }, updatedAt: serverTimestamp() },
+      { merge: true }
+    )
+  }
+
+  const defaultSectionKeys = useMemo(
+    () => [
+      'financialSummary',
+      'revenuePipeline',
+      'membershipSnapshot',
+      'revenuePrograms',
+      'partnerships',
+      'missionPrograms',
+      'highPriorityActionItems',
+      'overdueItems',
+      'boardEngagement',
+      'recentWins',
+      'comingUp',
+      ...customSections.map((s) => `custom:${s.id}`),
+    ],
+    [customSections]
+  )
+
+  const orderedSectionKeys = useMemo(() => {
+    const saved = Array.isArray(summary.sectionOrder) ? summary.sectionOrder : []
+    const known = new Set(defaultSectionKeys)
+    const ordered = saved.filter((k) => known.has(k))
+    defaultSectionKeys.forEach((k) => {
+      if (!ordered.includes(k)) ordered.push(k)
+    })
+    return ordered
+  }, [summary.sectionOrder, defaultSectionKeys])
+
+  const handleSectionDragStart = (key) => setDraggedSectionKey(key)
+  const handleSectionDragOver = (key) => {
+    if (key !== draggedSectionKey) setDragOverSectionKey(key)
+  }
+  const handleSectionDragEnd = () => {
+    setDraggedSectionKey(null)
+    setDragOverSectionKey(null)
+  }
+  const handleSectionDrop = async (key) => {
+    const from = draggedSectionKey
+    handleSectionDragEnd()
+    if (!from || from === key) return
+    const next = [...orderedSectionKeys]
+    const fromIdx = next.indexOf(from)
+    const toIdx = next.indexOf(key)
+    if (fromIdx === -1 || toIdx === -1) return
+    next.splice(toIdx, 0, next.splice(fromIdx, 1)[0])
+    setSummary((s) => ({ ...s, sectionOrder: next }))
+    await setDoc(doc(db, 'trackerAdvancementSummary', 'main'), { sectionOrder: next, updatedAt: serverTimestamp() }, { merge: true })
   }
 
   const updateMembershipField = async (key, raw, numeric = true) => {
@@ -536,25 +743,34 @@ export default function AdvancementReport() {
         />
       </div>
 
-      <AdvancementEditableList
-        title="Financial Summary (YTD)"
-        subtitle="Revenue by source — current, goal, forecast, and status."
-        addLabel="+ Add Revenue Source"
-        collectionPath="trackerAdvancementFinancials"
-        tone="navy"
-        totals
-        columns={[
-          { id: 'source', label: 'Revenue Source', type: 'text' },
-          { id: 'current', label: 'Current', type: 'currency' },
-          { id: 'goal', label: 'Goal', type: 'currency' },
-          { id: 'forecast', label: 'Forecast', type: 'currency' },
-          { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
-        ]}
-      />
+      {(() => {
+        const sectionNodes = {}
 
+        sectionNodes.financialSummary = (
+          <AdvancementEditableList
+            title={sectionTitle('financialSummary', 'Financial Summary (YTD)')}
+            onTitleCommit={(v) => commitSectionTitle('financialSummary', v)}
+            addLabel="+ Add Revenue Source"
+            collectionPath="trackerAdvancementFinancials"
+            tone={sectionTone('financialSummary', 'navy')}
+            onToneCommit={(t) => commitSectionTone('financialSummary', t)}
+            totals
+            columns={[
+              { id: 'source', label: 'Revenue Source', type: 'text' },
+              { id: 'current', label: 'Current', type: 'currency' },
+              { id: 'goal', label: 'Goal', type: 'currency' },
+              { id: 'forecast', label: 'Forecast', type: 'currency' },
+              { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
+            ]}
+          />
+        )
+
+        sectionNodes.revenuePipeline = (
       <SectionCard
-        title="Revenue Pipeline (by Source)"
-        tone="purple"
+        title={sectionTitle('revenuePipeline', 'Revenue Pipeline (by Source)')}
+        onTitleCommit={(v) => commitSectionTitle('revenuePipeline', v)}
+        tone={sectionTone('revenuePipeline', 'purple')}
+        onToneCommit={(t) => commitSectionTone('revenuePipeline', t)}
         headerAction={<HeaderAddButton onClick={addPipelineRow}>+ Add Pipeline Source</HeaderAddButton>}
       >
         {pipeline.length === 0 ? (
@@ -607,8 +823,15 @@ export default function AdvancementReport() {
           </div>
         )}
       </SectionCard>
+        )
 
-      <SectionCard title="Membership Snapshot" tone="green">
+        sectionNodes.membershipSnapshot = (
+      <SectionCard
+        title={sectionTitle('membershipSnapshot', 'Membership Snapshot')}
+        onTitleCommit={(v) => commitSectionTitle('membershipSnapshot', v)}
+        tone={sectionTone('membershipSnapshot', 'green')}
+        onToneCommit={(t) => commitSectionTone('membershipSnapshot', t)}
+      >
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           {ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => (
             <div key={t.id}>
@@ -651,22 +874,28 @@ export default function AdvancementReport() {
           </p>
         </div>
       </SectionCard>
+        )
 
+        sectionNodes.revenuePrograms = (
       <SectionCard
-        title="Revenue Generating Programs"
-        subtitle="Financial impact — click a program for its full financial report, a cell to edit it, or a column header to rename/reorder."
-        tone="navy"
+        title={sectionTitle('revenuePrograms', 'Revenue Generating Programs')}
+        onTitleCommit={(v) => commitSectionTitle('revenuePrograms', v)}
+        tone={sectionTone('revenuePrograms', 'navy')}
+        onToneCommit={(t) => commitSectionTone('revenuePrograms', t)}
         headerAction={<HeaderAddButton onClick={() => programsRef.current?.openAdd()}>+ Add Program</HeaderAddButton>}
       >
         <AdvancementProgramsTable ref={programsRef} bare />
       </SectionCard>
+        )
 
+        sectionNodes.partnerships = (
       <AdvancementEditableList
-        title="Strategic Partnerships & Custom Programs (Pipeline)"
-        subtitle="Active opportunities and pipeline value by partnership type."
+        title={sectionTitle('partnerships', 'Strategic Partnerships & Custom Programs (Pipeline)')}
+        onTitleCommit={(v) => commitSectionTitle('partnerships', v)}
         addLabel="+ Add Partnership Type"
         collectionPath="trackerAdvancementPartnerships"
-        tone="purple"
+        tone={sectionTone('partnerships', 'purple')}
+        onToneCommit={(t) => commitSectionTone('partnerships', t)}
         totals
         columns={[
           { id: 'type', label: 'Type', type: 'text' },
@@ -675,12 +904,16 @@ export default function AdvancementReport() {
           { id: 'nextSteps', label: 'Next Steps', type: 'textarea' },
         ]}
       />
+        )
 
+        sectionNodes.missionPrograms = (
       <AdvancementEditableList
-        title="Mission Critical / Non-Revenue Programs"
+        title={sectionTitle('missionPrograms', 'Mission Critical / Non-Revenue Programs')}
+        onTitleCommit={(v) => commitSectionTitle('missionPrograms', v)}
         addLabel="+ Add Program"
         collectionPath="trackerAdvancementMissionPrograms"
-        tone="ink"
+        tone={sectionTone('missionPrograms', 'ink')}
+        onToneCommit={(t) => commitSectionTone('missionPrograms', t)}
         columns={[
           { id: 'name', label: 'Program', type: 'text' },
           { id: 'purpose', label: 'Purpose', type: 'textarea' },
@@ -690,8 +923,15 @@ export default function AdvancementReport() {
           { id: 'impactHighlights', label: 'Impact', type: 'textarea' },
         ]}
       />
+        )
 
-      <SectionCard title="Quick View — High Priority Action Items" tone="orange">
+        sectionNodes.highPriorityActionItems = (
+      <SectionCard
+        title={sectionTitle('highPriorityActionItems', 'Quick View — High Priority Action Items')}
+        onTitleCommit={(v) => commitSectionTitle('highPriorityActionItems', v)}
+        tone={sectionTone('highPriorityActionItems', 'orange')}
+        onToneCommit={(t) => commitSectionTone('highPriorityActionItems', t)}
+      >
         {highPriorityTasks.length === 0 ? (
           <p className="text-sm text-hae-slate">No high-priority action items.</p>
         ) : (
@@ -710,8 +950,15 @@ export default function AdvancementReport() {
           View All Action Items →
         </Link>
       </SectionCard>
+        )
 
-      <SectionCard title={`Overdue Items (${overdueTasks.length})`} tone="crimson">
+        sectionNodes.overdueItems = (
+      <SectionCard
+        title={sectionTitle('overdueItems', `Overdue Items (${overdueTasks.length})`)}
+        onTitleCommit={(v) => commitSectionTitle('overdueItems', v)}
+        tone={sectionTone('overdueItems', 'crimson')}
+        onToneCommit={(t) => commitSectionTone('overdueItems', t)}
+      >
         {overdueTasks.length === 0 ? (
           <p className="text-sm text-hae-slate">Nothing overdue.</p>
         ) : (
@@ -732,13 +979,16 @@ export default function AdvancementReport() {
           View All Overdue Items →
         </Link>
       </SectionCard>
+        )
 
+        sectionNodes.boardEngagement = (
       <AdvancementEditableList
-        title="Board Engagement & Contributions (YTD)"
-        subtitle="Introductions, meetings, and opportunities created per board member."
+        title={sectionTitle('boardEngagement', 'Board Engagement & Contributions (YTD)')}
+        onTitleCommit={(v) => commitSectionTitle('boardEngagement', v)}
         addLabel="+ Add Board Member"
         collectionPath="trackerAdvancementBoard"
-        tone="navy"
+        tone={sectionTone('boardEngagement', 'navy')}
+        onToneCommit={(t) => commitSectionTone('boardEngagement', t)}
         columns={[
           { id: 'member', label: 'Board Member', type: 'text' },
           { id: 'sponsorIntro', label: 'Sponsor Intro', type: 'number' },
@@ -749,8 +999,15 @@ export default function AdvancementReport() {
           { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
         ]}
       />
+        )
 
-      <SectionCard title="Recent Wins" tone="ink">
+        sectionNodes.recentWins = (
+      <SectionCard
+        title={sectionTitle('recentWins', 'Recent Wins')}
+        onTitleCommit={(v) => commitSectionTitle('recentWins', v)}
+        tone={sectionTone('recentWins', 'ink')}
+        onToneCommit={(t) => commitSectionTone('recentWins', t)}
+      >
         {wins.length === 0 ? (
           <p className="text-sm text-hae-slate">No recent wins entered yet.</p>
         ) : (
@@ -788,8 +1045,15 @@ export default function AdvancementReport() {
           + Add Win
         </button>
       </SectionCard>
+        )
 
-      <SectionCard title="Coming Up" tone="ink">
+        sectionNodes.comingUp = (
+      <SectionCard
+        title={sectionTitle('comingUp', 'Coming Up')}
+        onTitleCommit={(v) => commitSectionTitle('comingUp', v)}
+        tone={sectionTone('comingUp', 'ink')}
+        onToneCommit={(t) => commitSectionTone('comingUp', t)}
+      >
         {comingUpEvents.length === 0 ? (
           <p className="text-sm text-hae-slate">No upcoming events scheduled.</p>
         ) : (
@@ -810,10 +1074,30 @@ export default function AdvancementReport() {
           View All Events →
         </Link>
       </SectionCard>
+        )
 
-      {customSections.map((s) => (
-        <AdvancementCustomSection key={s.id} section={s} onDeleted={() => removeCustomSection(s.id)} />
-      ))}
+        customSections.forEach((s) => {
+          sectionNodes[`custom:${s.id}`] = (
+            <AdvancementCustomSection section={s} onDeleted={() => removeCustomSection(s.id)} />
+          )
+        })
+
+        return orderedSectionKeys.map((key) => (
+          <DraggableSection
+            key={key}
+            sectionKey={key}
+            draggedKey={draggedSectionKey}
+            overKey={dragOverSectionKey}
+            onDragStart={handleSectionDragStart}
+            onDragOver={handleSectionDragOver}
+            onDrop={handleSectionDrop}
+            onDragEnd={handleSectionDragEnd}
+          >
+            {sectionNodes[key]}
+          </DraggableSection>
+        ))
+      })()}
+
       <button type="button" className="hae-btn print:hidden" onClick={addCustomSection}>
         + Add Section
       </button>

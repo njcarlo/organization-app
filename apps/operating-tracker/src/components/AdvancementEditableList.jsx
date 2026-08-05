@@ -19,6 +19,8 @@ const TONE_CLASSES = {
   ink: 'bg-hae-ink',
 }
 
+const TONE_OPTIONS = Object.keys(TONE_CLASSES).map((key) => ({ key, class: TONE_CLASSES[key] }))
+
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block ${className}`}>
@@ -27,6 +29,29 @@ function Field({ label, children, className = '' }) {
       </span>
       {children}
     </label>
+  )
+}
+
+// Color swatches shown while a toned header title is being edited — mousedown
+// preventDefault keeps the title input focused so picking a color doesn't
+// blur/close the editor. Mirrors AdvancementReport's ToneSwatches.
+function ToneSwatches({ value, onChange }) {
+  return (
+    <div className="mt-1 flex items-center gap-1 print:hidden">
+      {TONE_OPTIONS.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          title={t.key}
+          aria-label={`Set header color to ${t.key}`}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onChange(t.key)}
+          className={`h-4 w-4 rounded-full ${t.class} ${
+            value === t.key ? 'ring-2 ring-white' : 'opacity-70 hover:opacity-100'
+          }`}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -56,7 +81,8 @@ function emptyFormFor(columns) {
  */
 export default function AdvancementEditableList({
   title,
-  subtitle,
+  onTitleCommit,
+  onToneCommit,
   addLabel = '+ Add Row',
   collectionPath,
   columns: columnsProp,
@@ -71,6 +97,7 @@ export default function AdvancementEditableList({
   const [addForm, setAddForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [editingHeaderId, setEditingHeaderId] = useState(null)
+  const [editingTitle, setEditingTitle] = useState(false)
   const [draggedColId, setDraggedColId] = useState(null)
   const [dragOverColId, setDragOverColId] = useState(null)
 
@@ -273,17 +300,54 @@ export default function AdvancementEditableList({
             : 'border-b border-hae-line px-4 py-3'
         }`}
       >
-        <div>
-          <h2
-            className={
-              tone
-                ? 'section-title font-display text-sm font-semibold tracking-wide text-white uppercase'
-                : 'font-display text-lg text-hae-ink'
-            }
-          >
-            {title}
-          </h2>
-          {subtitle && <p className={`text-[11px] ${tone ? 'text-white/80 print:hidden' : 'text-xs text-hae-slate'}`}>{subtitle}</p>}
+        <div className="min-w-0 flex-1">
+          {onTitleCommit ? (
+            editingTitle ? (
+              <div>
+                <input
+                  autoFocus
+                  defaultValue={title}
+                  className={
+                    tone
+                      ? 'section-title w-full rounded border border-white/60 bg-white/10 px-1.5 py-0.5 font-display text-sm font-semibold tracking-wide text-white uppercase outline-none'
+                      : 'w-full rounded border border-hae-crimson px-1.5 py-0.5 font-display text-lg text-hae-ink outline-none'
+                  }
+                  onBlur={(e) => {
+                    setEditingTitle(false)
+                    const trimmed = e.target.value.trim()
+                    if (trimmed && trimmed !== title) onTitleCommit(trimmed)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.target.blur()
+                    if (e.key === 'Escape') setEditingTitle(false)
+                  }}
+                />
+                {tone && onToneCommit && <ToneSwatches value={tone} onChange={onToneCommit} />}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className={
+                  tone
+                    ? 'section-title font-display text-sm font-semibold tracking-wide text-white uppercase hover:text-white/80 print:pointer-events-none'
+                    : 'font-display text-lg text-hae-ink hover:text-hae-crimson print:pointer-events-none'
+                }
+                onClick={() => setEditingTitle(true)}
+              >
+                {title}
+              </button>
+            )
+          ) : (
+            <h2
+              className={
+                tone
+                  ? 'section-title font-display text-sm font-semibold tracking-wide text-white uppercase'
+                  : 'font-display text-lg text-hae-ink'
+              }
+            >
+              {title}
+            </h2>
+          )}
         </div>
         <button
           type="button"
