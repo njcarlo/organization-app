@@ -114,6 +114,12 @@ export const ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS = [
   'Approved',
 ]
 
+export const ADVANCEMENT_ACTION_ITEM_STATUS_OPTIONS = [
+  'Not Started',
+  'In Progress',
+  'Attention Required',
+]
+
 export const ADVANCEMENT_MEMBERSHIP_TYPES = [
   { id: 'fullMember', label: 'Full Member' },
   { id: 'lifetimeMember', label: 'Lifetime Member' },
