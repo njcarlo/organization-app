@@ -4,12 +4,15 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, s
 import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
 import AdvancementEditableList from '../components/AdvancementEditableList'
+import AdvancementPartnershipDetailCard from '../components/AdvancementPartnershipDetailCard'
 import AdvancementCustomSection from '../components/AdvancementCustomSection'
 import { DownloadIcon, PrinterIcon } from '../components/ActionIcons'
 import {
   ADVANCEMENT_MEMBERSHIP_TYPES,
   ADVANCEMENT_PIPELINE_STAGE_OPTIONS,
   ADVANCEMENT_PROGRAM_STATUS_OPTIONS,
+  ADVANCEMENT_PARTNERSHIP_TYPE_OPTIONS,
+  ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS,
 } from '../constants'
 import {
   advancementProgramStatusDotClass,
@@ -467,7 +470,7 @@ export default function AdvancementReport() {
   )
   const pipelineTotal = useMemo(() => pipeline.reduce((s, r) => s + (Number(r.value) || 0), 0), [pipeline])
   const partnershipsCount = useMemo(
-    () => partnerships.reduce((s, r) => s + (Number(r.activeOpportunities) || 0), 0),
+    () => partnerships.filter((r) => r.status === 'Approved').length,
     [partnerships]
   )
 
@@ -884,12 +887,23 @@ export default function AdvancementReport() {
         tone={sectionTone('partnerships', 'purple')}
         onToneCommit={(t) => commitSectionTone('partnerships', t)}
         totals
+        supportsLinks
         columns={[
-          { id: 'type', label: 'Type', type: 'text' },
-          { id: 'activeOpportunities', label: 'Active', type: 'number' },
+          { id: 'partnerName', label: 'Name of Partner', type: 'text' },
+          { id: 'type', label: 'Type', type: 'select', options: ADVANCEMENT_PARTNERSHIP_TYPE_OPTIONS },
+          { id: 'programName', label: 'Name of Course / Program', type: 'text' },
           { id: 'pipelineValue', label: 'Pipeline Value', type: 'currency' },
+          { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS },
           { id: 'nextSteps', label: 'Next Steps', type: 'textarea' },
         ]}
+        renderDetail={(row, { onClose, onChanged, onDeleted }) => (
+          <AdvancementPartnershipDetailCard
+            partnership={row}
+            onClose={onClose}
+            onChanged={onChanged}
+            onDeleted={onDeleted}
+          />
+        )}
       />
         )
 

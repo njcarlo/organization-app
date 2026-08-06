@@ -103,6 +103,17 @@ export const ADVANCEMENT_PIPELINE_STAGE_OPTIONS = [
   'Committed',
 ]
 
+export const ADVANCEMENT_PARTNERSHIP_TYPE_OPTIONS = [
+  'Custom Program',
+  'Custom Course',
+  'Collaboration',
+]
+
+export const ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS = [
+  'Prospect',
+  'Approved',
+]
+
 export const ADVANCEMENT_MEMBERSHIP_TYPES = [
   { id: 'fullMember', label: 'Full Member' },
   { id: 'lifetimeMember', label: 'Lifetime Member' },
