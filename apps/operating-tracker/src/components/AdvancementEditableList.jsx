@@ -4,7 +4,7 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { TrashIcon } from './ActionIcons'
 import { LinksEditor, sanitizeLinks } from './Links'
-import { formatMoney } from '../utils'
+import { formatMoney, formatDate } from '../utils'
 
 const fieldClass =
   'w-full rounded-md border border-hae-line bg-white px-3 py-2 text-sm outline-none focus:border-hae-crimson'
@@ -61,6 +61,7 @@ function displayValue(col, raw) {
   if (col.type === 'currency') return formatMoney(raw)
   if (col.type === 'percent') return `${raw}%`
   if (col.type === 'number') return Number(raw).toLocaleString()
+  if (col.type === 'date') return formatDate(raw)
   return String(raw)
 }
 
@@ -289,7 +290,7 @@ export default function AdvancementEditableList({
       return (
         <input
           autoFocus
-          type={NUMERIC_TYPES.has(col.type) ? 'number' : 'text'}
+          type={NUMERIC_TYPES.has(col.type) ? 'number' : col.type === 'date' ? 'date' : 'text'}
           className="w-full rounded border border-hae-crimson px-1.5 py-0.5 text-sm outline-none"
           value={editingCell.value}
           onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
@@ -549,7 +550,7 @@ export default function AdvancementEditableList({
                 ) : (
                   <input
                     autoFocus={c === columns[0]}
-                    type={NUMERIC_TYPES.has(c.type) ? 'number' : 'text'}
+                    type={NUMERIC_TYPES.has(c.type) ? 'number' : c.type === 'date' ? 'date' : 'text'}
                     className={fieldClass}
                     value={addForm[c.id]}
                     onChange={(e) => setAddForm({ ...addForm, [c.id]: e.target.value })}

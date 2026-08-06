@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import AdvancementProgramsTable from '../components/AdvancementProgramsTable'
 import AdvancementEditableList from '../components/AdvancementEditableList'
 import AdvancementPartnershipDetailCard from '../components/AdvancementPartnershipDetailCard'
+import AdvancementActionItemDetailCard from '../components/AdvancementActionItemDetailCard'
 import AdvancementCustomSection from '../components/AdvancementCustomSection'
 import { DownloadIcon, PrinterIcon } from '../components/ActionIcons'
 import {
@@ -13,6 +14,7 @@ import {
   ADVANCEMENT_PROGRAM_STATUS_OPTIONS,
   ADVANCEMENT_PARTNERSHIP_TYPE_OPTIONS,
   ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS,
+  ADVANCEMENT_ACTION_ITEM_STATUS_OPTIONS,
 } from '../constants'
 import {
   advancementProgramStatusDotClass,
@@ -21,7 +23,6 @@ import {
   formatDate,
   formatLongDate,
   formatMoney,
-  namesLabel,
   normalizeTaskStatus,
   pctToGoal,
 } from '../utils'
@@ -368,7 +369,6 @@ export default function AdvancementReport() {
   const [financials, setFinancials] = useState([])
   const [pipeline, setPipeline] = useState([])
   const [partnerships, setPartnerships] = useState([])
-  const [wins, setWins] = useState([])
   const [tasks, setTasks] = useState([])
   const [events, setEvents] = useState([])
   const [customSections, setCustomSections] = useState([])
@@ -387,7 +387,6 @@ export default function AdvancementReport() {
         financialsSnap,
         pipelineSnap,
         partnershipsSnap,
-        winsSnap,
         tasksSnap,
         eventsSnap,
         customSectionsSnap,
@@ -397,7 +396,6 @@ export default function AdvancementReport() {
         getDocs(collection(db, 'trackerAdvancementFinancials')),
         getDocs(collection(db, 'trackerAdvancementPipeline')),
         getDocs(collection(db, 'trackerAdvancementPartnerships')),
-        getDocs(collection(db, 'trackerAdvancementWins')),
         getDocs(collection(db, 'tasks')),
         getDocs(collection(db, 'trackerEvents')),
         getDocs(collection(db, 'trackerAdvancementCustomSections')),
@@ -407,7 +405,6 @@ export default function AdvancementReport() {
       setFinancials(sortByOrder(financialsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setPipeline(sortByOrder(pipelineSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setPartnerships(sortByOrder(partnershipsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-      setWins(sortByOrder(winsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setTasks(tasksSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setEvents(eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setCustomSections(sortByOrder(customSectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
@@ -541,9 +538,7 @@ export default function AdvancementReport() {
       'partnerships',
       'missionPrograms',
       'highPriorityActionItems',
-      'overdueItems',
       'boardEngagement',
-      'recentWins',
       'comingUp',
       ...customSections.map((s) => `custom:${s.id}`),
     ],
@@ -614,25 +609,6 @@ export default function AdvancementReport() {
     if (!confirm('Delete this pipeline source? This action cannot be undone.')) return
     setPipeline((rows) => rows.filter((r) => r.id !== rowId))
     await deleteDoc(doc(db, 'trackerAdvancementPipeline', rowId))
-  }
-
-  const updateWinField = async (rowId, key, raw, numeric = false) => {
-    const value = numeric ? Number(raw) || 0 : String(raw).trim()
-    setWins((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
-    await updateDoc(doc(db, 'trackerAdvancementWins', rowId), { [key]: value })
-  }
-
-  const addWinRow = async () => {
-    const maxOrder = wins.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
-    const payload = { title: 'New win', date: todayStr, order: maxOrder + 1 }
-    const ref = await addDoc(collection(db, 'trackerAdvancementWins'), { ...payload, createdAt: serverTimestamp() })
-    setWins((rows) => [...rows, { id: ref.id, ...payload }])
-  }
-
-  const removeWinRow = async (rowId) => {
-    if (!confirm('Delete this win? This action cannot be undone.')) return
-    setWins((rows) => rows.filter((r) => r.id !== rowId))
-    await deleteDoc(doc(db, 'trackerAdvancementWins', rowId))
   }
 
   const addCustomSection = async () => {
@@ -927,59 +903,28 @@ export default function AdvancementReport() {
         )
 
         sectionNodes.highPriorityActionItems = (
-      <SectionCard
+      <AdvancementEditableList
         title={sectionTitle('highPriorityActionItems', 'Quick View — High Priority Action Items')}
         onTitleCommit={(v) => commitSectionTitle('highPriorityActionItems', v)}
+        addLabel="+ Add Action Item"
+        collectionPath="trackerAdvancementActionItems"
         tone={sectionTone('highPriorityActionItems', 'orange')}
         onToneCommit={(t) => commitSectionTone('highPriorityActionItems', t)}
-      >
-        {highPriorityTasks.length === 0 ? (
-          <p className="text-sm text-hae-slate">No high-priority action items.</p>
-        ) : (
-          <ul className="space-y-1.5 text-sm">
-            {highPriorityTasks.slice(0, 5).map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-2">
-                <Link to={`/my-tasks?task=${t.id}`} className="min-w-0 flex-1 truncate text-hae-ink hover:text-hae-crimson print:pointer-events-none">
-                  {t.name}
-                </Link>
-                <span className="shrink-0 text-xs text-hae-slate">{formatDate(t.dueDate)}</span>
-              </li>
-            ))}
-          </ul>
+        columns={[
+          { id: 'commitment', label: 'Commitment', type: 'text' },
+          { id: 'assignedTo', label: 'Assigned To', type: 'text' },
+          { id: 'dateStarted', label: 'Date Started', type: 'date' },
+          { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_ACTION_ITEM_STATUS_OPTIONS },
+        ]}
+        renderDetail={(row, { onClose, onChanged, onDeleted }) => (
+          <AdvancementActionItemDetailCard
+            item={row}
+            onClose={onClose}
+            onChanged={onChanged}
+            onDeleted={onDeleted}
+          />
         )}
-        <Link to="/my-tasks" className="mt-2 inline-block text-xs text-hae-crimson hover:underline print:hidden">
-          View All Action Items →
-        </Link>
-      </SectionCard>
-        )
-
-        sectionNodes.overdueItems = (
-      <SectionCard
-        title={sectionTitle('overdueItems', `Overdue Items (${overdueTasks.length})`)}
-        onTitleCommit={(v) => commitSectionTitle('overdueItems', v)}
-        tone={sectionTone('overdueItems', 'crimson')}
-        onToneCommit={(t) => commitSectionTone('overdueItems', t)}
-      >
-        {overdueTasks.length === 0 ? (
-          <p className="text-sm text-hae-slate">Nothing overdue.</p>
-        ) : (
-          <ul className="space-y-1.5 text-sm">
-            {overdueTasks.slice(0, 5).map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-2">
-                <Link to={`/my-tasks?task=${t.id}`} className="min-w-0 flex-1 truncate text-hae-ink hover:text-hae-crimson print:pointer-events-none">
-                  {t.name}
-                </Link>
-                <span className="shrink-0 text-xs text-hae-slate">
-                  Due {formatDate(t.dueDate)} · {namesLabel(t.owner) || 'Unassigned'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Link to="/my-tasks" className="mt-2 inline-block text-xs text-hae-crimson hover:underline print:hidden">
-          View All Overdue Items →
-        </Link>
-      </SectionCard>
+      />
         )
 
         sectionNodes.boardEngagement = (
@@ -1000,52 +945,6 @@ export default function AdvancementReport() {
           { id: 'status', label: 'Status', type: 'select', options: ADVANCEMENT_PROGRAM_STATUS_OPTIONS },
         ]}
       />
-        )
-
-        sectionNodes.recentWins = (
-      <SectionCard
-        title={sectionTitle('recentWins', 'Recent Wins')}
-        onTitleCommit={(v) => commitSectionTitle('recentWins', v)}
-        tone={sectionTone('recentWins', 'ink')}
-        onToneCommit={(t) => commitSectionTone('recentWins', t)}
-      >
-        {wins.length === 0 ? (
-          <p className="text-sm text-hae-slate">No recent wins entered yet.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 print:grid-cols-4">
-            {wins.map((w) => (
-              <div key={w.id} className="rounded-md border border-hae-line p-2 text-xs">
-                <div className="flex items-start justify-between gap-1">
-                  <InlineEdit
-                    value={w.title}
-                    display={w.title || '—'}
-                    type="textarea"
-                    className="min-w-0 flex-1 text-hae-ink"
-                    onCommit={(v) => updateWinField(w.id, 'title', v, false)}
-                  />
-                  <button
-                    type="button"
-                    className="shrink-0 text-hae-slate/50 hover:text-hae-red print:hidden"
-                    title="Delete win"
-                    onClick={() => removeWinRow(w.id)}
-                  >
-                    ×
-                  </button>
-                </div>
-                <InlineEdit
-                  value={w.date}
-                  display={w.date || '—'}
-                  className="mt-1 text-hae-slate"
-                  onCommit={(v) => updateWinField(w.id, 'date', v, false)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-        <button type="button" className="mt-3 text-xs text-hae-crimson hover:underline print:hidden" onClick={addWinRow}>
-          + Add Win
-        </button>
-      </SectionCard>
         )
 
         sectionNodes.comingUp = (
