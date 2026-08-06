@@ -355,23 +355,6 @@ function KpiTile({ label, value, goalLabel, status, goalValue, onCommitGoal }) {
   )
 }
 
-function Sparkline({ values }) {
-  if (!values.length) return <p className="text-xs text-hae-slate">No data yet.</p>
-  const w = 220
-  const h = 40
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const range = max - min || 1
-  const points = values
-    .map((v, i) => `${(i / (values.length - 1 || 1)) * w},${h - ((v - min) / range) * h}`)
-    .join(' ')
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-full text-green-700">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  )
-}
-
 const emptySummary = {}
 const emptyMembership = {}
 
@@ -492,16 +475,8 @@ export default function AdvancementReport() {
     () => ADVANCEMENT_MEMBERSHIP_TYPES.reduce((sum, t) => sum + (Number(membership[t.id]) || 0), 0),
     [membership]
   )
-  const growthHistory = useMemo(
-    () =>
-      String(membership.growthSeries || '')
-        .split(',')
-        .map((v) => Number(v.trim()))
-        .filter((v) => Number.isFinite(v)),
-    [membership.growthSeries]
-  )
-  const growthSeries = useMemo(() => [...growthHistory, totalMembers], [growthHistory, totalMembers])
-  const previousTotalMembers = growthHistory.length ? growthHistory[growthHistory.length - 1] : null
+  const previousTotalMembers =
+    membership.previousTotalMembers != null ? Number(membership.previousTotalMembers) : null
   const growthRate =
     previousTotalMembers != null && previousTotalMembers > 0
       ? Math.round(((totalMembers - previousTotalMembers) / previousTotalMembers) * 1000) / 10
@@ -605,8 +580,18 @@ export default function AdvancementReport() {
 
   const updateMembershipField = async (key, raw, numeric = true) => {
     const value = numeric ? Number(raw) || 0 : raw
-    setMembership((m) => ({ ...m, [key]: value }))
-    await setDoc(doc(db, 'trackerAdvancementMembership', 'main'), { [key]: value, updatedAt: serverTimestamp() }, { merge: true })
+    const today = new Date().toISOString().slice(0, 10)
+    const isMemberCount = ADVANCEMENT_MEMBERSHIP_TYPES.some((t) => t.id === key)
+    const snapshot =
+      isMemberCount && membership.lastEditDate !== today
+        ? { previousTotalMembers: totalMembers, previousTotalMembersDate: membership.lastEditDate || null, lastEditDate: today }
+        : {}
+    setMembership((m) => ({ ...m, [key]: value, ...snapshot }))
+    await setDoc(
+      doc(db, 'trackerAdvancementMembership', 'main'),
+      { [key]: value, ...snapshot, updatedAt: serverTimestamp() },
+      { merge: true }
+    )
   }
 
   const updatePipelineField = async (rowId, key, raw, numeric = false) => {
@@ -867,21 +852,12 @@ export default function AdvancementReport() {
             <p className={`font-display text-xl ${growthRate == null ? 'text-hae-ink' : growthRate >= 0 ? 'text-green-700' : 'text-hae-crimson'}`}>
               {growthRate != null ? `${growthRate > 0 ? '+' : ''}${growthRate}%` : '—'}
             </p>
+            {previousTotalMembers != null && (
+              <p className="mt-0.5 text-[10px] text-hae-slate">
+                vs {previousTotalMembers}{membership.previousTotalMembersDate ? ` on ${membership.previousTotalMembersDate}` : ' previously'}
+              </p>
+            )}
           </div>
-        </div>
-        <div className="mt-3">
-          <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Total Members — Trend</p>
-          <Sparkline values={growthSeries} />
-          <p className="mt-2 text-[11px] text-hae-slate print:hidden">
-            History (comma-separated, oldest → most recent before today):{' '}
-            <InlineEdit
-              value={membership.growthSeries || ''}
-              display={membership.growthSeries || 'Set history'}
-              className="text-hae-ink underline decoration-dotted"
-              inputClassName="w-64"
-              onCommit={(v) => updateMembershipField('growthSeries', v, false)}
-            />
-          </p>
         </div>
       </SectionCard>
         )
