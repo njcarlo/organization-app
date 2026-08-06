@@ -3,6 +3,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, s
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { TrashIcon } from './ActionIcons'
+import { LinksEditor, sanitizeLinks } from './Links'
 import { formatMoney } from '../utils'
 
 const fieldClass =
@@ -88,6 +89,8 @@ export default function AdvancementEditableList({
   columns: columnsProp,
   totals = false,
   tone = null,
+  renderDetail = null,
+  supportsLinks = false,
 }) {
   const [rows, setRows] = useState([])
   const [columns, setColumns] = useState(columnsProp)
@@ -100,6 +103,9 @@ export default function AdvancementEditableList({
   const [editingTitle, setEditingTitle] = useState(false)
   const [draggedColId, setDraggedColId] = useState(null)
   const [dragOverColId, setDragOverColId] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+
+  const selected = rows.find((r) => r.id === selectedId) || null
 
   const load = useCallback(async () => {
     setError('')
@@ -211,7 +217,7 @@ export default function AdvancementEditableList({
     }
   }
 
-  const openAdd = () => setAddForm(emptyFormFor(columns))
+  const openAdd = () => setAddForm({ ...emptyFormFor(columns), ...(supportsLinks ? { links: [] } : {}) })
   const closeAdd = () => {
     if (saving) return
     setAddForm(null)
@@ -229,6 +235,7 @@ export default function AdvancementEditableList({
         const raw = addForm[c.id] ?? ''
         payload[c.id] = NUMERIC_TYPES.has(c.type) ? Number(raw) || 0 : String(raw).trim()
       })
+      if (supportsLinks) payload.links = sanitizeLinks(addForm.links)
       await addDoc(collection(db, collectionPath), payload)
       setAddForm(null)
       await load()
@@ -245,7 +252,21 @@ export default function AdvancementEditableList({
     return col.type === 'currency' ? formatMoney(sum) : sum.toLocaleString()
   }
 
-  const renderCell = (row, col, align = 'text-center') => {
+  const renderCell = (row, col, align = 'text-center', idx = -1) => {
+    if (renderDetail) {
+      if (idx === 0) {
+        return (
+          <button
+            type="button"
+            onClick={() => setSelectedId(row.id)}
+            className={`w-full ${align} text-hae-crimson hover:underline print:text-hae-ink print:no-underline`}
+          >
+            {displayValue(col, row[col.id])}
+          </button>
+        )
+      }
+      return <span className={`block w-full ${align}`}>{displayValue(col, row[col.id])}</span>
+    }
     const isEditing = editingCell?.rowId === row.id && editingCell?.colId === col.id
     if (isEditing) {
       if (col.type === 'select') {
@@ -374,16 +395,28 @@ export default function AdvancementEditableList({
             {rows.map((r) => (
               <div key={r.id} className="hae-mobile-card">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <span className="hae-mobile-card__title min-w-0 flex-1">{displayValue(columns[0], r[columns[0].id])}</span>
-                  <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
-                    <TrashIcon className="h-4 w-4" />
-                  </button>
+                  {renderDetail ? (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(r.id)}
+                      className="hae-mobile-card__title min-w-0 flex-1 text-left text-hae-crimson"
+                    >
+                      {displayValue(columns[0], r[columns[0].id])}
+                    </button>
+                  ) : (
+                    <span className="hae-mobile-card__title min-w-0 flex-1">{displayValue(columns[0], r[columns[0].id])}</span>
+                  )}
+                  {!renderDetail && (
+                    <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
                 <div className="hae-mobile-card__meta">
-                  {columns.slice(1).map((c) => (
+                  {columns.slice(1).map((c, i) => (
                     <span key={c.id}>
                       <span className="font-semibold text-hae-ink/70">{c.label}: </span>
-                      {renderCell(r, c)}
+                      {renderCell(r, c, 'text-center', i + 1)}
                     </span>
                   ))}
                 </div>
@@ -434,7 +467,7 @@ export default function AdvancementEditableList({
                       </th>
                     )
                   })}
-                  <th className="px-2 py-2 print:hidden" />
+                  {!renderDetail && <th className="px-2 py-2 print:hidden" />}
                 </tr>
               </thead>
               <tbody>
@@ -442,14 +475,16 @@ export default function AdvancementEditableList({
                   <tr key={r.id} className="border-b border-hae-line/60 last:border-0 hover:bg-hae-mist/50">
                     {columns.map((col, idx) => (
                       <td key={col.id} className={`px-4 py-2 ${idx === 0 ? 'text-left font-medium' : 'text-center'}`}>
-                        {renderCell(r, col, idx === 0 ? 'text-left' : 'text-center')}
+                        {renderCell(r, col, idx === 0 ? 'text-left' : 'text-center', idx)}
                       </td>
                     ))}
-                    <td className="px-2 py-2 text-center print:hidden">
-                      <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </td>
+                    {!renderDetail && (
+                      <td className="px-2 py-2 text-center print:hidden">
+                        <button type="button" className="text-hae-slate hover:text-hae-red" title="Delete" aria-label="Delete" onClick={() => removeRow(r.id)}>
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -461,7 +496,7 @@ export default function AdvancementEditableList({
                         {idx === 0 ? 'TOTAL' : columnTotal(col)}
                       </td>
                     ))}
-                    <td className="print:hidden" />
+                    {!renderDetail && <td className="print:hidden" />}
                   </tr>
                 </tfoot>
               )}
@@ -522,9 +557,26 @@ export default function AdvancementEditableList({
                 )}
               </Field>
             ))}
+            {supportsLinks && (
+              <LinksEditor
+                className="sm:col-span-2"
+                links={addForm.links}
+                onChange={(links) => setAddForm({ ...addForm, links })}
+              />
+            )}
           </form>
         </Modal>
       )}
+
+      {renderDetail && selected &&
+        renderDetail(selected, {
+          onClose: () => setSelectedId(null),
+          onChanged: load,
+          onDeleted: () => {
+            setSelectedId(null)
+            load()
+          },
+        })}
     </section>
   )
 }
