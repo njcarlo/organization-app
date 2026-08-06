@@ -3,6 +3,7 @@ import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, setDoc, upda
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import AdvancementProgramDetailCard from './AdvancementProgramDetailCard'
+import { LinksEditor, sanitizeLinks } from './Links'
 import { ADVANCEMENT_PROGRAM_STATUS_OPTIONS } from '../constants'
 import {
   advancementProgramStatusBadgeClass,
@@ -16,7 +17,6 @@ const fieldClass =
 
 const DEFAULT_COLUMNS = [
   { id: 'name', label: 'Program', type: 'text', builtin: true },
-  { id: 'purpose', label: 'Purpose', type: 'text', builtin: true },
   { id: 'revenue', label: 'Revenue (YTD)', type: 'currency', builtin: true },
   { id: 'goal', label: 'Goal', type: 'currency', builtin: true },
   { id: 'forecast', label: 'Forecast', type: 'currency', builtin: true },
@@ -37,12 +37,12 @@ const alignClass = (idx) => (idx === 0 ? 'text-left' : 'text-center')
 
 const emptyForm = {
   name: '',
-  purpose: '',
   revenue: '',
   goal: '',
   forecast: '',
   status: ADVANCEMENT_PROGRAM_STATUS_OPTIONS[0],
   impactHighlights: '',
+  links: [],
   customFields: {},
 }
 
@@ -111,11 +111,21 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
     try {
       const snap = await getDoc(doc(db, 'trackerAdvancementColumns', 'programColumns'))
       const saved = snap.exists() ? snap.data().columns : null
-      if (Array.isArray(saved) && saved.length) setColumns(saved)
+      if (Array.isArray(saved) && saved.length) {
+        // Self-heal saved layouts from before the Purpose column was retired.
+        const cleaned = saved.filter((c) => c.id !== 'purpose')
+        setColumns(cleaned)
+        if (!readOnly && cleaned.length !== saved.length) {
+          setDoc(doc(db, 'trackerAdvancementColumns', 'programColumns'), {
+            columns: cleaned,
+            updatedAt: serverTimestamp(),
+          }).catch(() => {})
+        }
+      }
     } catch {
       // fall back silently to DEFAULT_COLUMNS
     }
-  }, [])
+  }, [readOnly])
 
   useEffect(() => {
     load()
@@ -237,12 +247,12 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
       })
       await addDoc(collection(db, 'trackerAdvancementPrograms'), {
         name: form.name.trim(),
-        purpose: form.purpose.trim(),
         revenue: Number(form.revenue) || 0,
         goal: Number(form.goal) || 0,
         forecast: Number(form.forecast) || 0,
         status: form.status,
         impactHighlights: form.impactHighlights.trim(),
+        links: sanitizeLinks(form.links),
         customFields,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
@@ -278,7 +288,6 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
         </button>
       )
     }
-    if (col.id === 'purpose') return row.purpose || '—'
     if (col.id === 'revenue' || col.id === 'goal' || col.id === 'forecast') return formatMoney(row[col.id])
     if (col.id === 'pctToGoal') {
       const pct = pctToGoal(row.revenue, row.goal)
@@ -502,9 +511,7 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
                     {columns.map((col, idx) => (
                       <td
                         key={col.id}
-                        className={`px-4 py-2 ${alignClass(idx)} ${
-                          col.id === 'name' ? 'font-medium' : ''
-                        } ${col.id === 'purpose' ? 'max-w-[16rem] text-hae-slate' : ''}`}
+                        className={`px-4 py-2 ${alignClass(idx)} ${col.id === 'name' ? 'font-medium' : ''}`}
                       >
                         {renderCell(r, col)}
                       </td>
@@ -575,14 +582,6 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
                 onChange={(e) => setAddModal({ form: { ...addModal.form, name: e.target.value } })}
               />
             </Field>
-            <Field label="Purpose" className="sm:col-span-2">
-              <textarea
-                rows={2}
-                className={fieldClass}
-                value={addModal.form.purpose}
-                onChange={(e) => setAddModal({ form: { ...addModal.form, purpose: e.target.value } })}
-              />
-            </Field>
             <Field label="Revenue (YTD)">
               <input
                 type="number"
@@ -635,6 +634,11 @@ const AdvancementProgramsTable = forwardRef(function AdvancementProgramsTable({ 
                 onChange={(e) => setAddModal({ form: { ...addModal.form, impactHighlights: e.target.value } })}
               />
             </Field>
+            <LinksEditor
+              className="sm:col-span-2"
+              links={addModal.form.links}
+              onChange={(links) => setAddModal({ form: { ...addModal.form, links } })}
+            />
             {columns
               .filter((c) => !c.builtin)
               .map((c) => (
