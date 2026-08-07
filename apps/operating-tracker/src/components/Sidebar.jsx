@@ -601,7 +601,7 @@ export default function Sidebar({ open = false, onClose }) {
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/activity', label: 'Activity', icon: 'history' },
-          { to: '/advancement-dashboard', label: 'HAE Advancement', icon: 'chart' },
+          { to: '/advancement-dashboard', label: 'Advancement and Programming', icon: 'chart' },
         ]
     if (isExecInboxUser) {
       workspaceItems.push({
