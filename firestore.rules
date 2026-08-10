@@ -107,6 +107,9 @@ service cloud.firestore {
     match /trackerEventChecklist/{id} {
       allow read, write: if isStaff();
     }
+    match /academyEvents/{id} {
+      allow read, write: if isStaff();
+    }
     match /trackerGraphics/{id} {
       allow read, write: if isStaff();
     }
