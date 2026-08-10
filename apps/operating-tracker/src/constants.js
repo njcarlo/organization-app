@@ -15,6 +15,7 @@ export const DEFAULT_PROGRAMS = [
 export const TASK_STATUSES = [
   'Not Started',
   'Ongoing',
+  'In Process',
   'Needs Attention',
   'Time Sensitive',
   'Complete',
@@ -40,6 +41,7 @@ export const EXEC_INBOX_EMAILS = ['rmarchadesch@harvardae.org', 'rryan@harvardae
 export const HEALTH_OPTIONS = [
   { value: 'not-started', label: 'Not Started', className: 'bg-gray-200 text-black' },
   { value: 'ongoing', label: 'Ongoing', className: 'bg-orange-200 text-amber-900' },
+  { value: 'in-process', label: 'In Process', className: 'bg-orange-200 text-amber-900' },
   { value: 'needs-attention', label: 'Needs Attention', className: 'bg-yellow-200 text-black' },
   { value: 'time-sensitive', label: 'Time Sensitive', className: 'bg-hae-crimson text-white' },
   { value: 'completed', label: 'Complete', className: 'bg-green-900 text-green-400' },
@@ -76,6 +78,7 @@ export const EVENT_TYPE_OPTIONS = [
 export const GRAPHICS_STATUS_OPTIONS = [
   'Not Started',
   'Ongoing',
+  'In Process',
   'Ready for posting',
   'For Approval by Regina',
   'Complete',
@@ -91,6 +94,7 @@ export const MEMBERSHIP_STATUS_OPTIONS = [
 
 export const ADVANCEMENT_PROGRAM_STATUS_OPTIONS = [
   'On Track',
+  'In Process',
   'At Risk',
   'Behind',
 ]
@@ -111,12 +115,14 @@ export const ADVANCEMENT_PARTNERSHIP_TYPE_OPTIONS = [
 
 export const ADVANCEMENT_PARTNERSHIP_STATUS_OPTIONS = [
   'Prospect',
+  'In Process',
   'Approved',
 ]
 
 export const ADVANCEMENT_ACTION_ITEM_STATUS_OPTIONS = [
   'Not Started',
   'In Progress',
+  'In Process',
   'Attention Required',
 ]
 

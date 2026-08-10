@@ -3,11 +3,12 @@ export const LEARNING_PATHS = [
   { value: 'flagship', label: 'Flagship (Deep Dive)' },
 ]
 
-export const COURSE_STATUSES = ['Draft', 'Open', 'In Progress', 'Completed', 'Archived']
+export const COURSE_STATUSES = ['Draft', 'Open', 'In Progress', 'In Process', 'Completed', 'Archived']
 
 export const ENROLLMENT_STATUSES = [
   'Enrolled',
   'In Progress',
+  'In Process',
   'Completed',
   'Certificate Eligible',
   'Withdrawn',

@@ -1,5 +1,6 @@
 export const MEMBER_STATUSES = [
   { value: 'active', label: 'Active' },
+  { value: 'in-process', label: 'In Process' },
   { value: 'lapsed', label: 'Lapsed' },
   { value: 'alumni', label: 'Alumni' },
 ]
