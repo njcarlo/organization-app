@@ -140,6 +140,21 @@ export default function MoveCopyProjectModal({
             programId: target.id,
             order: nextOrder,
           })
+
+          const projectTasksSnap = await getDocs(
+            query(collection(db, 'tasks'), where('projectId', '==', project.id))
+          )
+          if (!projectTasksSnap.empty) {
+            const taskBatch = writeBatch(db)
+            projectTasksSnap.docs.forEach((d) => {
+              taskBatch.update(d.ref, {
+                programId: target.id,
+                programName: target.name,
+              })
+            })
+            await taskBatch.commit()
+          }
+
           logHistory({
             parentType: 'projects',
             parentId: project.id,
