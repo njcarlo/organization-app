@@ -18,4 +18,4 @@ export const EXPERTISE_SUGGESTIONS = [
   'Board / Governance',
 ]
 
-export const EXPERT_STATUSES = ['Active', 'Inactive', 'On Leave']
+export const EXPERT_STATUSES = ['Active', 'In Process', 'Inactive', 'On Leave']
