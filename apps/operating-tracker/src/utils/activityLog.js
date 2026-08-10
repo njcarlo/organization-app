@@ -23,6 +23,17 @@ const PROJECT_FIELDS = [
   { key: 'notes', label: 'Notes' },
 ]
 
+const SOCIAL_POST_FIELDS = [
+  { key: 'creative', label: 'Creative' },
+  { key: 'status', label: 'Status' },
+  { key: 'dateOfPosting', label: 'Date of Posting' },
+  { key: 'graphicsStatus', label: 'Graphics Status' },
+  { key: 'fileUrl', label: 'File' },
+  { key: 'hashtags', label: 'Hashtags' },
+  { key: 'linkedinGroups', label: 'LinkedIn Groups' },
+  { key: 'peopleToTag', label: 'People to Tag' },
+]
+
 function displayValue(value) {
   if (value == null || value === '') return '—'
   if (Array.isArray(value)) {
@@ -59,6 +70,11 @@ export function diffTaskFields(before, after) {
 /** Diff the user-facing project fields that changed between two versions of a project doc. */
 export function diffProjectFields(before, after) {
   return diffFields(before, after, PROJECT_FIELDS)
+}
+
+/** Diff the user-facing fields that changed between two versions of a social media post doc. */
+export function diffSocialPostFields(before, after) {
+  return diffFields(before, after, SOCIAL_POST_FIELDS)
 }
 
 /**

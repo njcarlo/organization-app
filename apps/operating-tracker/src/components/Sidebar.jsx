@@ -67,6 +67,7 @@ const DEFAULT_SECTION_ORDER = [
   'documents',
   'events',
   'graphics',
+  'content',
   'data',
   'board-commitments',
   'chapters',
@@ -654,6 +655,7 @@ export default function Sidebar({ open = false, onClose }) {
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
         { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
+        { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
         ...academyPrograms.map((p) => ({
           id: p.id,
           to: `/academy/${p.id}`,
@@ -722,6 +724,12 @@ export default function Sidebar({ open = false, onClose }) {
           actions: categoryActions('trackerGraphics', p),
         })),
       ],
+    })
+
+    next.push({
+      id: 'content',
+      label: 'Content',
+      items: [{ to: '/content-calendar', label: 'Social Media Calendar', icon: 'calendar' }],
     })
 
     next.push({

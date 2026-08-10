@@ -84,6 +84,25 @@ export const GRAPHICS_STATUS_OPTIONS = [
   'Complete',
 ]
 
+export const SOCIAL_POST_STATUS_OPTIONS = [
+  { value: 'Working on it', label: 'Working on it', className: 'bg-amber-400 text-black' },
+  { value: 'Postponed', label: 'Postponed', className: 'bg-orange-700 text-white' },
+  { value: 'Ready for posting', label: 'Ready for posting', className: 'bg-blue-600 text-white' },
+  { value: 'Check Subitems', label: 'Check Subitems', className: 'bg-cyan-600 text-white' },
+  { value: 'On Hold', label: 'On Hold', className: 'bg-yellow-600 text-white' },
+  { value: 'Stuck', label: 'Stuck', className: 'bg-hae-crimson text-white' },
+  { value: 'Done', label: 'Done', className: 'bg-green-700 text-white' },
+  { value: 'Cancelled', label: 'Cancelled', className: 'bg-slate-500 text-white' },
+  { value: 'Waiting', label: 'Waiting', className: 'bg-purple-600 text-white' },
+]
+
+export const SOCIAL_GRAPHICS_STATUS_OPTIONS = [
+  { value: 'Waiting for Approval', label: 'Waiting for Approval', className: 'bg-yellow-500 text-black' },
+  { value: 'Approved', label: 'Approved', className: 'bg-green-700 text-white' },
+  { value: 'Need revisions', label: 'Need revisions', className: 'bg-hae-crimson text-white' },
+  { value: 'Waiting', label: 'Waiting', className: 'bg-purple-600 text-white' },
+]
+
 export const MEMBERSHIP_STATUS_OPTIONS = [
   'Non-Member',
   'Full Member',

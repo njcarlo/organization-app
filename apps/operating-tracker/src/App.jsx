@@ -9,6 +9,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import EventsDashboard from './pages/EventsDashboard'
 import GraphicsDashboard from './pages/GraphicsDashboard'
+import ContentCalendar from './pages/ContentCalendar'
 import ChapterLeaderDashboard from './pages/ChapterLeaderDashboard'
 import AdvancementDashboard from './pages/AdvancementDashboard'
 import Activity from './pages/Activity'
@@ -17,6 +18,7 @@ import CategoryProgramPage from './pages/CategoryProgramPage'
 import CustomSectionItemPage from './pages/CustomSectionItemPage'
 import CourseRegistrations from './pages/CourseRegistrations'
 import AcademyLinks from './pages/AcademyLinks'
+import AcademyCalendar from './pages/AcademyCalendar'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
@@ -122,6 +124,14 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/content-calendar"
+                  element={
+                    <SectionRoute sectionId="content">
+                      <ContentCalendar />
+                    </SectionRoute>
+                  }
+                />
+                <Route
                   path="/chapter-leader-dashboard"
                   element={
                     <SectionRoute sectionId="chapters">
@@ -190,6 +200,14 @@ export default function App() {
                   element={
                     <SectionRoute sectionId="academy">
                       <AcademyLinks />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/academy/calendar"
+                  element={
+                    <SectionRoute sectionId="academy">
+                      <AcademyCalendar />
                     </SectionRoute>
                   }
                 />

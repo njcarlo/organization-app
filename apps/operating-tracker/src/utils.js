@@ -1,4 +1,11 @@
-import { EVENT_TYPE_OPTIONS, HEALTH_ALIASES, TASK_STATUSES, TASK_STATUS_ALIASES } from './constants'
+import {
+  EVENT_TYPE_OPTIONS,
+  HEALTH_ALIASES,
+  SOCIAL_GRAPHICS_STATUS_OPTIONS,
+  SOCIAL_POST_STATUS_OPTIONS,
+  TASK_STATUSES,
+  TASK_STATUS_ALIASES,
+} from './constants'
 
 /** Maps legacy task status strings onto the current 5-status hierarchy. */
 export function normalizeTaskStatus(status) {
@@ -153,6 +160,16 @@ export function graphicsStatusBadgeClass(status) {
   if (status === 'For Approval by Regina') return 'bg-hae-crimson text-white'
   if (status === 'Complete') return 'bg-green-900 text-green-400'
   return 'bg-gray-200 text-black'
+}
+
+export function socialPostStatusBadgeClass(status) {
+  return SOCIAL_POST_STATUS_OPTIONS.find((s) => s.value === status)?.className || 'bg-gray-200 text-black'
+}
+
+export function socialGraphicsStatusBadgeClass(status) {
+  return (
+    SOCIAL_GRAPHICS_STATUS_OPTIONS.find((s) => s.value === status)?.className || 'bg-gray-200 text-black'
+  )
 }
 
 export function membershipStatusBadgeClass(status) {
