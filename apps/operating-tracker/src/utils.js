@@ -91,6 +91,15 @@ export function projectNameOf(task, projectsById) {
   return task.projectName || projectsById[task.projectId]?.name || '—'
 }
 
+// Projects don't have their own page — they're shown inline on their
+// program's page — so both the Program and Project rows link there.
+export function programPathOf(task, programsById) {
+  if (!task.programId) return null
+  const program = programsById[task.programId]
+  if (!program) return null
+  return `${program.pathPrefix || '/programs'}/${task.programId}`
+}
+
 export function priorityBadgeClass(priority) {
   if (priority === 'HIGH') return 'bg-red-100 text-hae-red'
   if (priority === 'MEDIUM') return 'bg-amber-100 text-hae-yellow'

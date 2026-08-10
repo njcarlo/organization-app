@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { doc, updateDoc } from 'firebase/firestore'
 import { Modal, Linkify } from '@hae/ui'
 import { db } from '../firebase'
@@ -16,6 +17,7 @@ import {
   normalizeTaskStatus,
   priorityBadgeClass,
   programNameOf,
+  programPathOf,
   projectNameOf,
   statusBadgeClass,
   toNameList,
@@ -35,7 +37,7 @@ function Field({ label, children, className = '' }) {
   )
 }
 
-function Row({ label, value }) {
+function Row({ label, value, to, onNavigate }) {
   if (value == null) return null
   return (
     <div className="grid grid-cols-[7rem_1fr] gap-2 border-b border-hae-line/60 py-2 last:border-0 sm:grid-cols-[8.5rem_1fr]">
@@ -43,7 +45,13 @@ function Row({ label, value }) {
         {label}
       </dt>
       <dd className="text-sm text-hae-ink break-words">
-        <Linkify text={value} />
+        {to && value !== '—' ? (
+          <Link to={to} onClick={onNavigate} className="text-hae-crimson hover:underline">
+            {value}
+          </Link>
+        ) : (
+          <Linkify text={value} />
+        )}
       </dd>
     </div>
   )
@@ -324,7 +332,13 @@ export default function TaskDetailPopup({
                 className={priorityBadgeClass(row.value)}
               />
             ) : (
-              <Row key={row.label} label={row.label} value={row.value} />
+              <Row
+                key={row.label}
+                label={row.label}
+                value={row.value}
+                to={row.to}
+                onNavigate={handleClose}
+              />
             )
           )}
         </dl>
@@ -342,12 +356,13 @@ export default function TaskDetailPopup({
 
 export function taskDetailRows(task, { programsById = {}, projectsById = {} } = {}) {
   if (!task) return []
+  const programPath = programPathOf(task, programsById)
   return [
     { label: 'Status', value: normalizeTaskStatus(task.status) || 'Not Started' },
     { label: 'Due', value: formatDate(task.dueDate) },
     { label: 'Owner', value: namesLabel(task.owner) || '—' },
-    { label: 'Program', value: programNameOf(task, programsById) },
-    { label: 'Project', value: projectNameOf(task, projectsById) },
+    { label: 'Program', value: programNameOf(task, programsById), to: programPath },
+    { label: 'Project', value: projectNameOf(task, projectsById), to: programPath },
     { label: 'Priority', value: effectivePriority(task) },
     { label: 'Waiting on', value: task.waitingOn || '—' },
     { label: 'Leadership', value: task.leadershipAttention || 'None' },
