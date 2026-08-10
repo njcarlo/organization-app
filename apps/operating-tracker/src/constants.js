@@ -124,6 +124,7 @@ export const ADVANCEMENT_ACTION_ITEM_STATUS_OPTIONS = [
   'In Progress',
   'In Process',
   'Attention Required',
+  'Complete',
 ]
 
 export const ADVANCEMENT_MEMBERSHIP_TYPES = [

@@ -18,12 +18,9 @@ import {
 } from '../constants'
 import {
   advancementProgramStatusDotClass,
-  daysUntil,
-  effectivePriority,
   formatDate,
   formatLongDate,
   formatMoney,
-  normalizeTaskStatus,
   pctToGoal,
 } from '../utils'
 
@@ -369,9 +366,9 @@ export default function AdvancementReport() {
   const [financials, setFinancials] = useState([])
   const [pipeline, setPipeline] = useState([])
   const [partnerships, setPartnerships] = useState([])
-  const [tasks, setTasks] = useState([])
   const [events, setEvents] = useState([])
   const [customSections, setCustomSections] = useState([])
+  const [actionItems, setActionItems] = useState([])
   const [loadError, setLoadError] = useState('')
   const [draggedSectionKey, setDraggedSectionKey] = useState(null)
   const [dragOverSectionKey, setDragOverSectionKey] = useState(null)
@@ -387,7 +384,6 @@ export default function AdvancementReport() {
         financialsSnap,
         pipelineSnap,
         partnershipsSnap,
-        tasksSnap,
         eventsSnap,
         customSectionsSnap,
       ] = await Promise.all([
@@ -396,7 +392,6 @@ export default function AdvancementReport() {
         getDocs(collection(db, 'trackerAdvancementFinancials')),
         getDocs(collection(db, 'trackerAdvancementPipeline')),
         getDocs(collection(db, 'trackerAdvancementPartnerships')),
-        getDocs(collection(db, 'tasks')),
         getDocs(collection(db, 'trackerEvents')),
         getDocs(collection(db, 'trackerAdvancementCustomSections')),
       ])
@@ -405,7 +400,6 @@ export default function AdvancementReport() {
       setFinancials(sortByOrder(financialsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setPipeline(sortByOrder(pipelineSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
       setPartnerships(sortByOrder(partnershipsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-      setTasks(tasksSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setEvents(eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
       setCustomSections(sortByOrder(customSectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))))
     } catch (err) {
@@ -429,23 +423,12 @@ export default function AdvancementReport() {
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
-  const highPriorityTasks = useMemo(() => {
-    const list = tasks.filter(
-      (t) =>
-        normalizeTaskStatus(t.status) !== 'Complete' &&
-        (effectivePriority(t) === 'HIGH' || (t.leadershipAttention && t.leadershipAttention !== 'None'))
-    )
-    list.sort((a, b) => (a.dueDate || '9999-99-99').localeCompare(b.dueDate || '9999-99-99'))
-    return list
-  }, [tasks])
+  const excludeCompleteActionItems = useCallback((list) => list.filter((r) => r.status !== 'Complete'), [])
 
-  const overdueTasks = useMemo(() => {
-    const list = tasks.filter(
-      (t) => normalizeTaskStatus(t.status) !== 'Complete' && t.dueDate && daysUntil(t.dueDate) < 0
-    )
-    list.sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-    return list
-  }, [tasks])
+  const attentionRequiredActionItems = useMemo(
+    () => actionItems.filter((i) => i.status === 'Attention Required'),
+    [actionItems]
+  )
 
   const comingUpEvents = useMemo(() => {
     const list = events.filter((e) => (e.eventDate || '') >= todayStr)
@@ -705,9 +688,9 @@ export default function AdvancementReport() {
         />
         <KpiTile
           label="Open Action Items"
-          value={highPriorityTasks.length}
-          goalLabel={`${overdueTasks.length} Overdue`}
-          status={overdueTasks.length > 0 ? 'Behind' : 'On Track'}
+          value={actionItems.length}
+          goalLabel={`${attentionRequiredActionItems.length} Need Attention`}
+          status={attentionRequiredActionItems.length > 0 ? 'Behind' : 'On Track'}
         />
         <KpiTile
           label="Overall Health Score"
@@ -910,6 +893,8 @@ export default function AdvancementReport() {
         collectionPath="trackerAdvancementActionItems"
         tone={sectionTone('highPriorityActionItems', 'orange')}
         onToneCommit={(t) => commitSectionTone('highPriorityActionItems', t)}
+        onRowsChange={setActionItems}
+        filterRows={excludeCompleteActionItems}
         columns={[
           { id: 'commitment', label: 'Commitment', type: 'text' },
           { id: 'assignedTo', label: 'Assigned To', type: 'text' },

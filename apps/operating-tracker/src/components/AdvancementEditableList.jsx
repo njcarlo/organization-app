@@ -92,6 +92,8 @@ export default function AdvancementEditableList({
   tone = null,
   renderDetail = null,
   supportsLinks = false,
+  onRowsChange = null,
+  filterRows = null,
 }) {
   const [rows, setRows] = useState([])
   const [columns, setColumns] = useState(columnsProp)
@@ -112,15 +114,17 @@ export default function AdvancementEditableList({
     setError('')
     try {
       const snap = await getDocs(collection(db, collectionPath))
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      let list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+      if (filterRows) list = filterRows(list)
       setRows(list)
+      onRowsChange?.(list)
     } catch (err) {
       setError(err.message || `Failed to load ${title}`)
     } finally {
       setLoading(false)
     }
-  }, [collectionPath, title])
+  }, [collectionPath, title, onRowsChange, filterRows])
 
   const loadColumnLayout = useCallback(async () => {
     try {
