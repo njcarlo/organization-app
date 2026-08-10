@@ -4,6 +4,7 @@ import {
   healthLabel,
   namesLabel,
   programNameOf,
+  programPathOf,
   projectNameOf,
 } from '../utils'
 import CommentIndicator from './CommentIndicator'
@@ -209,8 +210,16 @@ export default function AttentionSection({
             ? [
                 { label: 'Type', value: 'Project' },
                 { label: 'Issue', value: selected.issue },
-                { label: 'Program', value: selected.programName || '—' },
-                { label: 'Project', value: selected.projectName || '—' },
+                {
+                  label: 'Program',
+                  value: selected.programName || '—',
+                  to: programPathOf(selected, programsById),
+                },
+                {
+                  label: 'Project',
+                  value: selected.projectName || '—',
+                  to: programPathOf(selected, programsById),
+                },
                 { label: 'Owner', value: selected.owner || '—' },
                 { label: 'Due', value: formatDate(selected.dueDate) },
               ]

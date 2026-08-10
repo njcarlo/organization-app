@@ -41,6 +41,7 @@ export default function Dashboard() {
           id: d.id,
           ...d.data(),
           category: CATEGORIES[i].id,
+          pathPrefix: CATEGORIES[i].pathPrefix,
         }))
       )
     )

@@ -85,6 +85,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [genericForm, setGenericForm] = useState(null)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [moveModal, setMoveModal] = useState(null)
+  const [promoting, setPromoting] = useState(false)
 
   const load = useCallback(async () => {
     setError('')
@@ -391,6 +392,35 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
     }
   }
 
+  // Sub-items (customSectionItems) live inside a user-created customSections
+  // "category". Promoting one detaches it into a brand-new section of its own
+  // so it shows in the sidebar as a top-level category — projects/tasks stay
+  // keyed to the same itemId, so nothing underneath it moves.
+  const promoteToCategory = async () => {
+    if (promoting) return
+    if (
+      !confirm(
+        `Move "${program.name}" out of this section and make it its own top-level category? Its projects and tasks are unaffected.`
+      )
+    )
+      return
+    setPromoting(true)
+    try {
+      const sectionsSnap = await getDocs(collection(db, 'customSections'))
+      const maxOrder = sectionsSnap.docs.reduce((m, d) => Math.max(m, d.data().order ?? 0), -1)
+      const sectionRef = await addDoc(collection(db, 'customSections'), {
+        label: program.name,
+        order: maxOrder + 1,
+        createdAt: serverTimestamp(),
+      })
+      await updateDoc(doc(db, 'customSectionItems', itemId), { sectionId: sectionRef.id })
+      navigate(`/custom-sections/${sectionRef.id}/${itemId}`)
+    } catch (err) {
+      setError(err.message || 'Failed to promote to category')
+      setPromoting(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-hae-slate">Loading…</p>
   if (error) return <p className="text-sm text-hae-red">{error}</p>
   if (!program)
@@ -620,6 +650,16 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           {isGenericEditable ? (
             <button type="button" onClick={startEditGeneric} className="hae-btn-secondary">
               Edit
+            </button>
+          ) : null}
+          {collectionName === 'customSectionItems' ? (
+            <button
+              type="button"
+              onClick={promoteToCategory}
+              disabled={promoting}
+              className="hae-btn-secondary disabled:opacity-60"
+            >
+              {promoting ? 'Promoting…' : 'Promote to Category'}
             </button>
           ) : null}
         </div>
