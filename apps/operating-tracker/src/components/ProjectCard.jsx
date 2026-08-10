@@ -1,5 +1,14 @@
 import { useMemo, useRef, useState } from 'react'
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+  writeBatch,
+} from 'firebase/firestore'
 import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
@@ -77,6 +86,20 @@ export default function ProjectCard({
       notes: draft.notes.trim(),
     }
     await updateDoc(doc(db, 'projects', project.id), payload)
+
+    if (payload.name !== project.name) {
+      const projectTasksSnap = await getDocs(
+        query(collection(db, 'tasks'), where('projectId', '==', project.id))
+      )
+      if (!projectTasksSnap.empty) {
+        const taskBatch = writeBatch(db)
+        projectTasksSnap.docs.forEach((d) => {
+          taskBatch.update(d.ref, { projectName: payload.name })
+        })
+        await taskBatch.commit()
+      }
+    }
+
     const changes = diffProjectFields(project, payload)
     if (changes.length) {
       logHistory({
