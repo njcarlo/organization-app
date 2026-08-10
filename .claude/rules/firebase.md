@@ -23,6 +23,13 @@ globs: firestore.rules,firebase.json,packages/firebase/**/*,functions/**/*,**/fi
 - Queries must match rules (public EiR directory uses `where('status','==','Active')`).
 - Do not expose emails on public UI even if the field exists on the document.
 
+## Files / attachments
+
+- No Firebase Storage in this app — Storage requires the Blaze plan even for free-tier usage (Google's Oct 2024
+  policy change), which this project doesn't carry. Attachment fields (Graphics `url`, Documents & Assets,
+  Social Media Calendar `fileUrl`) store a **link** (Google Drive/Dropbox) instead of an uploaded file — keep new
+  "file" fields consistent with this.
+
 ## Hosting
 
 - Multi-site targets in `firebase.json` / `.firebaserc` (`tracker`, `lms`, `eir`, `crm`, `ams`, `hub` + legacy).

@@ -9,6 +9,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import EventsDashboard from './pages/EventsDashboard'
 import GraphicsDashboard from './pages/GraphicsDashboard'
+import ContentCalendar from './pages/ContentCalendar'
 import ChapterLeaderDashboard from './pages/ChapterLeaderDashboard'
 import AdvancementDashboard from './pages/AdvancementDashboard'
 import Activity from './pages/Activity'
@@ -119,6 +120,14 @@ export default function App() {
                   element={
                     <SectionRoute sectionId="graphics">
                       <GraphicsDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/content-calendar"
+                  element={
+                    <SectionRoute sectionId="content">
+                      <ContentCalendar />
                     </SectionRoute>
                   }
                 />

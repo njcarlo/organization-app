@@ -37,6 +37,7 @@ export const TRACKER_SECTIONS = [
     pathPrefix: '/board-commitments',
   },
   { id: 'chapters', label: 'Chapters', landingPath: '/chapter-leader-dashboard', pathPrefix: '/chapters' },
+  { id: 'content', label: 'Content', landingPath: '/content-calendar', pathPrefix: '/content-calendar' },
 ]
 
 const sortByOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0)
