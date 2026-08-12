@@ -325,10 +325,11 @@ export default function Sidebar({ open = false, onClose }) {
     ...(meta.showChapterFields ? { chapterLeader: '', coLeaders: '' } : {}),
   })
 
-  const openAddCategory = (collectionName, sectionId) => {
+  const openAddCategory = (collectionName, sectionId, groupId) => {
     setEditCategoryModal({
       collectionName,
       sectionId,
+      groupId,
       id: null,
       form: emptyCategoryForm(CATEGORY_META[collectionName]),
     })
@@ -382,7 +383,7 @@ export default function Sidebar({ open = false, onClose }) {
   const submitEditCategory = async (e) => {
     e.preventDefault()
     if (!editCategoryModal?.form.name.trim() || saving) return
-    const { collectionName, id, sectionId, form } = editCategoryModal
+    const { collectionName, id, sectionId, groupId, form } = editCategoryModal
     const meta = CATEGORY_META[collectionName]
     const data = {
       name: form.name.trim(),
@@ -420,6 +421,7 @@ export default function Sidebar({ open = false, onClose }) {
         await addDoc(collection(db, collectionName), {
           ...data,
           ...(collectionName === 'customSectionItems' ? { sectionId } : {}),
+          ...(groupId ? { groupId } : {}),
           createdAt: serverTimestamp(),
         })
         if (collectionName === 'chapters') {
@@ -457,7 +459,7 @@ export default function Sidebar({ open = false, onClose }) {
   const groupsForKey = (sectionKey) =>
     sidebarGroups.filter((g) => g.sectionKey === sectionKey).sort(sortByOrder)
 
-  const partitionByGroup = (rows, groupDefs) => {
+  const partitionByGroup = (rows, groupDefs, collectionName, sectionId) => {
     const byGroupId = new Map(groupDefs.map((g) => [g.id, []]))
     const ungrouped = []
     rows.forEach((row) => {
@@ -470,6 +472,15 @@ export default function Sidebar({ open = false, onClose }) {
         id: g.id,
         label: g.label,
         actions: [
+          ...(collectionName
+            ? [
+                {
+                  key: 'add-item',
+                  label: `Add ${CATEGORY_META[collectionName].label.toLowerCase()}`,
+                  onClick: () => openAddCategory(collectionName, sectionId, g.id),
+                },
+              ]
+            : []),
           { key: 'rename-group', label: 'Rename group', onClick: () => openRenameGroup(g) },
           {
             key: 'delete-group',
@@ -775,7 +786,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('programs', p, programsGroupDefs),
       })),
-      programsGroupDefs
+      programsGroupDefs,
+      'programs'
     )
     next.push({
       id: 'programs',
@@ -802,7 +814,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('academyPrograms', p, academyGroupDefs),
       })),
-      academyGroupDefs
+      academyGroupDefs,
+      'academyPrograms'
     )
     next.push({
       id: 'academy',
@@ -833,7 +846,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('customPrograms', p, customProgramsGroupDefs),
       })),
-      customProgramsGroupDefs
+      customProgramsGroupDefs,
+      'customPrograms'
     )
     next.push({
       id: 'custom-programs',
@@ -860,7 +874,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('trackerDocuments', p, trackerDocumentsGroupDefs),
       })),
-      trackerDocumentsGroupDefs
+      trackerDocumentsGroupDefs,
+      'trackerDocuments'
     )
     next.push({
       id: 'documents',
@@ -896,7 +911,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('trackerGraphics', p, trackerGraphicsGroupDefs),
       })),
-      trackerGraphicsGroupDefs
+      trackerGraphicsGroupDefs,
+      'trackerGraphics'
     )
     next.push({
       id: 'graphics',
@@ -928,7 +944,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('trackerData', p, trackerDataGroupDefs),
       })),
-      trackerDataGroupDefs
+      trackerDataGroupDefs,
+      'trackerData'
     )
     next.push({
       id: 'data',
@@ -955,7 +972,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('boardCommitments', p, boardCommitmentsGroupDefs),
       })),
-      boardCommitmentsGroupDefs
+      boardCommitmentsGroupDefs,
+      'boardCommitments'
     )
     next.push({
       id: 'board-commitments',
@@ -982,7 +1000,8 @@ export default function Sidebar({ open = false, onClose }) {
         groupId: p.groupId,
         actions: categoryActions('chapters', p, chaptersGroupDefs),
       })),
-      chaptersGroupDefs
+      chaptersGroupDefs,
+      'chapters'
     )
     next.push({
       id: 'chapters',
@@ -1022,7 +1041,9 @@ export default function Sidebar({ open = false, onClose }) {
             groupId: p.groupId,
             actions: categoryActions('customSectionItems', p, sectionGroupDefs),
           })),
-          sectionGroupDefs
+          sectionGroupDefs,
+          'customSectionItems',
+          section.id
         )
         next.push({
           id: section.id,
