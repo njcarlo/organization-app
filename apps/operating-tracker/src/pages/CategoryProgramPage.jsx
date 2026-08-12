@@ -115,9 +115,16 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
       setTasks(allTasks.filter((t) => t.programId === itemId))
 
       if (collectionName === 'academyPrograms') {
-        const registrationSnap = await getDocs(collection(db, 'courseRegistrations'))
+        const enrollmentSnap = await getDoc(
+          doc(db, 'courseEnrollmentCounts', encodeURIComponent(prog.name))
+        )
+        const counts = enrollmentSnap.exists() ? enrollmentSnap.data() : null
         setEnrollmentCount(
-          registrationSnap.docs.filter((d) => d.data().course === prog.name).length
+          counts
+            ? (Number(counts.paid) || 0) +
+                (Number(counts.promotional) || 0) +
+                (Number(counts.free) || 0)
+            : 0
         )
       }
     } catch (err) {
