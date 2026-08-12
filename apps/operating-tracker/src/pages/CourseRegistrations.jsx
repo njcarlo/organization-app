@@ -95,6 +95,7 @@ export default function CourseRegistrations() {
   const [summarySearch, setSummarySearch] = useState('')
   const [summarySortKey, setSummarySortKey] = useState(null)
   const [summarySortDir, setSummarySortDir] = useState('asc')
+  const [selectedSummaryCourses, setSelectedSummaryCourses] = useState(() => new Set())
 
   const load = useCallback(async () => {
     setError('')
@@ -354,6 +355,53 @@ export default function CourseRegistrations() {
     }
   }
 
+  const removeEnrollmentCounts = async (courses) => {
+    setError('')
+    try {
+      await Promise.all(
+        courses.map((course) => deleteDoc(doc(db, 'courseEnrollmentCounts', encodeURIComponent(course))))
+      )
+      setEnrollmentCounts((prev) => {
+        const next = { ...prev }
+        courses.forEach((course) => delete next[course])
+        return next
+      })
+      setSelectedSummaryCourses((prev) => {
+        const next = new Set(prev)
+        courses.forEach((course) => next.delete(course))
+        return next
+      })
+    } catch (err) {
+      setError(err.message || 'Failed to delete enrollment counts')
+    }
+  }
+
+  const deleteEnrollmentRow = (course) => {
+    if (!confirm(`Clear enrollment counts for "${course}"? This action cannot be undone.`)) return
+    removeEnrollmentCounts([course])
+  }
+
+  const toggleSelectSummaryCourse = (course, checked) => {
+    setSelectedSummaryCourses((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(course)
+      else next.delete(course)
+      return next
+    })
+  }
+
+  const deleteSelectedSummaryCourses = () => {
+    const courses = Array.from(selectedSummaryCourses)
+    if (!courses.length) return
+    if (
+      !confirm(
+        `Clear enrollment counts for ${courses.length} course${courses.length === 1 ? '' : 's'}? This action cannot be undone.`
+      )
+    )
+      return
+    removeEnrollmentCounts(courses)
+  }
+
   const removeRegistration = async (id) => {
     if (!confirm('Delete this registration? This action cannot be undone.')) return
     setError('')
@@ -418,18 +466,50 @@ export default function CourseRegistrations() {
                 Count of registrations per course, broken out by enrollment type.
               </p>
             </div>
-            <input
-              type="search"
-              placeholder="Search courses…"
-              value={summarySearch}
-              onChange={(e) => setSummarySearch(e.target.value)}
-              className="w-full max-w-xs rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedSummaryCourses.size > 0 && (
+                <button
+                  type="button"
+                  onClick={deleteSelectedSummaryCourses}
+                  className="rounded-md border border-hae-red px-3 py-2 text-xs font-semibold uppercase text-hae-red hover:bg-hae-red/5"
+                >
+                  Delete selected ({selectedSummaryCourses.size})
+                </button>
+              )}
+              <input
+                type="search"
+                placeholder="Search courses…"
+                value={summarySearch}
+                onChange={(e) => setSummarySearch(e.target.value)}
+                className="w-full max-w-xs rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+              />
+            </div>
           </div>
           <div className="hae-table-scroll mt-4 rounded-lg border border-hae-line">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
+                  <th className="w-8 px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        sortedEnrollmentByCourse.length > 0 &&
+                        sortedEnrollmentByCourse.every((e) => selectedSummaryCourses.has(e.course))
+                      }
+                      onChange={(ev) => {
+                        setSelectedSummaryCourses((prev) => {
+                          const next = new Set(prev)
+                          sortedEnrollmentByCourse.forEach((e) => {
+                            if (ev.target.checked) next.add(e.course)
+                            else next.delete(e.course)
+                          })
+                          return next
+                        })
+                      }}
+                      className="h-4 w-4 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
+                      aria-label="Select all courses"
+                    />
+                  </th>
                   {[
                     { key: 'course', label: 'Academy' },
                     { key: 'paid', label: 'Paid Enrollment' },
@@ -450,6 +530,7 @@ export default function CourseRegistrations() {
                       </button>
                     </th>
                   ))}
+                  <th className="px-3 py-2 font-semibold w-16" />
                 </tr>
               </thead>
               <tbody>
@@ -462,6 +543,15 @@ export default function CourseRegistrations() {
                   const liveTotal = liveValues.reduce((sum, v) => sum + v, 0)
                   return (
                     <tr key={e.course} className="border-b border-hae-line/70">
+                      <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedSummaryCourses.has(e.course)}
+                          onChange={(ev) => toggleSelectSummaryCourse(e.course, ev.target.checked)}
+                          aria-label={`Select ${e.course}`}
+                          className="h-4 w-4 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
+                        />
+                      </td>
                       <td className="px-3 py-2 text-sm font-medium text-hae-ink">{e.course}</td>
                       {['paid', 'promotional', 'free'].map((field) => {
                         const draftKey = `${e.course}:${field}`
@@ -481,12 +571,21 @@ export default function CourseRegistrations() {
                         )
                       })}
                       <td className="px-3 py-2 text-sm font-semibold text-hae-ink">{liveTotal}</td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => deleteEnrollmentRow(e.course)}
+                          className="text-xs text-hae-slate hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
                 {sortedEnrollmentByCourse.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
+                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
                       {enrollmentByCourse.length === 0
                         ? 'No registrations yet.'
                         : 'No courses match your search.'}
@@ -497,6 +596,7 @@ export default function CourseRegistrations() {
               {enrollmentByCourse.length > 0 && (
                 <tfoot>
                   <tr className="bg-hae-mist/40">
+                    <td className="px-3 py-2" />
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">All courses</td>
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
                       {enrollmentGrandTotal.paid}
@@ -510,6 +610,7 @@ export default function CourseRegistrations() {
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
                       {enrollmentGrandTotal.total}
                     </td>
+                    <td className="px-3 py-2" />
                   </tr>
                 </tfoot>
               )}
