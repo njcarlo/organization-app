@@ -26,14 +26,18 @@ export function sanitizeLinks(links) {
 
 /**
  * Links table, edited fully inline — no separate edit mode. Existing rows
- * show the label as a clickable link plus an "×" to remove; pass onAdd to
- * reveal a "+ Add Link" row that appends without leaving this view.
+ * show the label as a clickable link plus "Edit"/"×" actions; pass onEdit to
+ * let a row's label/URL be rewritten in place, and onAdd to reveal a
+ * "+ Add Link" row that appends without leaving this view.
  */
-export function LinksTable({ links, onAdd, onDelete }) {
+export function LinksTable({ links, onAdd, onEdit, onDelete }) {
   const list = parseLinks(links)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [newUrl, setNewUrl] = useState('')
+  const [editingIdx, setEditingIdx] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editUrl, setEditUrl] = useState('')
 
   const commitAdd = () => {
     const url = newUrl.trim()
@@ -49,6 +53,24 @@ export function LinksTable({ links, onAdd, onDelete }) {
     setNewUrl('')
   }
 
+  const startEdit = (idx, link) => {
+    setAdding(false)
+    setEditingIdx(idx)
+    setEditName(link.name || '')
+    setEditUrl(link.url || '')
+  }
+  const cancelEdit = () => {
+    setEditingIdx(null)
+    setEditName('')
+    setEditUrl('')
+  }
+  const commitEdit = () => {
+    const url = editUrl.trim()
+    if (!/^https?:\/\//i.test(url)) return
+    onEdit?.(editingIdx, { name: editName.trim() || url, url })
+    cancelEdit()
+  }
+
   if (!list.length && !adding && !onAdd) {
     return <p className="text-sm text-hae-slate">No links yet.</p>
   }
@@ -59,27 +81,83 @@ export function LinksTable({ links, onAdd, onDelete }) {
         <div className="overflow-x-auto rounded-md border border-hae-line">
           <table className="w-full text-sm">
             <tbody>
-              {list.map((l, idx) => (
-                <tr key={`${l.url}-${l.name}`} className="border-b border-hae-line/60 last:border-0">
-                  <td className="px-3 py-1.5">
-                    <a href={l.url} target="_blank" rel="noreferrer" className="text-hae-crimson hover:underline">
-                      {l.name || l.url}
-                    </a>
-                  </td>
-                  {onDelete && (
-                    <td className="w-8 px-2 py-1.5 text-center">
-                      <button
-                        type="button"
-                        className="text-hae-slate/60 hover:text-hae-red"
-                        title="Remove link"
-                        onClick={() => onDelete(idx)}
-                      >
-                        ×
-                      </button>
+              {list.map((l, idx) =>
+                editingIdx === idx ? (
+                  <tr key={`${l.url}-${l.name}`} className="border-b border-hae-line/60 last:border-0">
+                    <td className="p-1.5" colSpan={2}>
+                      <div className="flex flex-wrap gap-1.5">
+                        <input
+                          autoFocus
+                          className="w-24 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                          placeholder="Label"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') commitEdit()
+                            if (e.key === 'Escape') cancelEdit()
+                          }}
+                        />
+                        <input
+                          className="min-w-0 flex-1 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                          placeholder="https://..."
+                          value={editUrl}
+                          onChange={(e) => setEditUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') commitEdit()
+                            if (e.key === 'Escape') cancelEdit()
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-hae-crimson hover:underline"
+                          onClick={commitEdit}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs text-hae-slate hover:text-hae-ink"
+                          onClick={cancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </td>
-                  )}
-                </tr>
-              ))}
+                  </tr>
+                ) : (
+                  <tr key={`${l.url}-${l.name}`} className="border-b border-hae-line/60 last:border-0">
+                    <td className="px-3 py-1.5">
+                      <a href={l.url} target="_blank" rel="noreferrer" className="text-hae-crimson hover:underline">
+                        {l.name || l.url}
+                      </a>
+                    </td>
+                    {(onEdit || onDelete) && (
+                      <td className="w-16 px-2 py-1.5 text-center whitespace-nowrap">
+                        {onEdit && (
+                          <button
+                            type="button"
+                            className="mr-2 text-xs text-hae-slate/70 hover:text-hae-crimson"
+                            title="Edit link"
+                            onClick={() => startEdit(idx, l)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            type="button"
+                            className="text-hae-slate/60 hover:text-hae-red"
+                            title="Remove link"
+                            onClick={() => onDelete(idx)}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                )
+              )}
               {adding && (
                 <tr className="border-b border-hae-line/60 last:border-0">
                   <td className="p-1.5">

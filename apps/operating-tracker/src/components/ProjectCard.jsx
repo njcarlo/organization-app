@@ -149,6 +149,13 @@ export default function ProjectCard({
     onChanged?.()
   }
 
+  const editLink = async (idx, link) => {
+    await updateDoc(doc(db, 'projects', project.id), {
+      links: parseLinks(project.links).map((l, i) => (i === idx ? link : l)),
+    })
+    onChanged?.()
+  }
+
   const deleteLink = async (idx) => {
     await updateDoc(doc(db, 'projects', project.id), {
       links: parseLinks(project.links).filter((_, i) => i !== idx),
@@ -329,7 +336,7 @@ export default function ProjectCard({
             <h4 className="mb-1 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
               Links
             </h4>
-            <LinksTable links={project.links} onAdd={addLink} onDelete={deleteLink} />
+            <LinksTable links={project.links} onAdd={addLink} onEdit={editLink} onDelete={deleteLink} />
           </div>
           <div>
             <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">

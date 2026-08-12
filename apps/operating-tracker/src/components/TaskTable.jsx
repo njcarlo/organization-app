@@ -596,6 +596,13 @@ const TaskTable = forwardRef(function TaskTable(
     onChanged?.()
   }
 
+  const editTaskLink = async (task, idx, link) => {
+    await updateDoc(doc(db, 'tasks', task.id), {
+      links: parseLinks(task.links).map((l, i) => (i === idx ? link : l)),
+    })
+    onChanged?.()
+  }
+
   const deleteTaskLink = async (task, idx) => {
     await updateDoc(doc(db, 'tasks', task.id), {
       links: parseLinks(task.links).filter((_, i) => i !== idx),
@@ -877,6 +884,7 @@ const TaskTable = forwardRef(function TaskTable(
                           <LinksTable
                             links={task.links}
                             onAdd={(link) => addTaskLink(task, link)}
+                            onEdit={(idx, link) => editTaskLink(task, idx, link)}
                             onDelete={(idx) => deleteTaskLink(task, idx)}
                           />
                         </div>

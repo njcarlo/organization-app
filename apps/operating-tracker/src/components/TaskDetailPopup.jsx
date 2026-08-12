@@ -177,6 +177,13 @@ export default function TaskDetailPopup({
     onSaved?.()
   }
 
+  const editLink = async (idx, link) => {
+    const links = parseLinks(effectiveTask.links).map((l, i) => (i === idx ? link : l))
+    await updateDoc(doc(db, 'tasks', task.id), { links })
+    setSaved((prev) => ({ ...prev, links }))
+    onSaved?.()
+  }
+
   const deleteLink = async (idx) => {
     const links = parseLinks(effectiveTask.links).filter((_, i) => i !== idx)
     await updateDoc(doc(db, 'tasks', task.id), { links })
@@ -373,6 +380,7 @@ export default function TaskDetailPopup({
           <LinksTable
             links={effectiveTask.links}
             onAdd={canEdit ? addLink : undefined}
+            onEdit={canEdit ? editLink : undefined}
             onDelete={canEdit ? deleteLink : undefined}
           />
         </div>

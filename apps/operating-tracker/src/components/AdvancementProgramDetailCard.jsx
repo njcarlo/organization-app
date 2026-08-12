@@ -79,6 +79,18 @@ export default function AdvancementProgramDetailCard({ program, readOnly = false
     }
   }
 
+  const editLink = async (idx, link) => {
+    setError('')
+    try {
+      await updateDoc(doc(db, 'trackerAdvancementPrograms', program.id), {
+        links: parseLinks(program.links).map((l, i) => (i === idx ? link : l)),
+      })
+      onChanged?.()
+    } catch (err) {
+      setError(err.message || 'Failed to update link')
+    }
+  }
+
   const deleteLink = async (idx) => {
     setError('')
     try {
@@ -268,6 +280,7 @@ export default function AdvancementProgramDetailCard({ program, readOnly = false
             <LinksTable
               links={program.links}
               onAdd={readOnly ? undefined : addLink}
+              onEdit={readOnly ? undefined : editLink}
               onDelete={readOnly ? undefined : deleteLink}
             />
           </div>

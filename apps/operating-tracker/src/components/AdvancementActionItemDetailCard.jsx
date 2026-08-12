@@ -69,6 +69,18 @@ export default function AdvancementActionItemDetailCard({ item, readOnly = false
     }
   }
 
+  const editLink = async (idx, link) => {
+    setError('')
+    try {
+      await updateDoc(doc(db, COLLECTION, item.id), {
+        links: parseLinks(item.links).map((l, i) => (i === idx ? link : l)),
+      })
+      onChanged?.()
+    } catch (err) {
+      setError(err.message || 'Failed to update link')
+    }
+  }
+
   const deleteLink = async (idx) => {
     setError('')
     try {
@@ -247,6 +259,7 @@ export default function AdvancementActionItemDetailCard({ item, readOnly = false
             <LinksTable
               links={item.links}
               onAdd={readOnly ? undefined : addLink}
+              onEdit={readOnly ? undefined : editLink}
               onDelete={readOnly ? undefined : deleteLink}
             />
           </div>
