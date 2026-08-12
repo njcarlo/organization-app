@@ -26,8 +26,14 @@ import { Chevron, NavIcon, iconForNavItem } from './navIcons.jsx'
  * sections: [
  *   { id, label, to?, end?, icon?, emptyLabel?, actions?: [{ key, label, onClick, danger? }],
  *     onReorderItems?: (orderedItems) => void, onRename?: (newLabel) => void,
- *     items?: [{ id?, to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }] }
+ *     items?: [{ id?, to, label, end?, icon?, description?, actions?: [{ key, label, onClick, danger? }] }],
+ *     groups?: [{ id, label, actions?: [{ key, label, onClick, danger? }],
+ *       items: [{ to, label, end?, icon?, description?, actions?: [...] }] }] }
  * ]
+ *
+ * `groups` render as collapsible sub-headers beneath a section's own items —
+ * a lightweight second level for clustering related sub-sections (e.g. a set
+ * of programs) without needing full drag-and-drop between groups.
  *
  * Items are drag-reorderable within a section when the section provides
  * `onReorderItems` — only items carrying an `id` become draggable; items
@@ -85,6 +91,16 @@ export default function SideNav({
 
   const toggle = (id) => {
     setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const [collapsedGroups, setCollapsedGroups] = useState(() => new Set())
+  const toggleGroup = (id) => {
+    setCollapsedGroups((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -198,7 +214,23 @@ export default function SideNav({
     const isOpen = expanded.has(section.id)
     const groupActive = activeGroupIds.has(section.id)
     const childItems = section.items || []
+    const groups = section.groups || []
     const isRenaming = renamingSectionId === section.id
+    const renderRow = (item, dragProps = {}) => (
+      <NavItemRow
+        key={item.to}
+        item={item}
+        active={pathMatches(location.pathname, item.to, item.end)}
+        close={close}
+        openMenuKey={openMenuKey}
+        toggleMenu={toggleMenu}
+        closeMenu={closeMenu}
+        menuRect={menuRect}
+        buttonRef={buttonRef}
+        menuRef={menuRef}
+        {...dragProps}
+      />
+    )
     const menuActions = [
       ...(section.onRename
         ? [{ key: 'rename', label: 'Rename section', onClick: () => startRename(section) }]
@@ -324,47 +356,114 @@ export default function SideNav({
 
         {isOpen ? (
           <div className="mb-2 mt-0.5 space-y-0.5">
-            {childItems.length === 0 ? (
+            {childItems.length === 0 && !groups.length ? (
               <p className="px-3 py-4 text-center text-xs text-hae-slate">
                 {section.emptyLabel || 'Nothing here yet'}
               </p>
             ) : (
-              (() => {
-                const reorderable = typeof section.onReorderItems === 'function'
-                const staticItems = reorderable
-                  ? childItems.filter((it) => it.id == null)
-                  : childItems
-                const draggableItems = reorderable
-                  ? childItems.filter((it) => it.id != null)
-                  : []
-                const renderRow = (item, dragProps) => (
-                  <NavItemRow
-                    key={item.to}
-                    item={item}
-                    active={pathMatches(location.pathname, item.to, item.end)}
-                    close={close}
-                    openMenuKey={openMenuKey}
-                    toggleMenu={toggleMenu}
-                    closeMenu={closeMenu}
-                    menuRect={menuRect}
-                    buttonRef={buttonRef}
-                    menuRef={menuRef}
-                    {...dragProps}
-                  />
-                )
-                return (
-                  <>
-                    {staticItems.map((item) => renderRow(item))}
-                    {draggableItems.length > 0 ? (
-                      <SortableItemList
-                        items={draggableItems}
-                        onReorder={section.onReorderItems}
-                        renderItem={renderRow}
-                      />
-                    ) : null}
-                  </>
-                )
-              })()
+              <>
+                {(() => {
+                  const reorderable = typeof section.onReorderItems === 'function'
+                  const staticItems = reorderable
+                    ? childItems.filter((it) => it.id == null)
+                    : childItems
+                  const draggableItems = reorderable
+                    ? childItems.filter((it) => it.id != null)
+                    : []
+                  return (
+                    <>
+                      {staticItems.map((item) => renderRow(item))}
+                      {draggableItems.length > 0 ? (
+                        <SortableItemList
+                          items={draggableItems}
+                          onReorder={section.onReorderItems}
+                          renderItem={renderRow}
+                        />
+                      ) : null}
+                    </>
+                  )
+                })()}
+                {groups.map((group) => renderGroup(group, renderRow))}
+              </>
+            )}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  const renderGroup = (group, renderRow) => {
+    const isCollapsed = collapsedGroups.has(group.id)
+    const groupActions = Array.isArray(group.actions) ? group.actions : []
+    const menuKey = `group:${group.id}`
+    const menuOpen = openMenuKey === menuKey
+    return (
+      <div key={group.id} className="group/group ml-3.5 mt-1">
+        <div className="relative flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => toggleGroup(group.id)}
+            aria-expanded={!isCollapsed}
+            className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold uppercase tracking-wide text-hae-slate hover:bg-hae-mist"
+          >
+            <span className="min-w-0 flex-1 truncate">{group.label}</span>
+            <Chevron open={!isCollapsed} />
+          </button>
+          {groupActions.length > 0 ? (
+            <div className="relative shrink-0" ref={menuOpen ? buttonRef : undefined}>
+              <button
+                type="button"
+                onClick={(e) => toggleMenu(menuKey, e.currentTarget, groupActions.length)}
+                aria-label={`${group.label} actions`}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                data-open={menuOpen}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-hae-slate opacity-0 hover:bg-hae-mist hover:text-hae-ink focus:opacity-100 focus:outline-none group-hover/group:opacity-100 data-[open=true]:bg-hae-mist data-[open=true]:opacity-100"
+              >
+                <NavIcon name="kebab" className="[&>svg]:h-3.5 [&>svg]:w-3.5" />
+              </button>
+              {menuOpen && menuRect
+                ? createPortal(
+                    <div
+                      ref={menuRef}
+                      role="menu"
+                      style={{
+                        position: 'fixed',
+                        top: menuRect.top ?? undefined,
+                        bottom: menuRect.bottom ?? undefined,
+                        right: menuRect.right,
+                      }}
+                      className="z-50 w-44 overflow-hidden rounded-2xl border border-transparent bg-white py-1 shadow-xl"
+                    >
+                      {groupActions.map((action) => (
+                        <button
+                          key={action.key}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            closeMenu()
+                            action.onClick()
+                          }}
+                          className={`block w-full px-3 py-2 text-left text-sm hover:bg-hae-mist ${
+                            action.danger ? 'text-hae-red' : 'text-hae-ink'
+                          }`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>,
+                    document.body
+                  )
+                : null}
+            </div>
+          ) : null}
+        </div>
+        {!isCollapsed ? (
+          <div className="mt-0.5 space-y-0.5 border-l border-hae-line/70 pl-1.5">
+            {group.items.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-hae-slate">No items yet</p>
+            ) : (
+              group.items.map((item) => renderRow(item))
             )}
           </div>
         ) : null}
