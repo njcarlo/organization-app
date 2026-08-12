@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -104,15 +105,6 @@ export default function CourseRegistrations() {
       list.sort((a, b) => (a.course || '').localeCompare(b.course || ''))
       setRegistrations(list)
 
-      const academySnap = await getDocs(collection(db, 'academyPrograms'))
-      setAcademyCourseNames(
-        academySnap.docs
-          .map((d) => d.data())
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((d) => d.name)
-          .filter(Boolean)
-      )
-
       const countsSnap = await getDocs(collection(db, 'courseParticipantCounts'))
       const counts = {}
       countsSnap.docs.forEach((d) => {
@@ -146,6 +138,19 @@ export default function CourseRegistrations() {
     load()
   }, [load])
 
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'academyPrograms'), (snap) => {
+      setAcademyCourseNames(
+        snap.docs
+          .map((d) => d.data())
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((d) => d.name)
+          .filter(Boolean)
+      )
+    })
+    return unsubscribe
+  }, [])
+
   const totalsByCourse = useMemo(() => {
     const map = new Map()
     for (const r of registrations) {
@@ -174,19 +179,11 @@ export default function CourseRegistrations() {
   }, [registrations])
 
   const enrollmentByCourse = useMemo(() => {
-    const extraCourses = [
-      ...new Set([
-        ...registrations.map((r) => r.course || 'Untitled course'),
-        ...Object.keys(enrollmentCounts),
-      ]),
-    ].filter((course) => !academyCourseNames.includes(course))
-    extraCourses.sort((a, b) => a.localeCompare(b))
-
-    return [...academyCourseNames, ...extraCourses].map((course) => {
+    return academyCourseNames.map((course) => {
       const counts = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
       return { course, ...counts, total: counts.paid + counts.promotional + counts.free }
     })
-  }, [registrations, enrollmentCounts, academyCourseNames])
+  }, [enrollmentCounts, academyCourseNames])
 
   const enrollmentGrandTotal = useMemo(
     () =>
@@ -371,7 +368,7 @@ export default function CourseRegistrations() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-hae-ink">Course Registrations</h1>
+          <h1 className="font-display text-3xl text-hae-ink">Course Enrollments</h1>
           <p className="text-sm text-hae-slate">
             Manually enter enrollees and payments for Academy courses.
           </p>
