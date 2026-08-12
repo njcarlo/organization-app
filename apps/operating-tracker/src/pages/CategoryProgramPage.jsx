@@ -65,6 +65,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const [program, setProgram] = useState(null)
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
+  const [enrollmentCount, setEnrollmentCount] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
@@ -112,6 +113,13 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         allProjects.filter((p) => p.programId === itemId).sort(sortByOrder)
       )
       setTasks(allTasks.filter((t) => t.programId === itemId))
+
+      if (collectionName === 'academyPrograms') {
+        const registrationSnap = await getDocs(collection(db, 'courseRegistrations'))
+        setEnrollmentCount(
+          registrationSnap.docs.filter((d) => d.data().course === prog.name).length
+        )
+      }
     } catch (err) {
       setError(err.message || 'Failed to load')
     } finally {
@@ -548,6 +556,12 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   Guest speaker
                 </dt>
                 <dd className="text-hae-ink">{program.guestSpeaker || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Enrollments
+                </dt>
+                <dd className="text-hae-ink">{enrollmentCount ?? '—'}</dd>
               </div>
             </dl>
           ) : null}

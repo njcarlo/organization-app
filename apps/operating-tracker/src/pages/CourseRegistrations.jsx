@@ -58,6 +58,13 @@ function normalizeProgramType(value) {
   return PROGRAM_TYPES.includes(value) ? value : PROGRAM_TYPES[0]
 }
 
+function courseOptions(academyCourseNames, currentValue) {
+  if (currentValue && !academyCourseNames.includes(currentValue)) {
+    return [currentValue, ...academyCourseNames]
+  }
+  return academyCourseNames
+}
+
 const COLUMNS = [
   { key: 'course', label: 'Course' },
   { key: 'firstName', label: 'First Name' },
@@ -69,6 +76,7 @@ const COLUMNS = [
 
 export default function CourseRegistrations() {
   const [registrations, setRegistrations] = useState([])
+  const [academyCourseNames, setAcademyCourseNames] = useState([])
   const [participantCounts, setParticipantCounts] = useState({})
   const [participantDrafts, setParticipantDrafts] = useState({})
   const [enrollmentCounts, setEnrollmentCounts] = useState({})
@@ -84,6 +92,9 @@ export default function CourseRegistrations() {
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState('summary')
+  const [summarySearch, setSummarySearch] = useState('')
+  const [summarySortKey, setSummarySortKey] = useState(null)
+  const [summarySortDir, setSummarySortDir] = useState('asc')
 
   const load = useCallback(async () => {
     setError('')
@@ -92,6 +103,15 @@ export default function CourseRegistrations() {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       list.sort((a, b) => (a.course || '').localeCompare(b.course || ''))
       setRegistrations(list)
+
+      const academySnap = await getDocs(collection(db, 'academyPrograms'))
+      setAcademyCourseNames(
+        academySnap.docs
+          .map((d) => d.data())
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((d) => d.name)
+          .filter(Boolean)
+      )
 
       const countsSnap = await getDocs(collection(db, 'courseParticipantCounts'))
       const counts = {}
@@ -154,17 +174,19 @@ export default function CourseRegistrations() {
   }, [registrations])
 
   const enrollmentByCourse = useMemo(() => {
-    const courses = new Set([
-      ...registrations.map((r) => r.course || 'Untitled course'),
-      ...Object.keys(enrollmentCounts),
-    ])
-    return Array.from(courses)
-      .map((course) => {
-        const counts = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
-        return { course, ...counts, total: counts.paid + counts.promotional + counts.free }
-      })
-      .sort((a, b) => a.course.localeCompare(b.course))
-  }, [registrations, enrollmentCounts])
+    const extraCourses = [
+      ...new Set([
+        ...registrations.map((r) => r.course || 'Untitled course'),
+        ...Object.keys(enrollmentCounts),
+      ]),
+    ].filter((course) => !academyCourseNames.includes(course))
+    extraCourses.sort((a, b) => a.localeCompare(b))
+
+    return [...academyCourseNames, ...extraCourses].map((course) => {
+      const counts = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
+      return { course, ...counts, total: counts.paid + counts.promotional + counts.free }
+    })
+  }, [registrations, enrollmentCounts, academyCourseNames])
 
   const enrollmentGrandTotal = useMemo(
     () =>
@@ -184,6 +206,28 @@ export default function CourseRegistrations() {
     () => registrations.reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0),
     [registrations]
   )
+
+  const sortedEnrollmentByCourse = useMemo(() => {
+    const term = summarySearch.trim().toLowerCase()
+    const list = term
+      ? enrollmentByCourse.filter((e) => e.course.toLowerCase().includes(term))
+      : enrollmentByCourse
+    if (!summarySortKey) return list
+    const dir = summarySortDir === 'asc' ? 1 : -1
+    return [...list].sort((a, b) => {
+      if (summarySortKey === 'course') return dir * a.course.localeCompare(b.course)
+      return dir * ((a[summarySortKey] || 0) - (b[summarySortKey] || 0))
+    })
+  }, [enrollmentByCourse, summarySearch, summarySortKey, summarySortDir])
+
+  const handleSummarySort = (key) => {
+    if (key === summarySortKey) {
+      setSummarySortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSummarySortKey(key)
+      setSummarySortDir('asc')
+    }
+  }
 
   const filteredRegistrations = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -367,23 +411,49 @@ export default function CourseRegistrations() {
 
       {activeTab === 'summary' && (
         <div className="rounded-xl border border-hae-line bg-white p-4">
-          <h2 className="text-sm font-semibold text-hae-ink">Enrollment by course</h2>
-          <p className="mt-1 text-xs text-hae-slate">
-            Count of registrations per course, broken out by enrollment type.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-hae-ink">Enrollment by course</h2>
+              <p className="mt-1 text-xs text-hae-slate">
+                Count of registrations per course, broken out by enrollment type.
+              </p>
+            </div>
+            <input
+              type="search"
+              placeholder="Search courses…"
+              value={summarySearch}
+              onChange={(e) => setSummarySearch(e.target.value)}
+              className="w-full max-w-xs rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </div>
           <div className="hae-table-scroll mt-4 rounded-lg border border-hae-line">
             <table className="w-full text-left">
               <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                 <tr>
-                  <th className="px-3 py-2 font-semibold">Academy</th>
-                  <th className="px-3 py-2 font-semibold">Paid Enrollment</th>
-                  <th className="px-3 py-2 font-semibold">Promotional Enrollment</th>
-                  <th className="px-3 py-2 font-semibold">Free enrollment</th>
-                  <th className="px-3 py-2 font-semibold">Total</th>
+                  {[
+                    { key: 'course', label: 'Academy' },
+                    { key: 'paid', label: 'Paid Enrollment' },
+                    { key: 'promotional', label: 'Promotional Enrollment' },
+                    { key: 'free', label: 'Free enrollment' },
+                    { key: 'total', label: 'Total' },
+                  ].map((col) => (
+                    <th key={col.key} className="px-3 py-2 font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => handleSummarySort(col.key)}
+                        className="flex items-center gap-1 whitespace-nowrap uppercase text-hae-slate hover:text-hae-ink"
+                      >
+                        {col.label}
+                        {summarySortKey === col.key && (
+                          <span>{summarySortDir === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </button>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {enrollmentByCourse.map((e) => {
+                {sortedEnrollmentByCourse.map((e) => {
                   const liveValues = ['paid', 'promotional', 'free'].map((field) => {
                     const draftKey = `${e.course}:${field}`
                     const raw = draftKey in enrollmentDrafts ? enrollmentDrafts[draftKey] : e[field]
@@ -414,10 +484,12 @@ export default function CourseRegistrations() {
                     </tr>
                   )
                 })}
-                {enrollmentByCourse.length === 0 && (
+                {sortedEnrollmentByCourse.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
-                      No registrations yet.
+                      {enrollmentByCourse.length === 0
+                        ? 'No registrations yet.'
+                        : 'No courses match your search.'}
                     </td>
                   </tr>
                 )}
@@ -537,13 +609,21 @@ export default function CourseRegistrations() {
         onSubmit={addRegistration}
         className="grid gap-3 rounded-xl border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-6"
       >
-        <input
+        <select
           required
-          placeholder="Course"
           value={form.course}
           onChange={(e) => setForm({ ...form, course: e.target.value })}
           className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-        />
+        >
+          <option value="" disabled>
+            Select course…
+          </option>
+          {courseOptions(academyCourseNames, form.course).map((course) => (
+            <option key={course} value={course}>
+              {course}
+            </option>
+          ))}
+        </select>
         <select
           value={form.programType}
           onChange={(e) => setForm({ ...form, programType: e.target.value })}
@@ -623,12 +703,17 @@ export default function CourseRegistrations() {
           pagedRegistrations.map((r) =>
             editingId === r.id && draft ? (
               <div key={r.id} className="hae-mobile-card space-y-2 border-amber-200 bg-amber-50">
-                <input
+                <select
                   className="w-full rounded border border-hae-line px-2 py-1 text-sm"
-                  placeholder="Course"
                   value={draft.course}
                   onChange={(e) => setDraft({ ...draft, course: e.target.value })}
-                />
+                >
+                  {courseOptions(academyCourseNames, draft.course).map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
+                </select>
                 <select
                   className="w-full rounded border border-hae-line px-2 py-1 text-xs"
                   value={normalizeProgramType(draft.programType)}
@@ -769,11 +854,17 @@ export default function CourseRegistrations() {
               editingId === r.id && draft ? (
                 <tr key={r.id} className="bg-amber-50">
                   <td className="px-3 py-2 space-y-1">
-                    <input
+                    <select
                       className="w-full rounded border border-hae-line px-2 py-1 text-sm"
                       value={draft.course}
                       onChange={(e) => setDraft({ ...draft, course: e.target.value })}
-                    />
+                    >
+                      {courseOptions(academyCourseNames, draft.course).map((course) => (
+                        <option key={course} value={course}>
+                          {course}
+                        </option>
+                      ))}
+                    </select>
                     <select
                       className="w-full rounded border border-hae-line px-2 py-1 text-xs"
                       value={normalizeProgramType(draft.programType)}
