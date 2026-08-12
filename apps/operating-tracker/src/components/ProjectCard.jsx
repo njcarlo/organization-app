@@ -27,6 +27,7 @@ import LeadSelect from './LeadSelect'
 import CommentIndicator from './CommentIndicator'
 import CommentsDrawer from './CommentsDrawer'
 import { CommentIcon, EditIcon, PlusIcon, TrashIcon } from './ActionIcons'
+import { LinksEditor, LinksTable, parseLinks, sanitizeLinks } from './Links'
 
 const inputClass =
   'rounded border border-hae-line bg-white px-2 py-1 text-sm outline-none focus:border-hae-crimson'
@@ -71,6 +72,7 @@ export default function ProjectCard({
       health: normalizeHealth(project.health || 'ongoing'),
       targetDate: project.targetDate || '',
       notes: project.notes || '',
+      links: parseLinks(project.links),
     })
     setEditing(true)
   }
@@ -84,6 +86,7 @@ export default function ProjectCard({
       health: draft.health,
       targetDate: draft.targetDate || '',
       notes: draft.notes.trim(),
+      links: sanitizeLinks(draft.links),
     }
     await updateDoc(doc(db, 'projects', project.id), payload)
 
@@ -137,6 +140,20 @@ export default function ProjectCard({
   const handleAddTask = () => {
     setOpen(true)
     requestAnimationFrame(() => tableRef.current?.startAdd())
+  }
+
+  const addLink = async (link) => {
+    await updateDoc(doc(db, 'projects', project.id), {
+      links: [...parseLinks(project.links), link],
+    })
+    onChanged?.()
+  }
+
+  const deleteLink = async (idx) => {
+    await updateDoc(doc(db, 'projects', project.id), {
+      links: parseLinks(project.links).filter((_, i) => i !== idx),
+    })
+    onChanged?.()
   }
 
   return (
@@ -195,6 +212,7 @@ export default function ProjectCard({
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
               />
+              <LinksEditor links={draft.links} onChange={(links) => setDraft({ ...draft, links })} />
               <div className="flex gap-2 text-xs">
                 <button
                   type="button"
@@ -307,6 +325,12 @@ export default function ProjectCard({
 
       {open && (
         <div className="space-y-3 bg-gradient-to-b from-white/40 to-hae-mist/20 p-3 sm:p-4">
+          <div>
+            <h4 className="mb-1 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
+              Links
+            </h4>
+            <LinksTable links={project.links} onAdd={addLink} onDelete={deleteLink} />
+          </div>
           <div>
             <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
               Tasks

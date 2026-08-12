@@ -8,6 +8,7 @@ import CommentIndicator from './CommentIndicator'
 import CommentsDrawer from './CommentsDrawer'
 import { CommentIcon, EditIcon } from './ActionIcons'
 import LeadSelect from './LeadSelect'
+import { LinksEditor, LinksTable, parseLinks, sanitizeLinks } from './Links'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import { diffTaskFields, logHistory } from '../utils/activityLog'
 import {
@@ -115,6 +116,7 @@ export default function TaskDetailPopup({
       leadershipAttention: effectiveTask.leadershipAttention || 'None',
       nextAction: effectiveTask.nextAction || '',
       notes: effectiveTask.notes || '',
+      links: parseLinks(effectiveTask.links),
     })
     setEditing(true)
   }
@@ -138,6 +140,7 @@ export default function TaskDetailPopup({
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
         notes: draft.notes.trim(),
+        links: sanitizeLinks(draft.links),
       }
       await updateDoc(doc(db, 'tasks', task.id), payload)
       const changes = diffTaskFields(effectiveTask, payload)
@@ -165,6 +168,20 @@ export default function TaskDetailPopup({
     setEditing(false)
     setDraft(null)
     onClose?.()
+  }
+
+  const addLink = async (link) => {
+    const links = [...parseLinks(effectiveTask.links), link]
+    await updateDoc(doc(db, 'tasks', task.id), { links })
+    setSaved((prev) => ({ ...prev, links }))
+    onSaved?.()
+  }
+
+  const deleteLink = async (idx) => {
+    const links = parseLinks(effectiveTask.links).filter((_, i) => i !== idx)
+    await updateDoc(doc(db, 'tasks', task.id), { links })
+    setSaved((prev) => ({ ...prev, links }))
+    onSaved?.()
   }
 
   return (
@@ -313,6 +330,11 @@ export default function TaskDetailPopup({
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
             />
           </Field>
+          <LinksEditor
+            className="sm:col-span-2"
+            links={draft.links}
+            onChange={(links) => setDraft({ ...draft, links })}
+          />
         </div>
       ) : (
         <dl className="-my-1">
@@ -343,6 +365,18 @@ export default function TaskDetailPopup({
           )}
         </dl>
       )}
+      {!editing && task?.id ? (
+        <div className="mt-3 border-t border-hae-line/60 pt-3">
+          <h4 className="mb-1 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
+            Links
+          </h4>
+          <LinksTable
+            links={effectiveTask.links}
+            onAdd={canEdit ? addLink : undefined}
+            onDelete={canEdit ? deleteLink : undefined}
+          />
+        </div>
+      ) : null}
       <CommentsDrawer
         open={commentsOpen}
         onClose={() => setCommentsOpen(false)}

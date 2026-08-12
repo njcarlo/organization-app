@@ -11,6 +11,7 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
+import { LinksEditor, sanitizeLinks } from './Links'
 import {
   HEALTH_OPTIONS,
   LEADERSHIP_ATTENTION,
@@ -28,6 +29,7 @@ const emptyProjectForm = {
   health: 'ongoing',
   targetDate: '',
   notes: '',
+  links: [],
 }
 
 const emptyTaskForm = {
@@ -39,6 +41,7 @@ const emptyTaskForm = {
   leadershipAttention: 'None',
   nextAction: '',
   notes: '',
+  links: [],
 }
 
 function Field({ label, children, className = '' }) {
@@ -201,6 +204,7 @@ export default function AddTaskModal({ open, onClose, onCreated }) {
           health: newProject.health,
           targetDate: newProject.targetDate || '',
           notes: newProject.notes.trim(),
+          links: sanitizeLinks(newProject.links),
           programId: subCategoryId,
           order: maxOrder + 1,
           createdAt: serverTimestamp(),
@@ -219,6 +223,7 @@ export default function AddTaskModal({ open, onClose, onCreated }) {
         leadershipAttention: taskForm.leadershipAttention,
         nextAction: taskForm.nextAction.trim(),
         notes: taskForm.notes.trim(),
+        links: sanitizeLinks(taskForm.links),
         projectId: finalProjectId,
         projectName: finalProjectName,
         programId: subCategoryId,
@@ -399,6 +404,11 @@ export default function AddTaskModal({ open, onClose, onCreated }) {
                     onChange={(e) => setNewProject({ ...newProject, notes: e.target.value })}
                     className={`${fieldClass} sm:col-span-2`}
                   />
+                  <LinksEditor
+                    className="sm:col-span-2"
+                    links={newProject.links}
+                    onChange={(links) => setNewProject({ ...newProject, links })}
+                  />
                 </div>
               )}
             </div>
@@ -487,6 +497,11 @@ export default function AddTaskModal({ open, onClose, onCreated }) {
                 className={fieldClass}
               />
             </Field>
+            <LinksEditor
+              className="sm:col-span-2"
+              links={taskForm.links}
+              onChange={(links) => setTaskForm({ ...taskForm, links })}
+            />
           </div>
         </form>
       )}

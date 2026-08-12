@@ -12,6 +12,7 @@ import { Linkify } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import LeadSelect from './LeadSelect'
+import { LinksEditor, LinksTable, parseLinks, sanitizeLinks } from './Links'
 import { LEADERSHIP_ATTENTION, TASK_STATUSES } from '../constants'
 import { diffTaskFields, logHistory } from '../utils/activityLog'
 import {
@@ -38,6 +39,7 @@ const emptyNew = {
   leadershipAttention: 'None',
   nextAction: '',
   notes: '',
+  links: [],
 }
 
 const fieldClass =
@@ -364,6 +366,11 @@ function TaskEditForm({
             onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
           />
         </Field>
+        <LinksEditor
+          className="sm:col-span-2 lg:col-span-3"
+          links={draft.links}
+          onChange={(links) => setDraft({ ...draft, links })}
+        />
       </div>
     </div>
   )
@@ -486,6 +493,7 @@ const TaskTable = forwardRef(function TaskTable(
         leadershipAttention: newTask.leadershipAttention,
         nextAction: newTask.nextAction.trim(),
         notes: newTask.notes.trim(),
+        links: sanitizeLinks(newTask.links),
         projectId: project.id,
         projectName: project.name,
         programId: program.id,
@@ -514,6 +522,7 @@ const TaskTable = forwardRef(function TaskTable(
       leadershipAttention: task.leadershipAttention || 'None',
       nextAction: task.nextAction || '',
       notes: task.notes || '',
+      links: parseLinks(task.links),
     })
   }
 
@@ -537,6 +546,7 @@ const TaskTable = forwardRef(function TaskTable(
         leadershipAttention: draft.leadershipAttention,
         nextAction: draft.nextAction.trim(),
         notes: draft.notes.trim(),
+        links: sanitizeLinks(draft.links),
       }
       await updateDoc(doc(db, 'tasks', editingId), payload)
       const changes = diffTaskFields(before, payload)
@@ -577,6 +587,20 @@ const TaskTable = forwardRef(function TaskTable(
 
   const toggleExpand = (id) => {
     setExpandedId((cur) => (cur === id ? null : id))
+  }
+
+  const addTaskLink = async (task, link) => {
+    await updateDoc(doc(db, 'tasks', task.id), {
+      links: [...parseLinks(task.links), link],
+    })
+    onChanged?.()
+  }
+
+  const deleteTaskLink = async (task, idx) => {
+    await updateDoc(doc(db, 'tasks', task.id), {
+      links: parseLinks(task.links).filter((_, i) => i !== idx),
+    })
+    onChanged?.()
   }
 
   const startAddSubtask = (taskId) => {
@@ -846,6 +870,16 @@ const TaskTable = forwardRef(function TaskTable(
                             </p>
                           </div>
                         ) : null}
+                        <div className="mt-3 border-t border-hae-line/50 pt-3">
+                          <div className="mb-1 text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                            Links
+                          </div>
+                          <LinksTable
+                            links={task.links}
+                            onAdd={(link) => addTaskLink(task, link)}
+                            onDelete={(idx) => deleteTaskLink(task, idx)}
+                          />
+                        </div>
                         <div className="mt-3 border-t border-hae-line/50 pt-3">
                           <SubtaskList
                             task={task}
