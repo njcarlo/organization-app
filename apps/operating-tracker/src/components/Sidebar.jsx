@@ -90,12 +90,15 @@ export default function Sidebar({ open = false, onClose }) {
   const [chapters, setChapters] = useState([])
   const [customSections, setCustomSections] = useState([])
   const [customSectionItems, setCustomSectionItems] = useState([])
+  const [sidebarGroups, setSidebarGroups] = useState([])
   const [addProjectModal, setAddProjectModal] = useState(null)
   const [editCategoryModal, setEditCategoryModal] = useState(null)
   const [addSectionOpen, setAddSectionOpen] = useState(false)
   const [newSectionLabel, setNewSectionLabel] = useState('')
   const [newSectionTemplate, setNewSectionTemplate] = useState('')
   const [addingSection, setAddingSection] = useState(false)
+  const [groupModal, setGroupModal] = useState(null)
+  const [savingGroup, setSavingGroup] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sectionConfig, setSectionConfig] = useState({ order: [], labels: {} })
 
@@ -111,6 +114,7 @@ export default function Sidebar({ open = false, onClose }) {
     chapters: setChapters,
     customSections: setCustomSections,
     customSectionItems: setCustomSectionItems,
+    sidebarGroups: setSidebarGroups,
   }
 
   // customSectionItems spans many sections (tagged by sectionId), so it isn't
@@ -237,6 +241,7 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('chapters', setChapters)
     loadInto('customSections', setCustomSections)
     loadInto('customSectionItems', setCustomSectionItems)
+    loadInto('sidebarGroups', setSidebarGroups)
     return () => {
       cancelled = true
     }
@@ -445,6 +450,133 @@ export default function Sidebar({ open = false, onClose }) {
     }
   }
 
+  // Groups are a lightweight second nesting level within a section — e.g.
+  // clustering several Academy programs together. Scoped by `sectionKey`
+  // (the collection name for built-in sections, or `customSectionItems:{id}`
+  // for a user-created section, since that collection spans many sections).
+  const groupsForKey = (sectionKey) =>
+    sidebarGroups.filter((g) => g.sectionKey === sectionKey).sort(sortByOrder)
+
+  const partitionByGroup = (rows, groupDefs) => {
+    const byGroupId = new Map(groupDefs.map((g) => [g.id, []]))
+    const ungrouped = []
+    rows.forEach((row) => {
+      if (row.groupId && byGroupId.has(row.groupId)) byGroupId.get(row.groupId).push(row)
+      else ungrouped.push(row)
+    })
+    return {
+      items: ungrouped,
+      groups: groupDefs.map((g) => ({
+        id: g.id,
+        label: g.label,
+        actions: [
+          { key: 'rename-group', label: 'Rename group', onClick: () => openRenameGroup(g) },
+          {
+            key: 'delete-group',
+            label: 'Delete group',
+            danger: true,
+            onClick: () => deleteGroup(g),
+          },
+        ],
+        items: byGroupId.get(g.id),
+      })),
+    }
+  }
+
+  const openAddGroup = (sectionKey) => {
+    setGroupModal({ sectionKey, id: null, label: '' })
+  }
+
+  const openRenameGroup = (group) => {
+    setGroupModal({ sectionKey: group.sectionKey, id: group.id, label: group.label })
+  }
+
+  const closeGroupModal = () => {
+    if (savingGroup) return
+    setGroupModal(null)
+  }
+
+  const submitGroupModal = async (e) => {
+    e.preventDefault()
+    const label = groupModal?.label.trim()
+    if (!label || savingGroup) return
+    setSavingGroup(true)
+    try {
+      if (groupModal.id) {
+        await updateDoc(doc(db, 'sidebarGroups', groupModal.id), { label })
+      } else {
+        const maxOrder = groupsForKey(groupModal.sectionKey).reduce(
+          (max, g) => Math.max(max, g.order ?? 0),
+          -1
+        )
+        await addDoc(collection(db, 'sidebarGroups'), {
+          sectionKey: groupModal.sectionKey,
+          label,
+          order: maxOrder + 1,
+          createdAt: serverTimestamp(),
+        })
+      }
+      reload('sidebarGroups')
+      setGroupModal(null)
+    } catch (err) {
+      console.error('Failed to save group', err)
+      alert(err.message || 'Failed to save group')
+    } finally {
+      setSavingGroup(false)
+    }
+  }
+
+  const deleteGroup = async (group) => {
+    if (
+      !confirm(`Delete "${group.label}"? Items in this group are not removed, just ungrouped.`)
+    )
+      return
+    try {
+      await deleteDoc(doc(db, 'sidebarGroups', group.id))
+      reload('sidebarGroups')
+    } catch (err) {
+      console.error('Failed to delete group', err)
+      alert(err.message || 'Failed to delete group')
+    }
+  }
+
+  const moveItemToGroup = async (collectionName, itemId, groupId) => {
+    try {
+      await updateDoc(doc(db, collectionName, itemId), { groupId: groupId || null })
+      reload(collectionName)
+    } catch (err) {
+      console.error('Failed to move item', err)
+      alert(err.message || 'Failed to move item')
+    }
+  }
+
+  const groupActions = (collectionName, category, groupDefs) => [
+    ...(groupDefs.length
+      ? groupDefs
+          .filter((g) => g.id !== category.groupId)
+          .map((g) => ({
+            key: `move-to-group-${g.id}`,
+            label: `Move to "${g.label}"`,
+            onClick: () => moveItemToGroup(collectionName, category.id, g.id),
+          }))
+      : []),
+    ...(category.groupId && groupDefs.some((g) => g.id === category.groupId)
+      ? [
+          {
+            key: 'remove-from-group',
+            label: 'Remove from group',
+            onClick: () => moveItemToGroup(collectionName, category.id, null),
+          },
+        ]
+      : []),
+  ]
+
+  const addGroupAction = (sectionKey) => ({
+    key: 'add-group',
+    label: 'Add group',
+    onClick: () => openAddGroup(sectionKey),
+  })
+
   const openAddSection = () => {
     setNewSectionLabel('')
     setNewSectionTemplate('')
@@ -566,7 +698,7 @@ export default function Sidebar({ open = false, onClose }) {
     onClick: () => sortAlphabetically(collectionName, items),
   })
 
-  const categoryActions = (collectionName, category) => [
+  const categoryActions = (collectionName, category, groupDefs = []) => [
     ...(collectionName === 'trackerEvents'
       ? []
       : [
@@ -581,6 +713,7 @@ export default function Sidebar({ open = false, onClose }) {
       label: `Edit ${CATEGORY_META[collectionName].label.toLowerCase()}`,
       onClick: () => openEditCategory(collectionName, category),
     },
+    ...groupActions(collectionName, category, groupDefs),
     {
       key: 'delete-category',
       label: `Delete ${CATEGORY_META[collectionName].label.toLowerCase()}`,
@@ -631,71 +764,115 @@ export default function Sidebar({ open = false, onClose }) {
       },
     ]
 
-    next.push({
-      id: 'programs',
-      label: 'Programs',
-      actions: [...sectionActions('programs'), sortAzAction('programs', programs)],
-      onReorderItems: (items) => reorderCategory('programs', items),
-      items: programs.map((p) => ({
+    const programsGroupDefs = groupsForKey('programs')
+    const { items: programsItems, groups: programsGroups } = partitionByGroup(
+      programs.map((p) => ({
         id: p.id,
         to: `/programs/${p.id}`,
         label: p.name,
         icon: 'folder',
         description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('programs', p),
+        groupId: p.groupId,
+        actions: categoryActions('programs', p, programsGroupDefs),
       })),
+      programsGroupDefs
+    )
+    next.push({
+      id: 'programs',
+      label: 'Programs',
+      actions: [
+        ...sectionActions('programs'),
+        sortAzAction('programs', programs),
+        addGroupAction('programs'),
+      ],
+      onReorderItems: (items) => reorderCategory('programs', items),
+      items: programsItems,
+      groups: programsGroups,
       emptyLabel: programs.length === 0 ? 'No programs yet' : undefined,
     })
 
+    const academyGroupDefs = groupsForKey('academyPrograms')
+    const { items: academyItems, groups: academyGroups } = partitionByGroup(
+      academyPrograms.map((p) => ({
+        id: p.id,
+        to: `/academy/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        groupId: p.groupId,
+        actions: categoryActions('academyPrograms', p, academyGroupDefs),
+      })),
+      academyGroupDefs
+    )
     next.push({
       id: 'academy',
       label: 'Academy',
-      actions: [...sectionActions('academyPrograms'), sortAzAction('academyPrograms', academyPrograms)],
+      actions: [
+        ...sectionActions('academyPrograms'),
+        sortAzAction('academyPrograms', academyPrograms),
+        addGroupAction('academyPrograms'),
+      ],
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
         { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
         { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
         { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
-        ...academyPrograms.map((p) => ({
-          id: p.id,
-          to: `/academy/${p.id}`,
-          label: p.name,
-          icon: 'folder',
-          description: namesLabel(p.lead) || undefined,
-          actions: categoryActions('academyPrograms', p),
-        })),
+        ...academyItems,
       ],
+      groups: academyGroups,
     })
 
-    next.push({
-      id: 'custom-programs',
-      label: 'Custom Programs',
-      actions: [...sectionActions('customPrograms'), sortAzAction('customPrograms', customPrograms)],
-      onReorderItems: (items) => reorderCategory('customPrograms', items),
-      items: customPrograms.map((p) => ({
+    const customProgramsGroupDefs = groupsForKey('customPrograms')
+    const { items: customProgramsItems, groups: customProgramsGroups } = partitionByGroup(
+      customPrograms.map((p) => ({
         id: p.id,
         to: `/custom-programs/${p.id}`,
         label: p.name,
         icon: 'folder',
         description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('customPrograms', p),
+        groupId: p.groupId,
+        actions: categoryActions('customPrograms', p, customProgramsGroupDefs),
       })),
+      customProgramsGroupDefs
+    )
+    next.push({
+      id: 'custom-programs',
+      label: 'Custom Programs',
+      actions: [
+        ...sectionActions('customPrograms'),
+        sortAzAction('customPrograms', customPrograms),
+        addGroupAction('customPrograms'),
+      ],
+      onReorderItems: (items) => reorderCategory('customPrograms', items),
+      items: customProgramsItems,
+      groups: customProgramsGroups,
       emptyLabel: customPrograms.length === 0 ? 'No Custom Programs yet' : undefined,
     })
 
-    next.push({
-      id: 'documents',
-      label: 'Documents & Assets',
-      actions: [...sectionActions('trackerDocuments'), sortAzAction('trackerDocuments', trackerDocuments)],
-      onReorderItems: (items) => reorderCategory('trackerDocuments', items),
-      items: trackerDocuments.map((p) => ({
+    const trackerDocumentsGroupDefs = groupsForKey('trackerDocuments')
+    const { items: trackerDocumentsItems, groups: trackerDocumentsGroups } = partitionByGroup(
+      trackerDocuments.map((p) => ({
         id: p.id,
         to: `/documents/${p.id}`,
         label: p.name,
         icon: 'folder',
         description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('trackerDocuments', p),
+        groupId: p.groupId,
+        actions: categoryActions('trackerDocuments', p, trackerDocumentsGroupDefs),
       })),
+      trackerDocumentsGroupDefs
+    )
+    next.push({
+      id: 'documents',
+      label: 'Documents & Assets',
+      actions: [
+        ...sectionActions('trackerDocuments'),
+        sortAzAction('trackerDocuments', trackerDocuments),
+        addGroupAction('trackerDocuments'),
+      ],
+      onReorderItems: (items) => reorderCategory('trackerDocuments', items),
+      items: trackerDocumentsItems,
+      groups: trackerDocumentsGroups,
       emptyLabel: trackerDocuments.length === 0 ? 'No Documents & Assets yet' : undefined,
     })
 
@@ -708,22 +885,30 @@ export default function Sidebar({ open = false, onClose }) {
       ],
     })
 
+    const trackerGraphicsGroupDefs = groupsForKey('trackerGraphics')
+    const { items: trackerGraphicsItems, groups: trackerGraphicsGroups } = partitionByGroup(
+      trackerGraphics.map((p) => ({
+        id: p.id,
+        to: `/graphics/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        groupId: p.groupId,
+        actions: categoryActions('trackerGraphics', p, trackerGraphicsGroupDefs),
+      })),
+      trackerGraphicsGroupDefs
+    )
     next.push({
       id: 'graphics',
       label: 'Graphics',
-      actions: [...sectionActions('trackerGraphics'), sortAzAction('trackerGraphics', trackerGraphics)],
-      onReorderItems: (items) => reorderCategory('trackerGraphics', items),
-      items: [
-        { to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' },
-        ...trackerGraphics.map((p) => ({
-          id: p.id,
-          to: `/graphics/${p.id}`,
-          label: p.name,
-          icon: 'folder',
-          description: namesLabel(p.lead) || undefined,
-          actions: categoryActions('trackerGraphics', p),
-        })),
+      actions: [
+        ...sectionActions('trackerGraphics'),
+        sortAzAction('trackerGraphics', trackerGraphics),
+        addGroupAction('trackerGraphics'),
       ],
+      onReorderItems: (items) => reorderCategory('trackerGraphics', items),
+      items: [{ to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' }, ...trackerGraphicsItems],
+      groups: trackerGraphicsGroups,
     })
 
     next.push({
@@ -732,57 +917,87 @@ export default function Sidebar({ open = false, onClose }) {
       items: [{ to: '/content-calendar', label: 'Social Media Calendar', icon: 'calendar' }],
     })
 
-    next.push({
-      id: 'data',
-      label: 'Data Projects',
-      actions: [...sectionActions('trackerData', 'Add Data Project'), sortAzAction('trackerData', trackerData)],
-      onReorderItems: (items) => reorderCategory('trackerData', items),
-      items: trackerData.map((p) => ({
+    const trackerDataGroupDefs = groupsForKey('trackerData')
+    const { items: trackerDataItems, groups: trackerDataGroups } = partitionByGroup(
+      trackerData.map((p) => ({
         id: p.id,
         to: `/data/${p.id}`,
         label: p.name,
         icon: 'folder',
         description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('trackerData', p),
+        groupId: p.groupId,
+        actions: categoryActions('trackerData', p, trackerDataGroupDefs),
       })),
+      trackerDataGroupDefs
+    )
+    next.push({
+      id: 'data',
+      label: 'Data Projects',
+      actions: [
+        ...sectionActions('trackerData', 'Add Data Project'),
+        sortAzAction('trackerData', trackerData),
+        addGroupAction('trackerData'),
+      ],
+      onReorderItems: (items) => reorderCategory('trackerData', items),
+      items: trackerDataItems,
+      groups: trackerDataGroups,
       emptyLabel: trackerData.length === 0 ? 'Nothing here yet' : undefined,
     })
 
+    const boardCommitmentsGroupDefs = groupsForKey('boardCommitments')
+    const { items: boardCommitmentsItems, groups: boardCommitmentsGroups } = partitionByGroup(
+      boardCommitments.map((p) => ({
+        id: p.id,
+        to: `/board-commitments/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        groupId: p.groupId,
+        actions: categoryActions('boardCommitments', p, boardCommitmentsGroupDefs),
+      })),
+      boardCommitmentsGroupDefs
+    )
     next.push({
       id: 'board-commitments',
       label: 'Board Commitments',
       actions: [
         ...sectionActions('boardCommitments', 'Add Board Commitment'),
         sortAzAction('boardCommitments', boardCommitments),
+        addGroupAction('boardCommitments'),
       ],
       onReorderItems: (items) => reorderCategory('boardCommitments', items),
-      items: boardCommitments.map((p) => ({
-        id: p.id,
-        to: `/board-commitments/${p.id}`,
-        label: p.name,
-        icon: 'folder',
-        description: namesLabel(p.lead) || undefined,
-        actions: categoryActions('boardCommitments', p),
-      })),
+      items: boardCommitmentsItems,
+      groups: boardCommitmentsGroups,
       emptyLabel: boardCommitments.length === 0 ? 'Nothing here yet' : undefined,
     })
 
+    const chaptersGroupDefs = groupsForKey('chapters')
+    const { items: chaptersItems, groups: chaptersGroups } = partitionByGroup(
+      chapters.map((p) => ({
+        id: p.id,
+        to: `/chapters/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: [p.chapterLeader, p.coLeaders].filter(Boolean).join(' · ') || undefined,
+        groupId: p.groupId,
+        actions: categoryActions('chapters', p, chaptersGroupDefs),
+      })),
+      chaptersGroupDefs
+    )
     next.push({
       id: 'chapters',
       label: 'Chapters',
-      actions: [...sectionActions('chapters', 'Add a chapter'), sortAzAction('chapters', chapters)],
+      actions: [
+        ...sectionActions('chapters', 'Add a chapter'),
+        sortAzAction('chapters', chapters),
+        addGroupAction('chapters'),
+      ],
       onReorderItems: (items) => reorderCategory('chapters', items),
       items: [
         { to: '/chapter-leader-dashboard', label: 'Chapter Leader Dashboard', icon: 'chart' },
-        ...chapters.map((p) => ({
-          id: p.id,
-          to: `/chapters/${p.id}`,
-          label: p.name,
-          icon: 'folder',
-          description: [p.chapterLeader, p.coLeaders].filter(Boolean).join(' · ') || undefined,
-          actions: categoryActions('chapters', p),
-        })),
+        ...chaptersItems,
       ],
+      groups: chaptersGroups,
       emptyLabel: chapters.length === 0 ? 'No chapters yet' : undefined,
     })
 
@@ -792,15 +1007,30 @@ export default function Sidebar({ open = false, onClose }) {
       .slice()
       .sort(sortByOrder)
       .forEach((section) => {
+        const sectionKey = `customSectionItems:${section.id}`
+        const sectionGroupDefs = groupsForKey(sectionKey)
         const sectionItems = customSectionItems
           .filter((it) => it.sectionId === section.id)
           .sort(sortByOrder)
+        const { items: partitionedItems, groups: sectionGroups } = partitionByGroup(
+          sectionItems.map((p) => ({
+            id: p.id,
+            to: `/custom-sections/${section.id}/${p.id}`,
+            label: p.name,
+            icon: 'folder',
+            description: namesLabel(p.lead) || undefined,
+            groupId: p.groupId,
+            actions: categoryActions('customSectionItems', p, sectionGroupDefs),
+          })),
+          sectionGroupDefs
+        )
         next.push({
           id: section.id,
           label: section.label,
           actions: [
             ...sectionActions('customSectionItems', 'Add item', section.id),
             sortAzAction('customSectionItems', sectionItems),
+            addGroupAction(sectionKey),
             {
               key: 'delete-section',
               label: 'Delete section',
@@ -809,15 +1039,8 @@ export default function Sidebar({ open = false, onClose }) {
             },
           ],
           onReorderItems: (items) => reorderCategory('customSectionItems', items),
-          items: sectionItems
-            .map((p) => ({
-              id: p.id,
-              to: `/custom-sections/${section.id}/${p.id}`,
-              label: p.name,
-              icon: 'folder',
-              description: namesLabel(p.lead) || undefined,
-              actions: categoryActions('customSectionItems', p),
-            })),
+          items: partitionedItems,
+          groups: sectionGroups,
           emptyLabel: 'No items yet',
         })
       })
@@ -863,6 +1086,7 @@ export default function Sidebar({ open = false, onClose }) {
     chapters,
     customSections,
     customSectionItems,
+    sidebarGroups,
     isAdmin,
     isEnabled,
     isExecInboxUser,
@@ -935,6 +1159,46 @@ export default function Sidebar({ open = false, onClose }) {
             </select>
           </label>
         </form>
+      </Modal>
+
+      <Modal
+        open={!!groupModal}
+        onClose={closeGroupModal}
+        title={groupModal?.id ? 'Rename group' : 'Add a group'}
+        busy={savingGroup}
+        footer={
+          <>
+            <button
+              type="button"
+              className="hae-btn-secondary"
+              onClick={closeGroupModal}
+              disabled={savingGroup}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="sidebar-group-form"
+              className="hae-btn"
+              disabled={savingGroup}
+            >
+              {savingGroup ? 'Saving…' : 'Save'}
+            </button>
+          </>
+        }
+      >
+        {groupModal ? (
+          <form id="sidebar-group-form" onSubmit={submitGroupModal} className="space-y-3">
+            <input
+              required
+              autoFocus
+              placeholder="Group name"
+              value={groupModal.label}
+              onChange={(e) => setGroupModal({ ...groupModal, label: e.target.value })}
+              className="w-full rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+          </form>
+        ) : null}
       </Modal>
 
       <Modal

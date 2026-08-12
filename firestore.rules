@@ -203,6 +203,9 @@ service cloud.firestore {
     match /customSectionItems/{id} {
       allow read, write: if isStaff();
     }
+    match /sidebarGroups/{id} {
+      allow read, write: if isStaff();
+    }
     match /chapters/{id} {
       allow read, write: if isStaff();
     }
