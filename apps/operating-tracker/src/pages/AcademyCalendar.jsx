@@ -31,6 +31,13 @@ function monthLabel(year, monthIndex) {
   })
 }
 
+function addDaysIso(iso, days) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() + days)
+  return toIsoDate(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
 function buildMonthCells(year, monthIndex) {
   const firstWeekday = new Date(year, monthIndex, 1).getDay()
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
@@ -102,12 +109,17 @@ export default function AcademyCalendar() {
       }))
     const fromPrograms = programs
       .filter((program) => program.startDate)
-      .map((program) => ({
-        id: program.id,
-        kind: 'program',
-        name: program.name,
-        eventDate: program.startDate,
-      }))
+      .flatMap((program) => {
+        const totalWeeks = Number(program.durationWeeks) > 0 ? Number(program.durationWeeks) : 1
+        return Array.from({ length: totalWeeks }, (_, i) => ({
+          id: program.id,
+          kind: 'program',
+          name: program.name,
+          label: `${i + 1} of ${totalWeeks} – ${program.name}`,
+          eventDate: addDaysIso(program.startDate, i * 7),
+          startDate: program.startDate,
+        }))
+      })
     return [...fromEvents, ...fromPrograms]
   }, [events, programs])
 
@@ -164,7 +176,7 @@ export default function AcademyCalendar() {
     setEditingKind(item.kind)
     setForm({
       name: item.name || '',
-      eventDate: item.eventDate || '',
+      eventDate: (item.kind === 'program' ? item.startDate : item.eventDate) || '',
       time: item.time || '',
       location: item.location || '',
       notes: item.notes || '',
@@ -274,7 +286,7 @@ export default function AcademyCalendar() {
         </button>
         <div className="ml-auto flex items-center gap-3 text-[11px] font-semibold text-hae-slate">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-hae-ink" /> Course start
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-hae-ink" /> Course week
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block h-2.5 w-2.5 rounded-sm bg-hae-crimson" /> Calendar event
@@ -282,7 +294,8 @@ export default function AcademyCalendar() {
         </div>
       </div>
 
-      <div className="overflow-hidden border border-hae-line bg-white">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <div className="overflow-hidden border border-hae-line bg-white lg:flex-1">
         <div className="grid grid-cols-7 border-b border-hae-line bg-hae-mist/80">
           {WEEKDAYS.map((d) => (
             <div
@@ -336,9 +349,9 @@ export default function AcademyCalendar() {
                       className={`truncate rounded px-1 py-0.5 text-[10px] font-semibold leading-tight text-white ${
                         item.kind === 'program' ? 'bg-hae-ink' : 'bg-hae-crimson'
                       }`}
-                      title={item.name}
+                      title={item.kind === 'program' ? item.label : item.name}
                     >
-                      {item.name}
+                      {item.kind === 'program' ? item.label : item.name}
                     </div>
                   ))}
                   {more > 0 ? (
@@ -353,10 +366,10 @@ export default function AcademyCalendar() {
         </div>
       </div>
 
-      <section className="border border-hae-line bg-white">
+      <aside className="w-full shrink-0 border border-hae-line bg-white lg:sticky lg:top-4 lg:w-80">
         <div className="flex items-center justify-between border-b border-hae-line px-4 py-3">
           <h2 className="text-sm font-semibold text-hae-ink">
-            {selectedDay ? `Course dates on ${formatDate(selectedDay)}` : 'Select a day'}
+            {selectedDay ? formatDate(selectedDay) : 'Select a day'}
           </h2>
           {isStaff && selectedDay ? (
             <button
@@ -364,7 +377,7 @@ export default function AcademyCalendar() {
               onClick={() => openAdd(selectedDay)}
               className="text-xs font-semibold text-hae-crimson"
             >
-              + Add to this day
+              + Add
             </button>
           ) : null}
         </div>
@@ -377,47 +390,50 @@ export default function AcademyCalendar() {
         ) : (
           <ul className="divide-y divide-hae-line">
             {selectedEvents.map((item) => (
-              <li key={`${item.kind}-${item.id}`}>
-                <div className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 hover:bg-hae-mist/40">
+              <li key={`${item.kind}-${item.id}`} className="px-4 py-3 hover:bg-hae-mist/40">
+                <div className="flex items-start gap-3">
+                  <div className="w-16 shrink-0 pt-0.5 text-[11px] font-semibold uppercase text-hae-slate">
+                    {item.kind === 'program' ? 'All day' : item.time || 'No time'}
+                  </div>
                   <button
                     type="button"
                     onClick={() => (isStaff ? openEdit(item) : null)}
                     className="flex-1 text-left"
                   >
-                    <div className="text-sm font-semibold text-hae-ink">{item.name}</div>
-                    <div className="text-xs text-hae-slate">
-                      {item.kind === 'program'
-                        ? 'Academy course start date'
-                        : item.time || 'No time set'}
-                      {item.kind === 'event' && item.location ? ` · ${item.location}` : ''}
+                    <div className="text-sm font-semibold text-hae-ink">
+                      {item.kind === 'program' ? item.label : item.name}
                     </div>
+                    {item.kind === 'event' && item.location ? (
+                      <div className="text-xs text-hae-slate">{item.location}</div>
+                    ) : null}
                   </button>
-                  <div className="flex items-center gap-3">
-                    {item.kind === 'program' ? (
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/academy/${item.id}`)}
-                        className="text-xs font-semibold text-hae-slate hover:text-hae-ink"
-                      >
-                        View course →
-                      </button>
-                    ) : null}
-                    {isStaff ? (
-                      <button
-                        type="button"
-                        onClick={() => openEdit(item)}
-                        className="text-xs font-semibold text-hae-crimson"
-                      >
-                        Edit →
-                      </button>
-                    ) : null}
-                  </div>
+                </div>
+                <div className="mt-2 flex items-center gap-3 pl-[4.75rem]">
+                  {item.kind === 'program' ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/academy/${item.id}`)}
+                      className="text-xs font-semibold text-hae-slate hover:text-hae-ink"
+                    >
+                      View course →
+                    </button>
+                  ) : null}
+                  {isStaff ? (
+                    <button
+                      type="button"
+                      onClick={() => openEdit(item)}
+                      className="text-xs font-semibold text-hae-crimson"
+                    >
+                      Edit →
+                    </button>
+                  ) : null}
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </aside>
+      </div>
 
       <Modal
         open={open}
