@@ -38,6 +38,20 @@ function addDaysIso(iso, days) {
   return toIsoDate(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+function formatTime(hhmm) {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 === 0 ? 12 : h % 12
+  return `${hour12}:${pad2(m)} ${period}`
+}
+
+function formatTimeRange(startTime, endTime) {
+  if (!startTime && !endTime) return ''
+  if (startTime && endTime) return `${formatTime(startTime)}–${formatTime(endTime)}`
+  return formatTime(startTime || endTime)
+}
+
 function buildMonthCells(year, monthIndex) {
   const firstWeekday = new Date(year, monthIndex, 1).getDay()
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
@@ -56,6 +70,8 @@ const emptyForm = {
   time: '',
   location: '',
   notes: '',
+  startTime: '',
+  endTime: '',
 }
 
 export default function AcademyCalendar() {
@@ -111,13 +127,17 @@ export default function AcademyCalendar() {
       .filter((program) => program.startDate)
       .flatMap((program) => {
         const totalWeeks = Number(program.durationWeeks) > 0 ? Number(program.durationWeeks) : 1
+        const timeRange = formatTimeRange(program.startTime, program.endTime)
         return Array.from({ length: totalWeeks }, (_, i) => ({
           id: program.id,
           kind: 'program',
           name: program.name,
-          label: `${i + 1} of ${totalWeeks} – ${program.name}`,
+          label: `${i + 1} of ${totalWeeks} – ${program.name}${timeRange ? ` (${timeRange})` : ''}`,
           eventDate: addDaysIso(program.startDate, i * 7),
           startDate: program.startDate,
+          startTime: program.startTime,
+          endTime: program.endTime,
+          timeRange,
         }))
       })
     return [...fromEvents, ...fromPrograms]
@@ -180,6 +200,8 @@ export default function AcademyCalendar() {
       time: item.time || '',
       location: item.location || '',
       notes: item.notes || '',
+      startTime: item.startTime || '',
+      endTime: item.endTime || '',
     })
     setOpen(true)
   }
@@ -193,6 +215,8 @@ export default function AcademyCalendar() {
         await updateDoc(doc(db, 'academyPrograms', editingId), {
           name: form.name.trim(),
           startDate: form.eventDate,
+          startTime: form.startTime,
+          endTime: form.endTime,
         })
       } else {
         const payload = {
@@ -393,7 +417,9 @@ export default function AcademyCalendar() {
               <li key={`${item.kind}-${item.id}`} className="px-4 py-3 hover:bg-hae-mist/40">
                 <div className="flex items-start gap-3">
                   <div className="w-16 shrink-0 pt-0.5 text-[11px] font-semibold uppercase text-hae-slate">
-                    {item.kind === 'program' ? 'All day' : item.time || 'No time'}
+                    {item.kind === 'program'
+                      ? item.timeRange || 'All day'
+                      : item.time || 'No time'}
                   </div>
                   <button
                     type="button"
@@ -497,6 +523,28 @@ export default function AcademyCalendar() {
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
             />
           </label>
+          {editingKind === 'program' ? (
+            <>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Start time</span>
+                <input
+                  type="time"
+                  value={form.startTime}
+                  onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">End time</span>
+                <input
+                  type="time"
+                  value={form.endTime}
+                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+            </>
+          ) : null}
           {editingKind === 'event' ? (
             <>
               <label className="flex flex-col gap-1 text-sm">
