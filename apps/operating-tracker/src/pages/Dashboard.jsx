@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
-import { timeOfDayGreeting } from '@hae/ui'
+import { NavIcon, timeOfDayGreeting } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../firebase'
 import PrioritiesSection from '../components/PrioritiesSection'
@@ -19,13 +20,43 @@ const CATEGORIES = [
   },
 ]
 
+const DASHBOARD_LINKS = [
+  {
+    id: 'programs',
+    label: 'Programs',
+    icon: 'folder',
+  },
+  {
+    id: 'academy',
+    label: 'Academy',
+    icon: 'book',
+  },
+  {
+    id: 'custom-programs',
+    label: 'Custom Programs',
+    icon: 'star',
+  },
+  {
+    id: 'social-media',
+    label: 'Social Media',
+    icon: 'calendar',
+    to: '/content-calendar',
+  },
+  {
+    id: 'traffic-report',
+    label: 'Traffic Report',
+    icon: 'chart',
+    to: '/events-dashboard',
+  },
+]
+
 export default function Dashboard() {
   const { userProfile } = useAuth()
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState(CATEGORIES[0].id)
+  const [category, setCategory] = useState(null)
 
   const loadData = useCallback(async () => {
     const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
@@ -86,26 +117,74 @@ export default function Dashboard() {
     return <p className="text-sm text-hae-slate">Loading dashboard…</p>
   }
 
+  const header = (
+    <header className="border-b border-hae-line pb-6">
+      {userProfile?.name && (
+        <p className="font-display text-xl text-hae-ink">
+          {timeOfDayGreeting()}, {userProfile.name}
+        </p>
+      )}
+      <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
+        Harvard Alumni Entrepreneurs
+      </p>
+      <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
+        HAE Dashboard
+      </h1>
+      <p className="mt-3 max-w-2xl text-sm text-hae-slate">
+        Choose a dashboard to view.
+      </p>
+    </header>
+  )
+
+  if (!category) {
+    return (
+      <div className="space-y-8">
+        {header}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {DASHBOARD_LINKS.map((d) => {
+            const content = (
+              <>
+                <NavIcon
+                  name={d.icon}
+                  className="[&>svg]:h-6 [&>svg]:w-6 text-hae-crimson"
+                />
+                <p className="mt-3 font-display text-lg text-hae-ink">{d.label}</p>
+              </>
+            )
+            const className =
+              'block rounded-lg border border-hae-line p-5 transition hover:border-hae-crimson hover:shadow-sm'
+            return d.to ? (
+              <Link key={d.id} to={d.to} className={className}>
+                {content}
+              </Link>
+            ) : (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setCategory(d.id)}
+                className={`${className} text-left`}
+              >
+                {content}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
-      <header className="border-b border-hae-line pb-6">
-        {userProfile?.name && (
-          <p className="font-display text-xl text-hae-ink">
-            {timeOfDayGreeting()}, {userProfile.name}
-          </p>
-        )}
-        <p className="mt-2 text-[11px] font-semibold tracking-[0.16em] text-hae-crimson uppercase">
-          Harvard Alumni Entrepreneurs
-        </p>
-        <h1 className="mt-2 font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
-          Operating Dashboard
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-          Live view of priorities, blockers, attention items, and wins across all programs.
-        </p>
-      </header>
+      {header}
 
-      <div className="flex flex-wrap gap-2 border-b border-hae-line">
+      <div className="flex flex-wrap items-center gap-2 border-b border-hae-line">
+        <button
+          type="button"
+          onClick={() => setCategory(null)}
+          className="mr-2 border-b-2 border-transparent px-3 py-2 text-sm font-semibold text-hae-slate hover:text-hae-ink"
+        >
+          ← All dashboards
+        </button>
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
