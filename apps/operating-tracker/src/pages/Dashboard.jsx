@@ -8,6 +8,7 @@ import PrioritiesSection from '../components/PrioritiesSection'
 import WaitingOnSection from '../components/WaitingOnSection'
 import AttentionSection from '../components/AttentionSection'
 import WinsSection from '../components/WinsSection'
+import RestrictedHome from './RestrictedHome'
 
 const CATEGORIES = [
   { id: 'programs', label: 'Programs', collectionName: 'programs', pathPrefix: '/programs' },
@@ -20,43 +21,61 @@ const CATEGORIES = [
   },
 ]
 
-const DASHBOARD_LINKS = [
+export const DASHBOARD_LINKS = [
   {
     id: 'programs',
     label: 'Programs',
     icon: 'folder',
+    sectionId: 'programs',
   },
   {
     id: 'academy',
     label: 'Academy',
     icon: 'book',
+    sectionId: 'academy',
   },
   {
     id: 'custom-programs',
     label: 'Custom Programs',
     icon: 'star',
+    sectionId: 'custom-programs',
   },
   {
     id: 'social-media',
     label: 'Social Media',
     icon: 'calendar',
     to: '/content-calendar',
+    sectionId: 'content',
   },
   {
     id: 'traffic-report',
     label: 'Traffic Report',
     icon: 'chart',
     to: '/events-dashboard',
+    sectionId: 'events',
   },
 ]
 
 export default function Dashboard() {
-  const { userProfile } = useAuth()
+  const { userProfile, sectionAccess } = useAuth()
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState(null)
+
+  const visibleLinks = useMemo(
+    () =>
+      sectionAccess
+        ? DASHBOARD_LINKS.filter((d) => sectionAccess.includes(d.sectionId))
+        : DASHBOARD_LINKS,
+    [sectionAccess]
+  )
+
+  const visibleCategories = useMemo(
+    () => (sectionAccess ? CATEGORIES.filter((c) => sectionAccess.includes(c.id)) : CATEGORIES),
+    [sectionAccess]
+  )
 
   const loadData = useCallback(async () => {
     const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
@@ -117,6 +136,10 @@ export default function Dashboard() {
     return <p className="text-sm text-hae-slate">Loading dashboard…</p>
   }
 
+  if (sectionAccess && visibleLinks.length === 0) {
+    return <RestrictedHome />
+  }
+
   const header = (
     <header className="border-b border-hae-line pb-6">
       {userProfile?.name && (
@@ -141,7 +164,7 @@ export default function Dashboard() {
       <div className="space-y-8">
         {header}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {DASHBOARD_LINKS.map((d) => {
+          {visibleLinks.map((d) => {
             const content = (
               <>
                 <NavIcon
@@ -185,7 +208,7 @@ export default function Dashboard() {
         >
           ← All dashboards
         </button>
-        {CATEGORIES.map((c) => (
+        {visibleCategories.map((c) => (
           <button
             key={c.id}
             type="button"
