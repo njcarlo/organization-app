@@ -301,6 +301,8 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
       haeLead: toNameList(program.haeLead),
       startDate: program.startDate || '',
       durationWeeks: program.durationWeeks ?? '',
+      startTime: program.startTime || '',
+      endTime: program.endTime || '',
       instructor: program.instructor || '',
       guestSpeaker: program.guestSpeaker || '',
     })
@@ -324,6 +326,8 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         haeLead: academyForm.haeLead,
         startDate: academyForm.startDate,
         durationWeeks: academyForm.durationWeeks ? Number(academyForm.durationWeeks) : null,
+        startTime: academyForm.startTime,
+        endTime: academyForm.endTime,
         instructor: academyForm.instructor.trim(),
         guestSpeaker: academyForm.guestSpeaker.trim(),
       })
@@ -552,6 +556,16 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Time
+                </dt>
+                <dd className="text-hae-ink">
+                  {program.startTime || program.endTime
+                    ? `${program.startTime || '—'} – ${program.endTime || '—'}`
+                    : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Instructor
                 </dt>
                 <dd className="text-hae-ink">{program.instructor || '—'}</dd>
@@ -754,6 +768,24 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   onChange={(e) =>
                     setAcademyForm({ ...academyForm, durationWeeks: e.target.value })
                   }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Start time</span>
+                <input
+                  type="time"
+                  value={academyForm.startTime}
+                  onChange={(e) => setAcademyForm({ ...academyForm, startTime: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">End time</span>
+                <input
+                  type="time"
+                  value={academyForm.endTime}
+                  onChange={(e) => setAcademyForm({ ...academyForm, endTime: e.target.value })}
                   className="rounded-md border border-hae-line px-3 py-2 text-sm"
                 />
               </label>

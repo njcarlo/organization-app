@@ -16,6 +16,8 @@ const emptyCourseFields = {
   haeLead: [],
   startDate: '',
   durationWeeks: '',
+  startTime: '',
+  endTime: '',
   instructor: '',
   guestSpeaker: '',
 }
@@ -76,6 +78,8 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               haeLead: newItem.haeLead,
               startDate: newItem.startDate,
               durationWeeks: newItem.durationWeeks ? Number(newItem.durationWeeks) : null,
+              startTime: newItem.startTime,
+              endTime: newItem.endTime,
               instructor: newItem.instructor.trim(),
               guestSpeaker: newItem.guestSpeaker.trim(),
             }
@@ -104,6 +108,8 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               haeLead: draft.haeLead,
               startDate: draft.startDate,
               durationWeeks: draft.durationWeeks ? Number(draft.durationWeeks) : null,
+              startTime: draft.startTime,
+              endTime: draft.endTime,
               instructor: draft.instructor.trim(),
               guestSpeaker: draft.guestSpeaker.trim(),
             }
@@ -176,6 +182,20 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               value={newItem.durationWeeks}
               onChange={(e) => setNewItem({ ...newItem, durationWeeks: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            />
+            <input
+              type="time"
+              placeholder="Start time"
+              value={newItem.startTime}
+              onChange={(e) => setNewItem({ ...newItem, startTime: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
+            />
+            <input
+              type="time"
+              placeholder="End time"
+              value={newItem.endTime}
+              onChange={(e) => setNewItem({ ...newItem, endTime: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
             />
             <input
               placeholder="Instructor"
@@ -270,6 +290,20 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                           onChange={(e) => setDraft({ ...draft, durationWeeks: e.target.value })}
                         />
                         <input
+                          type="time"
+                          placeholder="Start time"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs text-hae-slate"
+                          value={draft.startTime}
+                          onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
+                        />
+                        <input
+                          type="time"
+                          placeholder="End time"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs text-hae-slate"
+                          value={draft.endTime}
+                          onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
+                        />
+                        <input
                           placeholder="Instructor"
                           className="w-full rounded border border-hae-line px-2 py-1 text-xs"
                           value={draft.instructor}
@@ -338,6 +372,8 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                           namesLabel(p.haeLead) && `HAE Lead: ${namesLabel(p.haeLead)}`,
                           p.startDate && `Start: ${p.startDate}`,
                           p.durationWeeks && `${p.durationWeeks} weeks`,
+                          (p.startTime || p.endTime) &&
+                            `Time: ${p.startTime || '—'}–${p.endTime || '—'}`,
                           p.instructor && `Instructor: ${p.instructor}`,
                           p.guestSpeaker && `Guest: ${p.guestSpeaker}`,
                         ]
@@ -378,6 +414,8 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                                   haeLead: toNameList(p.haeLead),
                                   startDate: p.startDate || '',
                                   durationWeeks: p.durationWeeks ?? '',
+                                  startTime: p.startTime || '',
+                                  endTime: p.endTime || '',
                                   instructor: p.instructor || '',
                                   guestSpeaker: p.guestSpeaker || '',
                                 }
