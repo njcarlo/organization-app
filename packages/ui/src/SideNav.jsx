@@ -248,20 +248,6 @@ export default function SideNav({
         className={`group/section rounded-2xl ${isDragging ? 'z-10 opacity-90' : ''}`}
       >
         <div className="relative flex items-center gap-0.5">
-          {dragHandle ? (
-            <button
-              type="button"
-              {...dragHandle.attributes}
-              {...dragHandle.listeners}
-              ref={dragHandle.setActivatorNodeRef}
-              aria-label={`Reorder ${section.label}`}
-              className="flex h-8 w-4 shrink-0 touch-none items-center justify-center rounded text-hae-slate/50 opacity-0 hover:text-hae-ink group-hover/section:opacity-100 active:cursor-grabbing cursor-grab"
-            >
-              <NavIcon name="grip" className="[&>svg]:h-4 [&>svg]:w-4" />
-            </button>
-          ) : (
-            <span className="h-8 w-4 shrink-0" aria-hidden />
-          )}
           {isRenaming ? (
             <input
               autoFocus
@@ -285,7 +271,11 @@ export default function SideNav({
               type="button"
               onClick={() => toggle(section.id)}
               aria-expanded={isOpen}
+              {...(dragHandle ? { ...dragHandle.attributes, ...dragHandle.listeners } : {})}
+              ref={dragHandle ? dragHandle.setActivatorNodeRef : undefined}
               className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-2xl py-2.5 pl-3 pr-3 text-left text-xs font-semibold transition-colors ${
+                dragHandle ? 'touch-none cursor-grab active:cursor-grabbing' : ''
+              } ${
                 groupActive || isOpen
                   ? 'text-hae-crimson'
                   : 'text-hae-ink hover:bg-hae-mist'
@@ -362,28 +352,42 @@ export default function SideNav({
               </p>
             ) : (
               <>
-                {(() => {
-                  const reorderable = typeof section.onReorderItems === 'function'
-                  const staticItems = reorderable
-                    ? childItems.filter((it) => it.id == null)
-                    : childItems
-                  const draggableItems = reorderable
-                    ? childItems.filter((it) => it.id != null)
-                    : []
-                  return (
-                    <>
-                      {staticItems.map((item) => renderRow(item))}
-                      {draggableItems.length > 0 ? (
-                        <SortableItemList
-                          items={draggableItems}
-                          onReorder={section.onReorderItems}
-                          renderItem={renderRow}
-                        />
-                      ) : null}
-                    </>
-                  )
-                })()}
-                {groups.map((group) => renderGroup(group, renderRow))}
+                {childItems.length > 0 ? (
+                  <div className="ml-3.5 space-y-0.5 border-l border-hae-line/70 pl-1.5">
+                    {(() => {
+                      const reorderable = typeof section.onReorderItems === 'function'
+                      const staticItems = reorderable
+                        ? childItems.filter((it) => it.id == null)
+                        : childItems
+                      const draggableItems = reorderable
+                        ? childItems.filter((it) => it.id != null)
+                        : []
+                      return (
+                        <>
+                          {staticItems.map((item) => renderRow(item))}
+                          {draggableItems.length > 0 ? (
+                            <SortableItemList
+                              items={draggableItems}
+                              onReorder={section.onReorderItems}
+                              renderItem={renderRow}
+                            />
+                          ) : null}
+                        </>
+                      )
+                    })()}
+                  </div>
+                ) : null}
+                {childItems.length > 0 && groups.length > 0 ? (
+                  <div className="my-2 border-t border-hae-line/60" aria-hidden />
+                ) : null}
+                {groups.map((group, i) => (
+                  <div key={group.id}>
+                    {i > 0 ? (
+                      <div className="my-2 ml-3.5 border-t border-hae-line/60" aria-hidden />
+                    ) : null}
+                    {renderGroup(group, renderRow)}
+                  </div>
+                ))}
               </>
             )}
           </div>
@@ -590,7 +594,6 @@ function NavItemRow({
   wrapperStyle,
   isDragging,
 }) {
-  const icon = iconForNavItem(item)
   const hasActions = Array.isArray(item.actions) && item.actions.length > 0
   const menuKey = item.to
   const menuOpen = openMenuKey === menuKey
@@ -626,13 +629,6 @@ function NavItemRow({
             : 'font-medium text-hae-ink/75 hover:bg-hae-mist hover:text-hae-ink'
         }`}
       >
-        <span
-          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-            active ? 'bg-white/20 text-white' : 'bg-hae-mist/80 text-hae-slate'
-          }`}
-        >
-          <NavIcon name={icon} className="[&>svg]:h-4 [&>svg]:w-4" />
-        </span>
         <span className="min-w-0 flex-1 truncate leading-snug">{item.label}</span>
       </NavLink>
       {hasActions ? (
