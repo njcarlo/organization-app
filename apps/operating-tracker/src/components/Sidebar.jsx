@@ -175,7 +175,7 @@ export default function Sidebar({ open = false, onClose }) {
     try {
       await setDoc(
         doc(db, SIDEBAR_LABELS_DOC),
-        { [`labels.${sectionId}`]: label },
+        { labels: { [sectionId]: label } },
         { merge: true }
       )
     } catch (err) {
