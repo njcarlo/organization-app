@@ -827,7 +827,7 @@ export default function Sidebar({ open = false, onClose }) {
       ],
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
-        { to: '/academy/course-registrations', label: 'Course Registrations', icon: 'checklist' },
+        { to: '/academy/course-registrations', label: 'Course Enrollments', icon: 'checklist' },
         { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
         { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
         ...academyItems,
