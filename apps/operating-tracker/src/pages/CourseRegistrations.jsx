@@ -122,6 +122,7 @@ export default function CourseRegistrations() {
             paid: Number(data.paid) || 0,
             promotional: Number(data.promotional) || 0,
             free: Number(data.free) || 0,
+            subscription: Number(data.subscription) || 0,
           }
         }
       })
@@ -180,8 +181,17 @@ export default function CourseRegistrations() {
 
   const enrollmentByCourse = useMemo(() => {
     return academyCourseNames.map((course) => {
-      const counts = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
-      return { course, ...counts, total: counts.paid + counts.promotional + counts.free }
+      const counts = enrollmentCounts[course] || {
+        paid: 0,
+        promotional: 0,
+        free: 0,
+        subscription: 0,
+      }
+      return {
+        course,
+        ...counts,
+        total: counts.paid + counts.promotional + counts.free + counts.subscription,
+      }
     })
   }, [enrollmentCounts, academyCourseNames])
 
@@ -192,9 +202,10 @@ export default function CourseRegistrations() {
           paid: sum.paid + e.paid,
           promotional: sum.promotional + e.promotional,
           free: sum.free + e.free,
+          subscription: sum.subscription + e.subscription,
           total: sum.total + e.total,
         }),
-        { paid: 0, promotional: 0, free: 0, total: 0 }
+        { paid: 0, promotional: 0, free: 0, subscription: 0, total: 0 }
       ),
     [enrollmentByCourse]
   )
@@ -331,7 +342,12 @@ export default function CourseRegistrations() {
 
   const saveEnrollmentCount = async (course, field, value) => {
     const cleaned = Math.max(0, Number(value) || 0)
-    const existing = enrollmentCounts[course] || { paid: 0, promotional: 0, free: 0 }
+    const existing = enrollmentCounts[course] || {
+      paid: 0,
+      promotional: 0,
+      free: 0,
+      subscription: 0,
+    }
     const next = { ...existing, [field]: cleaned }
     setError('')
     try {
@@ -429,6 +445,7 @@ export default function CourseRegistrations() {
                 <tr>
                   {[
                     { key: 'course', label: 'Academy' },
+                    { key: 'subscription', label: 'Subscription' },
                     { key: 'paid', label: 'Paid Enrollment' },
                     { key: 'promotional', label: 'Promotional Enrollment' },
                     { key: 'free', label: 'Free enrollment' },
@@ -451,7 +468,7 @@ export default function CourseRegistrations() {
               </thead>
               <tbody>
                 {sortedEnrollmentByCourse.map((e) => {
-                  const liveValues = ['paid', 'promotional', 'free'].map((field) => {
+                  const liveValues = ['paid', 'promotional', 'free', 'subscription'].map((field) => {
                     const draftKey = `${e.course}:${field}`
                     const raw = draftKey in enrollmentDrafts ? enrollmentDrafts[draftKey] : e[field]
                     return Number(raw) || 0
@@ -460,7 +477,7 @@ export default function CourseRegistrations() {
                   return (
                     <tr key={e.course} className="border-b border-hae-line/70">
                       <td className="px-3 py-2 text-sm font-medium text-hae-ink">{e.course}</td>
-                      {['paid', 'promotional', 'free'].map((field) => {
+                      {['subscription', 'paid', 'promotional', 'free'].map((field) => {
                         const draftKey = `${e.course}:${field}`
                         return (
                           <td key={field} className="px-3 py-2 text-sm text-hae-slate">
@@ -483,7 +500,7 @@ export default function CourseRegistrations() {
                 })}
                 {sortedEnrollmentByCourse.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center text-sm text-hae-slate">
+                    <td colSpan={6} className="px-3 py-6 text-center text-sm text-hae-slate">
                       {enrollmentByCourse.length === 0
                         ? 'No registrations yet.'
                         : 'No courses match your search.'}
@@ -495,6 +512,9 @@ export default function CourseRegistrations() {
                 <tfoot>
                   <tr className="bg-hae-mist/40">
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">All courses</td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
+                      {enrollmentGrandTotal.subscription}
+                    </td>
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
                       {enrollmentGrandTotal.paid}
                     </td>
