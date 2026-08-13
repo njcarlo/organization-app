@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Setup from './pages/Setup'
-import Dashboard from './pages/Dashboard'
+import Dashboard, { DASHBOARD_LINKS } from './pages/Dashboard'
 import EventsDashboard from './pages/EventsDashboard'
 import GraphicsDashboard from './pages/GraphicsDashboard'
 import ContentCalendar from './pages/ContentCalendar'
@@ -33,10 +33,15 @@ import { EXEC_INBOX_EMAILS } from './constants'
 // Surveys UI is hidden (platformSurface.hideSurveys). Page files + Firestore
 // `surveys*` data are intentionally kept — do not delete.
 
-/** Root route: full Dashboard for unrestricted users, else their section. */
+/** Root route: the dashboard picker for everyone. Section-restricted users
+ * only see cards for sections they're allowed into (filtered in Dashboard);
+ * if none of the picker's dashboards match their access, fall back to
+ * sending them straight into their first allowed section. */
 function Home() {
   const { sectionAccess } = useAuth()
-  return sectionAccess ? <RestrictedHome /> : <Dashboard />
+  const hasPickerAccess =
+    !sectionAccess || DASHBOARD_LINKS.some((d) => sectionAccess.includes(d.sectionId))
+  return hasPickerAccess ? <Dashboard /> : <RestrictedHome />
 }
 
 /** Gates a section's routes for section-restricted users; unrestricted users
