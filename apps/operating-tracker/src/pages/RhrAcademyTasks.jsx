@@ -94,8 +94,6 @@ export default function RhrAcademyTasks() {
       .sort((a, b) => (a.course.name || '').localeCompare(b.course.name || ''))
   }, [reginaTasks, courses])
 
-  const totalCount = groups.reduce((sum, g) => sum + g.tasks.length, 0)
-
   const startEdit = (task) => {
     setEditingId(task.id)
     setDraft({
@@ -184,9 +182,6 @@ export default function RhrAcademyTasks() {
         <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           RHR Academy Things to Do
         </h1>
-        <p className="mt-1 text-sm text-hae-slate">
-          {totalCount} Academy task{totalCount === 1 ? '' : 's'} assigned to Regina, grouped by course
-        </p>
       </header>
 
       {groups.length === 0 ? (
@@ -238,10 +233,19 @@ export default function RhrAcademyTasks() {
               ))}
             </div>
 
-            {/* Desktop: table with the columns Regina asked for */}
+            {/* Desktop: table with the columns Regina asked for. Column
+                widths are fixed and identical across every course's table
+                so they line up with each other down the page. */}
             <div className="hae-desktop-only overflow-hidden rounded-xl border border-hae-line bg-white">
               <div className="hae-table-scroll">
-                <table className="w-full min-w-[640px] text-left">
+                <table className="w-full min-w-[640px] table-fixed text-left">
+                  <colgroup>
+                    <col className="w-24" />
+                    <col className="w-1/3" />
+                    <col />
+                    <col className="w-32" />
+                    <col className="w-20" />
+                  </colgroup>
                   <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
                     <tr>
                       <th className="px-3 py-2 font-semibold">Priority</th>
@@ -253,7 +257,11 @@ export default function RhrAcademyTasks() {
                   </thead>
                   <tbody>
                     {courseTasks.map((task) => (
-                      <tr key={task.id} className="group border-b border-hae-line/70">
+                      <tr
+                        key={task.id}
+                        onClick={() => startEdit(task)}
+                        className="group cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40"
+                      >
                         <td className="px-3 py-2">
                           <span
                             className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
@@ -276,22 +284,16 @@ export default function RhrAcademyTasks() {
                           {formatDate(task.dueDate)}
                         </td>
                         <td className="px-3 py-2 text-right">
-                          <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                            <button
-                              type="button"
-                              onClick={() => startEdit(task)}
-                              className="text-xs text-hae-slate hover:text-hae-crimson"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeTask(task.id)}
-                              className="text-xs text-hae-slate hover:text-hae-red"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeTask(task.id)
+                            }}
+                            className="text-xs text-hae-slate opacity-100 hover:text-hae-red sm:opacity-0 sm:group-hover:opacity-100"
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
