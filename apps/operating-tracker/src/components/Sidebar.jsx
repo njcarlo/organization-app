@@ -73,6 +73,16 @@ const DEFAULT_SECTION_ORDER = [
   'chapters',
 ]
 
+// Regina's cross-course Academy view. It's requested to be visible to
+// everyone regardless of permission type, so even though it's placed in the
+// Academy section's nav (before Course Enrollments), it's re-added below for
+// section-restricted staff who don't have Academy access at all.
+const RHR_ACADEMY_TODO_ITEM = {
+  to: '/academy/rhr-things-to-do',
+  label: 'RHR Academy Things to Do',
+  icon: 'checklist',
+}
+
 /** Tracker sidenav — expandable chrome; platform switch lives in the header. */
 export default function Sidebar({ open = false, onClose }) {
   const { user, userProfile, isAdmin, logout, roleLabel, sectionAccess } = useAuth()
@@ -736,19 +746,14 @@ export default function Sidebar({ open = false, onClose }) {
   const sections = useMemo(() => {
     // Section-restricted users don't get the org-wide Dashboard or Activity
     // feed — they land in (and stay within) their assigned section(s).
-    // Regina's cross-course Academy view lives here (Workspace), not in the
-    // Academy section below, so it stays visible to section-restricted
-    // staff regardless of their section access.
     const workspaceItems = sectionAccess
       ? [
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-          { to: '/academy/rhr-things-to-do', label: 'RHR Academy Things to Do', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
         ]
       : [
           { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-          { to: '/academy/rhr-things-to-do', label: 'RHR Academy Things to Do', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/activity', label: 'Activity', icon: 'history' },
           { to: '/advancement-dashboard', label: 'Advancement and Programming', icon: 'chart' },
@@ -832,6 +837,7 @@ export default function Sidebar({ open = false, onClose }) {
       ],
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
+        RHR_ACADEMY_TODO_ITEM,
         { to: '/academy/course-registrations', label: 'Course Enrollments', icon: 'checklist' },
         { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
         { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
@@ -1078,6 +1084,17 @@ export default function Sidebar({ open = false, onClose }) {
     const content = sectionAccess
       ? allContent.filter((section) => sectionAccess.includes(section.id))
       : allContent
+    // RHR Academy Things to Do must stay reachable for every signed-in staff
+    // member, even those without Academy section access — if the whole
+    // Academy section got filtered out above, add a trimmed-down copy back
+    // with just that one item.
+    if (sectionAccess && !sectionAccess.includes('academy')) {
+      content.push({
+        id: 'academy',
+        label: 'Academy',
+        items: [RHR_ACADEMY_TODO_ITEM],
+      })
+    }
     const byId = new Map(content.map((section) => [section.id, section]))
     const orderedIds = [
       ...sectionConfig.order.filter((id) => byId.has(id)),
