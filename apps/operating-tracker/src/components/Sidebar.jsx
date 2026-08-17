@@ -736,14 +736,19 @@ export default function Sidebar({ open = false, onClose }) {
   const sections = useMemo(() => {
     // Section-restricted users don't get the org-wide Dashboard or Activity
     // feed — they land in (and stay within) their assigned section(s).
+    // Regina's cross-course Academy view lives here (Workspace), not in the
+    // Academy section below, so it stays visible to section-restricted
+    // staff regardless of their section access.
     const workspaceItems = sectionAccess
       ? [
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
+          { to: '/academy/rhr-things-to-do', label: 'RHR Academy Things to Do', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
         ]
       : [
           { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
+          { to: '/academy/rhr-things-to-do', label: 'RHR Academy Things to Do', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/activity', label: 'Activity', icon: 'history' },
           { to: '/advancement-dashboard', label: 'Advancement and Programming', icon: 'chart' },

@@ -19,6 +19,7 @@ import CustomSectionItemPage from './pages/CustomSectionItemPage'
 import CourseRegistrations from './pages/CourseRegistrations'
 import AcademyLinks from './pages/AcademyLinks'
 import AcademyCalendar from './pages/AcademyCalendar'
+import RhrAcademyTasks from './pages/RhrAcademyTasks'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
@@ -111,6 +112,10 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
+                {/* Not wrapped in SectionRoute("academy") — available to
+                    every signed-in staff member regardless of section
+                    access, same as My Tasks / Calendar above. */}
+                <Route path="/academy/rhr-things-to-do" element={<RhrAcademyTasks />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route
                   path="/events-dashboard"
