@@ -20,6 +20,7 @@ const emptyCourseFields = {
   endTime: '',
   instructor: '',
   guestSpeaker: '',
+  assetsDeadline: '',
 }
 
 const STATUS_OPTIONS = ['Prospect', 'Approved']
@@ -29,7 +30,7 @@ const STATUS_OPTIONS = ['Prospect', 'Approved']
  * (name + lead + order), mirroring Admin's Programs tab. Powers the Academy
  * and Custom Programs sidebar categories. Pass showCourseFields to also
  * capture Academy course-style fields (HAE Lead, Start Date, Duration,
- * Instructor, Guest Speaker), mirroring apps/lms Courses.jsx.
+ * Instructor, Guest Speaker, Assets Deadline), mirroring apps/lms Courses.jsx.
  */
 export default function CategoryItemsAdmin({ collectionName, itemLabel, showCourseFields }) {
   const [items, setItems] = useState([])
@@ -82,6 +83,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               endTime: newItem.endTime,
               instructor: newItem.instructor.trim(),
               guestSpeaker: newItem.guestSpeaker.trim(),
+              assetsDeadline: newItem.assetsDeadline,
             }
           : { startDate: newItem.startDate, status: newItem.status }),
       })
@@ -112,6 +114,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               endTime: draft.endTime,
               instructor: draft.instructor.trim(),
               guestSpeaker: draft.guestSpeaker.trim(),
+              assetsDeadline: draft.assetsDeadline,
             }
           : { startDate: draft.startDate, status: draft.status }),
       })
@@ -208,6 +211,13 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
               value={newItem.guestSpeaker}
               onChange={(e) => setNewItem({ ...newItem, guestSpeaker: e.target.value })}
               className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+            />
+            <input
+              type="date"
+              placeholder="Assets deadline"
+              value={newItem.assetsDeadline}
+              onChange={(e) => setNewItem({ ...newItem, assetsDeadline: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm text-hae-slate"
             />
           </>
         ) : (
@@ -315,6 +325,13 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                           value={draft.guestSpeaker}
                           onChange={(e) => setDraft({ ...draft, guestSpeaker: e.target.value })}
                         />
+                        <input
+                          type="date"
+                          placeholder="Assets deadline"
+                          className="w-full rounded border border-hae-line px-2 py-1 text-xs text-hae-slate"
+                          value={draft.assetsDeadline}
+                          onChange={(e) => setDraft({ ...draft, assetsDeadline: e.target.value })}
+                        />
                       </div>
                     ) : null}
                   </td>
@@ -376,6 +393,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                             `Time: ${p.startTime || '—'}–${p.endTime || '—'}`,
                           p.instructor && `Instructor: ${p.instructor}`,
                           p.guestSpeaker && `Guest: ${p.guestSpeaker}`,
+                          p.assetsDeadline && `Assets due: ${p.assetsDeadline}`,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
@@ -418,6 +436,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                                   endTime: p.endTime || '',
                                   instructor: p.instructor || '',
                                   guestSpeaker: p.guestSpeaker || '',
+                                  assetsDeadline: p.assetsDeadline || '',
                                 }
                               : { startDate: p.startDate || '', status: p.status || '' }),
                           })
