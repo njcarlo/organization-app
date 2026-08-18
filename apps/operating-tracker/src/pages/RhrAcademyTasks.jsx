@@ -53,6 +53,7 @@ export default function RhrAcademyTasks() {
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
   const [commentsOpen, setCommentsOpen] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const load = useCallback(async () => {
     const [courseSnap, taskSnap, projectSnap] = await Promise.all([
@@ -77,22 +78,38 @@ export default function RhrAcademyTasks() {
   }, [projects])
 
   const reginaTasks = useMemo(
-    () => tasks.filter((t) => toNameList(t.owner).some(isRegina)),
-    [tasks]
+    () =>
+      tasks.filter(
+        (t) =>
+          toNameList(t.owner).some(isRegina) &&
+          (showCompleted || normalizeTaskStatus(t.status) !== 'Complete')
+      ),
+    [tasks, showCompleted]
   )
 
   const groups = useMemo(() => {
     const byCourse = {}
     for (const task of reginaTasks) {
-      const course = courses.find((c) => c.id === task.programId)
+      // Some tasks' programId can go stale (e.g. bulk edits that only
+      // updated the parent project), so fall back to the task's project's
+      // programId before giving up on it.
+      const programId = task.programId || projectsById[task.projectId]?.programId
+      const course = courses.find((c) => c.id === programId)
       if (!course) continue // only Academy tasks belong here
       if (!byCourse[course.id]) byCourse[course.id] = { course, tasks: [] }
       byCourse[course.id].tasks.push(task)
     }
     return Object.values(byCourse)
       .map((g) => ({ ...g, tasks: [...g.tasks].sort(sortByPriorityThenDue) }))
-      .sort((a, b) => (a.course.name || '').localeCompare(b.course.name || ''))
-  }, [reginaTasks, courses])
+      .sort((a, b) => {
+        // Earliest due date among each course's tasks; courses with no due
+        // dates at all sort to the end.
+        const dueA = a.tasks.reduce((m, t) => (t.dueDate && t.dueDate < m ? t.dueDate : m), '9999-99-99')
+        const dueB = b.tasks.reduce((m, t) => (t.dueDate && t.dueDate < m ? t.dueDate : m), '9999-99-99')
+        if (dueA !== dueB) return dueA < dueB ? -1 : 1
+        return (a.course.name || '').localeCompare(b.course.name || '')
+      })
+  }, [reginaTasks, courses, projectsById])
 
   const startEdit = (task) => {
     setEditingId(task.id)
@@ -178,10 +195,17 @@ export default function RhrAcademyTasks() {
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl text-hae-ink sm:text-4xl md:text-5xl">
           RHR Academy Things to Do
         </h1>
+        <button
+          type="button"
+          className={showCompleted ? 'hae-btn-secondary' : 'hae-btn-secondary opacity-70'}
+          onClick={() => setShowCompleted((v) => !v)}
+        >
+          {showCompleted ? 'Hide completed' : 'Show completed'}
+        </button>
       </header>
 
       {groups.length === 0 ? (
