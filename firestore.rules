@@ -148,6 +148,11 @@ service cloud.firestore {
       allow create: if isStaff();
       allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
     }
+    // Append-only edit/delete audit trail — no update or delete once written.
+    match /trackerAdvancementPrograms/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /trackerAdvancementColumns/{id} {
       allow read, write: if isStaff();
     }
@@ -171,6 +176,11 @@ service cloud.firestore {
       allow create: if isStaff();
       allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
     }
+    // Append-only edit/delete audit trail — no update or delete once written.
+    match /trackerAdvancementPartnerships/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+    }
     match /trackerAdvancementMissionPrograms/{id} {
       allow read, write: if isStaff();
     }
@@ -181,6 +191,11 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create: if isStaff();
       allow update, delete: if isStaff() && resource.data.authorId == request.auth.uid;
+    }
+    // Append-only edit/delete audit trail — no update or delete once written.
+    match /trackerAdvancementActionItems/{id}/history/{entryId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
     }
     match /trackerAdvancementBoard/{id} {
       allow read, write: if isStaff();
