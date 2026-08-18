@@ -51,7 +51,7 @@ jobs:
           fi
           # Hosting + rules must succeed even when the project is still on Spark
           # (Cloud Functions / Blaze is optional and deployed in a separate step).
-          npx firebase-tools deploy --only hosting,firestore:rules --non-interactive --project hae-operating-tracker
+          npx firebase-tools deploy --only hosting,firestore:rules,firestore:indexes --non-interactive --project hae-operating-tracker
 
       - name: Deploy Cloud Functions (Blaze required)
         continue-on-error: true
