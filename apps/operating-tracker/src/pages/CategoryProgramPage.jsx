@@ -305,6 +305,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
       endTime: program.endTime || '',
       instructor: program.instructor || '',
       guestSpeaker: program.guestSpeaker || '',
+      assetsDeadline: program.assetsDeadline || '',
     })
     setEditAcademyOpen(true)
   }
@@ -330,6 +331,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
         endTime: academyForm.endTime,
         instructor: academyForm.instructor.trim(),
         guestSpeaker: academyForm.guestSpeaker.trim(),
+        assetsDeadline: academyForm.assetsDeadline,
       })
       setEditAcademyOpen(false)
       setAcademyForm(null)
@@ -462,7 +464,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header>
         <div>
           <p className="text-[10px] font-semibold tracking-[0.14em] text-hae-crimson uppercase">
             {categoryLabel}
@@ -533,7 +535,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
           ) : null}
 
           {collectionName === 'academyPrograms' ? (
-            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   HAE Lead
@@ -575,6 +577,12 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                   Guest speaker
                 </dt>
                 <dd className="text-hae-ink">{program.guestSpeaker || '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
+                  Assets Deadline
+                </dt>
+                <dd className="text-hae-ink">{program.assetsDeadline || '—'}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
@@ -639,7 +647,9 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
             </dl>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+      </header>
+
+      <div className="flex flex-wrap items-center gap-2">
           {completedProjects.length > 0 ? (
             <button
               type="button"
@@ -695,8 +705,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
               {promoting ? 'Promoting…' : 'Promote to Category'}
             </button>
           ) : null}
-        </div>
-      </header>
+      </div>
 
       {collectionName === 'academyPrograms' ? (
         <Modal
@@ -805,6 +814,17 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
                     setAcademyForm({ ...academyForm, guestSpeaker: e.target.value })
                   }
                   className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Assets Deadline</span>
+                <input
+                  type="date"
+                  value={academyForm.assetsDeadline}
+                  onChange={(e) =>
+                    setAcademyForm({ ...academyForm, assetsDeadline: e.target.value })
+                  }
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm"
                 />
               </label>
             </form>
