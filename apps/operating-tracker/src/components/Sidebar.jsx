@@ -839,7 +839,7 @@ export default function Sidebar({ open = false, onClose }) {
       items: [
         RHR_ACADEMY_TODO_ITEM,
         { to: '/academy/course-registrations', label: 'Course Enrollments', icon: 'checklist' },
-        { to: '/academy/links', label: 'Academy Links', icon: 'folder' },
+        { to: '/academy/links', label: 'Academy Schedule and Links', icon: 'folder' },
         { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
         ...academyItems,
       ],
