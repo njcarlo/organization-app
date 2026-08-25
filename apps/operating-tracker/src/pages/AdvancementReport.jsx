@@ -248,6 +248,16 @@ function HeaderAddButton({ onClick, children }) {
   )
 }
 
+// Long-form date without the weekday, e.g. "July 13, 2026" — used for the
+// membership goal date range, where the weekday isn't meaningful.
+function formatLongDateNoWeekday(dateStr) {
+  if (!dateStr) return '—'
+  const [y, m, d] = dateStr.split('-')
+  if (!y || !m || !d) return dateStr
+  const date = new Date(Number(y), Number(m) - 1, Number(d))
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 // Click-to-edit primitive shared by every editable value on the Report —
 // mirrors AdvancementEditableList's inline cell editing so the whole page
 // (not just list sections) uses one consistent edit interaction.
@@ -458,6 +468,13 @@ export default function AdvancementReport() {
     () => ADVANCEMENT_MEMBERSHIP_TYPES.reduce((sum, t) => sum + (Number(membership[t.id]) || 0), 0),
     [membership]
   )
+  // Total Members goal is derived — the sum of the per-type goals set in the
+  // Membership Snapshot card — rather than entered separately, so the two
+  // can never drift out of sync.
+  const totalMembersGoal = useMemo(
+    () => ADVANCEMENT_MEMBERSHIP_TYPES.reduce((sum, t) => sum + (Number(membership.goalTargets?.[t.id]) || 0), 0),
+    [membership]
+  )
   const previousTotalMembers =
     membership.previousTotalMembers != null ? Number(membership.previousTotalMembers) : null
   const growthRate =
@@ -465,7 +482,7 @@ export default function AdvancementReport() {
       ? Math.round(((totalMembers - previousTotalMembers) / previousTotalMembers) * 1000) / 10
       : null
 
-  const membersPct = pctToGoal(totalMembers, summary.totalMembersGoal)
+  const membersPct = pctToGoal(totalMembers, totalMembersGoal)
   const revenuePct = pctToGoal(financialTotals.current, financialTotals.goal)
   const pipelinePct = pctToGoal(pipelineTotal, summary.pipelineGoal)
   const partnershipsPct = pctToGoal(partnershipsCount, summary.partnershipsGoal)
@@ -575,6 +592,26 @@ export default function AdvancementReport() {
     )
   }
 
+  const updateMembershipGoalDate = async (key, raw) => {
+    const value = String(raw).trim()
+    setMembership((m) => ({ ...m, [key]: value }))
+    await setDoc(
+      doc(db, 'trackerAdvancementMembership', 'main'),
+      { [key]: value, updatedAt: serverTimestamp() },
+      { merge: true }
+    )
+  }
+
+  const updateMembershipGoalTarget = async (typeId, raw) => {
+    const value = Number(raw) || 0
+    setMembership((m) => ({ ...m, goalTargets: { ...(m.goalTargets || {}), [typeId]: value } }))
+    await setDoc(
+      doc(db, 'trackerAdvancementMembership', 'main'),
+      { goalTargets: { [typeId]: value }, updatedAt: serverTimestamp() },
+      { merge: true }
+    )
+  }
+
   const updatePipelineField = async (rowId, key, raw, numeric = false) => {
     const value = numeric ? Number(raw) || 0 : String(raw).trim()
     setPipeline((rows) => rows.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)))
@@ -659,10 +696,8 @@ export default function AdvancementReport() {
         <KpiTile
           label="Total Members"
           value={totalMembers}
-          goalLabel={summary.totalMembersGoal || 'No goal set'}
-          goalValue={summary.totalMembersGoal}
+          goalLabel={totalMembersGoal ? `${totalMembersGoal} (sum of type goals)` : 'No goal set'}
           status={statusFromPct(membersPct)}
-          onCommitGoal={(v) => updateSummaryField('totalMembersGoal', v, true)}
         />
         <KpiTile
           label="Total Revenue (YTD)"
@@ -819,6 +854,81 @@ export default function AdvancementReport() {
                 vs {previousTotalMembers}{membership.previousTotalMembersDate ? ` on ${membership.previousTotalMembersDate}` : ' previously'}
               </p>
             )}
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">New Members</p>
+            <InlineEdit
+              value={membership.newMembers}
+              display={Number(membership.newMembers) || 0}
+              type="number"
+              className="font-display text-xl text-hae-ink"
+              inputClassName="w-20"
+              onCommit={(v) => updateMembershipField('newMembers', v)}
+            />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Renewed Members</p>
+            <InlineEdit
+              value={membership.renewedMembers}
+              display={Number(membership.renewedMembers) || 0}
+              type="number"
+              className="font-display text-xl text-hae-ink"
+              inputClassName="w-20"
+              onCommit={(v) => updateMembershipField('renewedMembers', v)}
+            />
+          </div>
+        </div>
+        <div className="mt-3 border-t border-hae-line pt-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">Membership Goals</p>
+            <span className="inline-flex items-center gap-1 text-xs text-hae-slate">
+              From
+              <InlineEdit
+                value={membership.goalStartDate || ''}
+                display={membership.goalStartDate ? formatLongDateNoWeekday(membership.goalStartDate) : 'Set date'}
+                type="date"
+                className="text-hae-ink underline decoration-dotted"
+                inputClassName="w-32"
+                onCommit={(v) => updateMembershipGoalDate('goalStartDate', v)}
+              />
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs text-hae-slate">
+              to
+              <InlineEdit
+                value={membership.goalEndDate || ''}
+                display={membership.goalEndDate ? formatLongDateNoWeekday(membership.goalEndDate) : 'Set date'}
+                type="date"
+                className="text-hae-ink underline decoration-dotted"
+                inputClassName="w-32"
+                onCommit={(v) => updateMembershipGoalDate('goalEndDate', v)}
+              />
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+            {ADVANCEMENT_MEMBERSHIP_TYPES.map((t) => {
+              const goal = membership.goalTargets?.[t.id]
+              const current = Number(membership[t.id]) || 0
+              const pct = pctToGoal(current, goal)
+              return (
+                <div key={t.id}>
+                  <p className="text-[10px] font-semibold tracking-wide text-hae-slate uppercase">{t.label}</p>
+                  <span className="inline-flex items-baseline gap-1 text-sm">
+                    <span className="text-hae-ink">{current} of</span>
+                    <InlineEdit
+                      value={goal}
+                      display={goal || 'No goal'}
+                      type="number"
+                      className="text-hae-ink underline decoration-dotted"
+                      inputClassName="w-16"
+                      onCommit={(v) => updateMembershipGoalTarget(t.id, v)}
+                    />
+                  </span>
+                  {pct != null && (
+                    <p className={`mt-0.5 text-[10px] ${pct >= 100 ? 'text-green-700' : 'text-hae-slate'}`}>{pct}% to goal</p>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </SectionCard>
