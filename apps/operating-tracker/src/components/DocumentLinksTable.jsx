@@ -18,13 +18,23 @@ const emptyRow = { name: '', url: '', createdBy: '', filePath: '', notes: '' }
 const cellInputClass =
   'w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-hae-crimson focus:bg-white'
 
+// Password variant relabels the same underlying fields (name/url/createdBy/filePath)
+// as Website-Account/Username-Email/hidden/Password, and conceals the password value.
+const COLUMN_LABELS = {
+  documents: { name: 'Name of Link', url: 'Link', filePath: 'File Path' },
+  password: { name: 'Website / Account', url: 'Username / Email', filePath: 'Password' },
+}
+const MASKED_VALUE = '••••••••'
+
 /**
  * Link table nested under a single Documents & Assets group. Existing rows are
  * read-only in the table; clicking a row opens a modal to edit it. The trailing
  * blank row is directly editable — pressing Enter commits it and a fresh blank
  * row appears below.
  */
-export default function DocumentLinksTable({ groupId, showNotes = false }) {
+export default function DocumentLinksTable({ groupId, showNotes = false, variant }) {
+  const isPassword = variant === 'password'
+  const labels = COLUMN_LABELS[isPassword ? 'password' : 'documents']
   const { user, userProfile } = useAuth()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +44,8 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showEditPassword, setShowEditPassword] = useState(false)
   const newNameRef = useRef(null)
 
   const byName = userProfile?.name || user?.email || 'Someone'
@@ -59,7 +71,10 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
     load()
   }, [load])
 
-  const openEdit = (row) => setEditRow({ ...row })
+  const openEdit = (row) => {
+    setShowEditPassword(false)
+    setEditRow({ ...row })
+  }
 
   const closeEdit = () => {
     if (saving) return
@@ -118,6 +133,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
         createdAt: serverTimestamp(),
       })
       setNewRow(emptyRow)
+      setShowNewPassword(false)
       await load()
       newNameRef.current?.focus()
     } catch (err) {
@@ -198,10 +214,10 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                   aria-label="Select all links"
                 />
               </th>
-              <th className="px-3 py-2 font-semibold">Name of Link</th>
-              <th className="px-3 py-2 font-semibold">Link</th>
-              <th className="px-3 py-2 font-semibold">Created by</th>
-              <th className="px-3 py-2 font-semibold">File Path</th>
+              <th className="px-3 py-2 font-semibold">{labels.name}</th>
+              <th className="px-3 py-2 font-semibold">{labels.url}</th>
+              {!isPassword && <th className="px-3 py-2 font-semibold">Created by</th>}
+              <th className="px-3 py-2 font-semibold">{labels.filePath}</th>
               {showNotes && <th className="px-3 py-2 font-semibold">Notes</th>}
               <th className="px-3 py-2 font-semibold" />
             </tr>
@@ -223,7 +239,9 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                 </td>
                 <td className="px-3 py-2 text-sm font-medium text-hae-ink">{row.name || '—'}</td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
-                  {row.url ? (
+                  {isPassword ? (
+                    row.url || '—'
+                  ) : row.url ? (
                     <a
                       href={row.url}
                       target="_blank"
@@ -237,8 +255,12 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
                     '—'
                   )}
                 </td>
-                <td className="px-3 py-2 text-sm text-hae-slate">{row.createdBy || '—'}</td>
-                <td className="px-3 py-2 text-sm text-hae-slate">{row.filePath || '—'}</td>
+                {!isPassword && (
+                  <td className="px-3 py-2 text-sm text-hae-slate">{row.createdBy || '—'}</td>
+                )}
+                <td className="px-3 py-2 text-sm text-hae-slate">
+                  {isPassword ? (row.filePath ? MASKED_VALUE : '—') : row.filePath || '—'}
+                </td>
                 {showNotes && (
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
                 )}
@@ -250,7 +272,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
               <td className="px-1 py-1">
                 <input
                   ref={newNameRef}
-                  placeholder="Name of link"
+                  placeholder={isPassword ? 'Website / account' : 'Name of link'}
                   className={cellInputClass}
                   value={newRow.name}
                   onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
@@ -259,30 +281,52 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
               </td>
               <td className="px-1 py-1">
                 <input
-                  placeholder="Link"
+                  placeholder={isPassword ? 'Username / email' : 'Link'}
                   className={cellInputClass}
                   value={newRow.url}
                   onChange={(e) => setNewRow({ ...newRow, url: e.target.value })}
                   onKeyDown={onEnterCommitNewRow}
                 />
               </td>
+              {!isPassword && (
+                <td className="px-1 py-1">
+                  <input
+                    placeholder={byName}
+                    className={cellInputClass}
+                    value={newRow.createdBy}
+                    onChange={(e) => setNewRow({ ...newRow, createdBy: e.target.value })}
+                    onKeyDown={onEnterCommitNewRow}
+                  />
+                </td>
+              )}
               <td className="px-1 py-1">
-                <input
-                  placeholder={byName}
-                  className={cellInputClass}
-                  value={newRow.createdBy}
-                  onChange={(e) => setNewRow({ ...newRow, createdBy: e.target.value })}
-                  onKeyDown={onEnterCommitNewRow}
-                />
-              </td>
-              <td className="px-1 py-1">
-                <input
-                  placeholder="File path"
-                  className={cellInputClass}
-                  value={newRow.filePath}
-                  onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
-                  onKeyDown={onEnterCommitNewRow}
-                />
+                {isPassword ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      placeholder="Password"
+                      className={cellInputClass}
+                      value={newRow.filePath}
+                      onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
+                      onKeyDown={onEnterCommitNewRow}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="shrink-0 text-[11px] font-medium text-hae-slate hover:text-hae-crimson"
+                    >
+                      {showNewPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    placeholder="File path"
+                    className={cellInputClass}
+                    value={newRow.filePath}
+                    onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
+                    onKeyDown={onEnterCommitNewRow}
+                  />
+                )}
               </td>
               {showNotes && (
                 <td className="px-1 py-1">
@@ -321,7 +365,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
       <Modal
         open={!!editRow}
         onClose={closeEdit}
-        title="Edit link"
+        title={isPassword ? 'Edit password' : 'Edit link'}
         busy={saving}
         footer={
           <>
@@ -350,7 +394,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
         {editRow ? (
           <form id="edit-link-form" onSubmit={saveEdit} className="grid gap-3">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Name of Link</span>
+              <span className="text-xs font-medium text-hae-slate">{labels.name}</span>
               <input
                 required
                 value={editRow.name}
@@ -359,28 +403,48 @@ export default function DocumentLinksTable({ groupId, showNotes = false }) {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Link</span>
+              <span className="text-xs font-medium text-hae-slate">{labels.url}</span>
               <input
                 value={editRow.url}
                 onChange={(e) => setEditRow({ ...editRow, url: e.target.value })}
                 className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
               />
             </label>
+            {!isPassword && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Created by</span>
+                <input
+                  value={editRow.createdBy}
+                  onChange={(e) => setEditRow({ ...editRow, createdBy: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+            )}
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">Created by</span>
-              <input
-                value={editRow.createdBy}
-                onChange={(e) => setEditRow({ ...editRow, createdBy: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium text-hae-slate">File Path</span>
-              <input
-                value={editRow.filePath}
-                onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
+              <span className="text-xs font-medium text-hae-slate">{labels.filePath}</span>
+              {isPassword ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type={showEditPassword ? 'text' : 'password'}
+                    value={editRow.filePath}
+                    onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword((v) => !v)}
+                    className="shrink-0 text-xs font-medium text-hae-crimson hover:underline"
+                  >
+                    {showEditPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              ) : (
+                <input
+                  value={editRow.filePath}
+                  onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              )}
             </label>
             {showNotes && (
               <label className="flex flex-col gap-1 text-sm">

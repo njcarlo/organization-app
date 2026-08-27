@@ -57,7 +57,7 @@ const emptyProject = {
  * by a different top-level Firestore collection (e.g. academyPrograms,
  * customPrograms) so it can power additional sidebar categories.
  */
-export default function CategoryProgramPage({ collectionName, categoryLabel }) {
+export default function CategoryProgramPage({ collectionName, categoryLabel, sectionLabel }) {
   const { itemId } = useParams()
   const navigate = useNavigate()
   const programPath = `${PROGRAM_PATH_PREFIX_BY_COLLECTION[collectionName] || '/programs'}/${itemId}`
@@ -451,6 +451,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
   const isDocumentsMode =
     collectionName === 'trackerDocuments' ||
     (collectionName === 'customSectionItems' && program.kind === 'documents')
+  // A user-created "Password" section reuses the Links Directory template but
+  // shows password-flavored headers (Website / Account, Username / Email,
+  // Password, Notes) and conceals the password value — scoped by section
+  // label so every other Documents & Assets / Links Directory table is unaffected.
+  const isPasswordSection = isDocumentsMode && /password/i.test(sectionLabel || '')
   const isEventsMode =
     collectionName === 'trackerEvents' ||
     (collectionName === 'customSectionItems' && program.kind === 'events')
@@ -1083,10 +1088,14 @@ export default function CategoryProgramPage({ collectionName, categoryLabel }) {
 
       {isDocumentsMode ? (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
-            Documents
-          </h2>
-          <DocumentGroupsSection programId={itemId} />
+          {/* Page header above already reads "Passwords" (eyebrow + title), so
+              skip the redundant section heading for this variant. */}
+          {!isPasswordSection && (
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
+              Documents
+            </h2>
+          )}
+          <DocumentGroupsSection programId={itemId} variant={isPasswordSection ? 'password' : undefined} />
         </section>
       ) : null}
 

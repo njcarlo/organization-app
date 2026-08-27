@@ -21,5 +21,11 @@ export default function CustomSectionItemPage() {
     }
   }, [sectionId])
 
-  return <CategoryProgramPage collectionName="customSectionItems" categoryLabel={label || 'Section'} />
+  return (
+    <CategoryProgramPage
+      collectionName="customSectionItems"
+      categoryLabel={label || 'Section'}
+      sectionLabel={label}
+    />
+  )
 }

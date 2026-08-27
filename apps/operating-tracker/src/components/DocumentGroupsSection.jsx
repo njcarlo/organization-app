@@ -16,7 +16,7 @@ import DocumentLinksTable from './DocumentLinksTable'
  * Groups nested under a single Documents & Assets category item. Each group
  * gets its own DocumentLinksTable of link rows.
  */
-export default function DocumentGroupsSection({ programId, showNotes = false }) {
+export default function DocumentGroupsSection({ programId, showNotes = false, variant }) {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -175,7 +175,11 @@ export default function DocumentGroupsSection({ programId, showNotes = false }) 
                 Delete group
               </button>
             </div>
-            <DocumentLinksTable groupId={group.id} showNotes={showNotes} />
+            <DocumentLinksTable
+              groupId={group.id}
+              showNotes={variant === 'password' ? true : showNotes}
+              variant={variant}
+            />
           </div>
         ))
       )}
