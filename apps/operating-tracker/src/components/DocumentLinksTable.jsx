@@ -44,6 +44,8 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showEditPassword, setShowEditPassword] = useState(false)
   const newNameRef = useRef(null)
 
   const byName = userProfile?.name || user?.email || 'Someone'
@@ -69,7 +71,10 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
     load()
   }, [load])
 
-  const openEdit = (row) => setEditRow({ ...row })
+  const openEdit = (row) => {
+    setShowEditPassword(false)
+    setEditRow({ ...row })
+  }
 
   const closeEdit = () => {
     if (saving) return
@@ -128,6 +133,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
         createdAt: serverTimestamp(),
       })
       setNewRow(emptyRow)
+      setShowNewPassword(false)
       await load()
       newNameRef.current?.focus()
     } catch (err) {
@@ -294,14 +300,33 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 </td>
               )}
               <td className="px-1 py-1">
-                <input
-                  type={isPassword ? 'password' : 'text'}
-                  placeholder={isPassword ? 'Password' : 'File path'}
-                  className={cellInputClass}
-                  value={newRow.filePath}
-                  onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
-                  onKeyDown={onEnterCommitNewRow}
-                />
+                {isPassword ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      placeholder="Password"
+                      className={cellInputClass}
+                      value={newRow.filePath}
+                      onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
+                      onKeyDown={onEnterCommitNewRow}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="shrink-0 text-[11px] font-medium text-hae-slate hover:text-hae-crimson"
+                    >
+                      {showNewPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    placeholder="File path"
+                    className={cellInputClass}
+                    value={newRow.filePath}
+                    onChange={(e) => setNewRow({ ...newRow, filePath: e.target.value })}
+                    onKeyDown={onEnterCommitNewRow}
+                  />
+                )}
               </td>
               {showNotes && (
                 <td className="px-1 py-1">
@@ -397,12 +422,29 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
             )}
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium text-hae-slate">{labels.filePath}</span>
-              <input
-                type={isPassword ? 'password' : 'text'}
-                value={editRow.filePath}
-                onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
-                className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
-              />
+              {isPassword ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type={showEditPassword ? 'text' : 'password'}
+                    value={editRow.filePath}
+                    onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
+                    className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword((v) => !v)}
+                    className="shrink-0 text-xs font-medium text-hae-crimson hover:underline"
+                  >
+                    {showEditPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              ) : (
+                <input
+                  value={editRow.filePath}
+                  onChange={(e) => setEditRow({ ...editRow, filePath: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              )}
             </label>
             {showNotes && (
               <label className="flex flex-col gap-1 text-sm">
