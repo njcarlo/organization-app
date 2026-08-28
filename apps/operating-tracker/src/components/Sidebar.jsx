@@ -36,6 +36,7 @@ const CATEGORY_META = {
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
   customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs', showCustomProgramFields: true },
   trackerDocuments: { label: 'Document', pathPrefix: '/documents' },
+  trackerPasswords: { label: 'Password entry', pathPrefix: '/passwords' },
   trackerEvents: { label: 'Event', pathPrefix: '/events', showEventFields: true },
   trackerGraphics: { label: 'Graphic', pathPrefix: '/graphics' },
   trackerData: { label: 'Data Project', pathPrefix: '/data' },
@@ -65,6 +66,7 @@ const DEFAULT_SECTION_ORDER = [
   'academy',
   'custom-programs',
   'documents',
+  'password',
   'events',
   'graphics',
   'content',
@@ -93,6 +95,7 @@ export default function Sidebar({ open = false, onClose }) {
   const [academyPrograms, setAcademyPrograms] = useState([])
   const [customPrograms, setCustomPrograms] = useState([])
   const [trackerDocuments, setTrackerDocuments] = useState([])
+  const [trackerPasswords, setTrackerPasswords] = useState([])
   const [trackerEvents, setTrackerEvents] = useState([])
   const [trackerGraphics, setTrackerGraphics] = useState([])
   const [trackerData, setTrackerData] = useState([])
@@ -117,6 +120,7 @@ export default function Sidebar({ open = false, onClose }) {
     academyPrograms: setAcademyPrograms,
     customPrograms: setCustomPrograms,
     trackerDocuments: setTrackerDocuments,
+    trackerPasswords: setTrackerPasswords,
     trackerEvents: setTrackerEvents,
     trackerGraphics: setTrackerGraphics,
     trackerData: setTrackerData,
@@ -245,6 +249,7 @@ export default function Sidebar({ open = false, onClose }) {
     loadInto('academyPrograms', setAcademyPrograms)
     loadInto('customPrograms', setCustomPrograms)
     loadInto('trackerDocuments', setTrackerDocuments)
+    loadInto('trackerPasswords', setTrackerPasswords)
     loadInto('trackerGraphics', setTrackerGraphics)
     loadInto('trackerData', setTrackerData)
     loadInto('boardCommitments', setBoardCommitments)
@@ -902,6 +907,34 @@ export default function Sidebar({ open = false, onClose }) {
       emptyLabel: trackerDocuments.length === 0 ? 'No Documents & Assets yet' : undefined,
     })
 
+    const trackerPasswordsGroupDefs = groupsForKey('trackerPasswords')
+    const { items: trackerPasswordsItems, groups: trackerPasswordsGroups } = partitionByGroup(
+      trackerPasswords.map((p) => ({
+        id: p.id,
+        to: `/passwords/${p.id}`,
+        label: p.name,
+        icon: 'folder',
+        description: namesLabel(p.lead) || undefined,
+        groupId: p.groupId,
+        actions: categoryActions('trackerPasswords', p, trackerPasswordsGroupDefs),
+      })),
+      trackerPasswordsGroupDefs,
+      'trackerPasswords'
+    )
+    next.push({
+      id: 'password',
+      label: 'Password',
+      actions: [
+        ...sectionActions('trackerPasswords', 'Add password'),
+        sortAzAction('trackerPasswords', trackerPasswords),
+        addGroupAction('trackerPasswords'),
+      ],
+      onReorderItems: (items) => reorderCategory('trackerPasswords', items),
+      items: trackerPasswordsItems,
+      groups: trackerPasswordsGroups,
+      emptyLabel: trackerPasswords.length === 0 ? 'No passwords yet' : undefined,
+    })
+
     next.push({
       id: 'events',
       label: 'Events & Programs',
@@ -1122,6 +1155,7 @@ export default function Sidebar({ open = false, onClose }) {
     academyPrograms,
     customPrograms,
     trackerDocuments,
+    trackerPasswords,
     trackerEvents,
     trackerGraphics,
     trackerData,

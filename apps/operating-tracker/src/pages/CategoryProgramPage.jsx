@@ -39,7 +39,7 @@ import {
 } from '../utils'
 import { logHistory } from '../utils/activityLog'
 
-const NO_PROJECTS_COLLECTIONS = ['trackerDocuments', 'trackerEvents']
+const NO_PROJECTS_COLLECTIONS = ['trackerDocuments', 'trackerPasswords', 'trackerEvents']
 
 const CUSTOM_PROGRAM_STATUS_OPTIONS = ['Prospect', 'Approved']
 
@@ -450,12 +450,16 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
   // being distinguishable by collectionName the way trackerDocuments/trackerEvents are.
   const isDocumentsMode =
     collectionName === 'trackerDocuments' ||
+    collectionName === 'trackerPasswords' ||
     (collectionName === 'customSectionItems' && program.kind === 'documents')
-  // A user-created "Password" section reuses the Links Directory template but
-  // shows password-flavored headers (Website / Account, Username / Email,
-  // Password, Notes) and conceals the password value — scoped by section
-  // label so every other Documents & Assets / Links Directory table is unaffected.
-  const isPasswordSection = isDocumentsMode && /password/i.test(sectionLabel || '')
+  // Password is an official section (trackerPasswords) that reuses the Links
+  // Directory template but shows password-flavored headers (Website / Account,
+  // Username / Email, Password, Notes) and conceals the password value. The
+  // section-label check is legacy fallback support for the old user-created
+  // "Password" custom section, kept so any pre-existing one still renders
+  // correctly until it's deleted.
+  const isPasswordSection =
+    collectionName === 'trackerPasswords' || (isDocumentsMode && /password/i.test(sectionLabel || ''))
   const isEventsMode =
     collectionName === 'trackerEvents' ||
     (collectionName === 'customSectionItems' && program.kind === 'events')

@@ -255,6 +255,17 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/passwords/:itemId"
+                  element={
+                    <SectionRoute sectionId="password">
+                      <CategoryProgramPage
+                        collectionName="trackerPasswords"
+                        categoryLabel="Password"
+                      />
+                    </SectionRoute>
+                  }
+                />
+                <Route
                   path="/graphics/:itemId"
                   element={
                     <SectionRoute sectionId="graphics">
