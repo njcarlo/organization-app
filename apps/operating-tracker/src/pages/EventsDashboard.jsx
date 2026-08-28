@@ -7,7 +7,8 @@ import { db } from '../firebase'
 import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
-import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import { useEventCategories } from '../hooks/useEventCategories'
+import { EVENT_KIND_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import {
   eventTypeBadgeClass,
   eventTypeLabel,
@@ -22,6 +23,7 @@ const emptyForm = {
   name: '',
   eventDate: '',
   type: '',
+  eventType: '',
   lead: [],
   instructor: '',
   moderator: '',
@@ -31,7 +33,6 @@ const emptyForm = {
   guestSpeaker: '',
   reginaAvailable: '',
   venue: '',
-  format: '',
   marketingDate: '',
   health: 'not-started',
 }
@@ -40,6 +41,7 @@ const COLUMN_COUNT = 14
 
 export default function EventsDashboard() {
   const { userProfile } = useAuth()
+  const { options: categoryOptions, addCategory } = useEventCategories()
   const [searchParams, setSearchParams] = useSearchParams()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -127,6 +129,17 @@ export default function EventsDashboard() {
     setOpen(true)
   }
 
+  const selectCategory = async (value, apply) => {
+    if (value !== '__add_category__') {
+      apply(value)
+      return
+    }
+    const name = window.prompt('New category name')
+    if (!name || !name.trim()) return
+    const added = await addCategory(name)
+    if (added) apply(added)
+  }
+
   const toggleSelected = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -172,6 +185,7 @@ export default function EventsDashboard() {
         name: form.name.trim(),
         eventDate: form.eventDate,
         type: form.type,
+        eventType: form.eventType,
         lead: form.lead,
         instructor: form.instructor.trim(),
         moderator: form.moderator.trim(),
@@ -181,7 +195,6 @@ export default function EventsDashboard() {
         guestSpeaker: form.guestSpeaker.trim(),
         reginaAvailable: form.reginaAvailable.trim(),
         venue: form.venue.trim(),
-        format: form.format,
         marketingDate: form.marketingDate,
         health: form.health,
         order: maxOrder + 1,
@@ -298,16 +311,32 @@ export default function EventsDashboard() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Type</span>
+            <span className="text-xs font-medium text-hae-slate">Category</span>
             <select
               value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              onChange={(e) => selectCategory(e.target.value, (v) => setForm((f) => ({ ...f, type: v })))}
               className="rounded-md border border-hae-line px-3 py-2 text-sm"
             >
-              <option value="">Select type</option>
-              {EVENT_TYPE_OPTIONS.map((t) => (
+              <option value="">Select category</option>
+              {categoryOptions.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
+                </option>
+              ))}
+              <option value="__add_category__">+ Add category</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs font-medium text-hae-slate">Event Type</span>
+            <select
+              value={form.eventType}
+              onChange={(e) => setForm({ ...form, eventType: e.target.value })}
+              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+            >
+              <option value="">Select event type</option>
+              {EVENT_KIND_OPTIONS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
                 </option>
               ))}
             </select>
@@ -381,21 +410,6 @@ export default function EventsDashboard() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium text-hae-slate">Online or In-Person</span>
-            <select
-              value={form.format}
-              onChange={(e) => setForm({ ...form, format: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
-            >
-              <option value="">Select format</option>
-              {EVENT_FORMAT_OPTIONS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
             <span className="text-xs font-medium text-hae-slate">Date of Marketing</span>
             <input
               type="date"
@@ -437,7 +451,8 @@ export default function EventsDashboard() {
                 />
               </th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
-              <th className="px-3 py-2 font-semibold">Type</th>
+              <th className="px-3 py-2 font-semibold">Category</th>
+              <th className="px-3 py-2 font-semibold">Event Type</th>
               <th className="px-3 py-2 font-semibold">Complete Event Title</th>
               <th className="px-3 py-2 font-semibold">HAE Lead</th>
               <th className="px-3 py-2 font-semibold">Instructor</th>
@@ -446,7 +461,6 @@ export default function EventsDashboard() {
               <th className="px-3 py-2 font-semibold">Time</th>
               <th className="px-3 py-2 font-semibold">Time Zone</th>
               <th className="px-3 py-2 font-semibold">Guest Speaker</th>
-              <th className="px-3 py-2 font-semibold">Online or In-Person</th>
               <th className="px-3 py-2 font-semibold">Date of Marketing</th>
               <th className="px-3 py-2 font-semibold">Marketing Status</th>
             </tr>
@@ -516,6 +530,7 @@ export default function EventsDashboard() {
                           {eventTypeLabel(event.type)}
                         </span>
                       </td>
+                      <td className="px-3 py-2 text-sm text-hae-ink">{event.eventType || '—'}</td>
                       <td className="px-3 py-2 text-sm font-medium text-hae-ink">{event.name}</td>
                       <td className="px-3 py-2 text-sm text-hae-ink">{namesLabel(event.lead) || '—'}</td>
                       <td className="px-3 py-2 text-sm text-hae-ink">{event.instructor || '—'}</td>
@@ -524,7 +539,6 @@ export default function EventsDashboard() {
                       <td className="px-3 py-2 text-sm text-hae-ink">{event.time || '—'}</td>
                       <td className="px-3 py-2 text-sm text-hae-ink">{event.timeZone || '—'}</td>
                       <td className="px-3 py-2 text-sm text-hae-ink">{event.guestSpeaker || '—'}</td>
-                      <td className="px-3 py-2 text-sm text-hae-ink">{event.format || '—'}</td>
                       <td className="px-3 py-2 text-sm whitespace-nowrap text-hae-ink">
                         {formatLongDate(event.marketingDate)}
                       </td>
