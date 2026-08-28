@@ -4,7 +4,7 @@
  */
 
 import { toNameList } from '../utils'
-import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import { EVENT_KIND_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
 
 export const MODULE_IMPORT_SPECS = {
   surveys: {
@@ -333,8 +333,8 @@ Venture Lab,Academy Flagship,Jordan,Lee,jordan@harvardae.org,500`,
       'timeZone',
       'marketingDate',
       'venue',
-      'format',
       'type',
+      'eventType',
       'lead',
       'instructor',
       'moderator',
@@ -345,8 +345,8 @@ Venture Lab,Academy Flagship,Jordan,Lee,jordan@harvardae.org,500`,
       '_id',
     ],
     defaults: { health: 'not-started' },
-    exampleCsv: `name,eventDate,time,timeZone,marketingDate,venue,format,type,lead,instructor,moderator,zoomCoordinator,guestSpeaker,reginaAvailable,health
-Founders Mixer,2026-08-15,6:00 PM,ET,2026-08-01,Boston,In-Person,Live event (in-person),Jamie Lee,,,Jamie Lee,,,ongoing`,
+    exampleCsv: `name,eventDate,time,timeZone,marketingDate,venue,type,eventType,lead,instructor,moderator,zoomCoordinator,guestSpeaker,reginaAvailable,health
+Founders Mixer,2026-08-15,6:00 PM,ET,2026-08-01,Boston,Live event (in-person),In-person,Jamie Lee,,,Jamie Lee,,,ongoing`,
     exampleJson: [
       {
         name: 'Founders Mixer',
@@ -355,8 +355,8 @@ Founders Mixer,2026-08-15,6:00 PM,ET,2026-08-01,Boston,In-Person,Live event (in-
         timeZone: 'ET',
         marketingDate: '2026-08-01',
         venue: 'Boston',
-        format: 'In-Person',
         type: 'Live event (in-person)',
+        eventType: 'In-person',
         lead: ['Jamie Lee'],
         instructor: '',
         moderator: '',
@@ -369,8 +369,8 @@ Founders Mixer,2026-08-15,6:00 PM,ET,2026-08-01,Boston,In-Person,Live event (in-
     mapRow(row) {
       const name = String(row.name || '').trim()
       if (!name) return null
-      const format = EVENT_FORMAT_OPTIONS.includes(row.format) ? row.format : ''
       const type = EVENT_TYPE_OPTIONS.some((t) => t.value === row.type) ? row.type : ''
+      const eventType = EVENT_KIND_OPTIONS.includes(row.eventType) ? row.eventType : ''
       const health = HEALTH_OPTIONS.some((h) => h.value === row.health)
         ? row.health
         : 'not-started'
@@ -382,8 +382,8 @@ Founders Mixer,2026-08-15,6:00 PM,ET,2026-08-01,Boston,In-Person,Live event (in-
         timeZone: String(row.timeZone || '').trim(),
         marketingDate: row.marketingDate || '',
         venue: String(row.venue || '').trim(),
-        format,
         type,
+        eventType,
         lead: toNameList(row.lead),
         instructor: String(row.instructor || '').trim(),
         moderator: String(row.moderator || '').trim(),

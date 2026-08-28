@@ -5,7 +5,8 @@ import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
 import EventChecklist from './EventChecklist'
 import CommentsPanel from './CommentsPanel'
-import { EVENT_FORMAT_OPTIONS, EVENT_TYPE_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import { EVENT_KIND_OPTIONS, HEALTH_OPTIONS } from '../constants'
+import { useEventCategories } from '../hooks/useEventCategories'
 import { toNameList } from '../utils'
 
 const fieldClass =
@@ -30,8 +31,8 @@ function draftFromEvent(event) {
     timeZone: event.timeZone || '',
     marketingDate: event.marketingDate || '',
     venue: event.venue || '',
-    format: event.format || '',
     type: event.type || '',
+    eventType: event.eventType || '',
     lead: toNameList(event.lead),
     instructor: event.instructor || '',
     moderator: event.moderator || '',
@@ -46,10 +47,22 @@ function draftFromEvent(event) {
 export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState(() => draftFromEvent(event))
+  const { options: categoryOptions, addCategory } = useEventCategories()
 
   useEffect(() => {
     setDraft(draftFromEvent(event))
   }, [event.id])
+
+  const selectCategory = async (value, apply) => {
+    if (value !== '__add_category__') {
+      apply(value)
+      return
+    }
+    const name = window.prompt('New category name')
+    if (!name || !name.trim()) return
+    const added = await addCategory(name)
+    if (added) apply(added)
+  }
 
   const save = async () => {
     if (!draft.name.trim() || saving) return
@@ -62,8 +75,8 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
         timeZone: draft.timeZone.trim(),
         marketingDate: draft.marketingDate,
         venue: draft.venue.trim(),
-        format: draft.format,
         type: draft.type,
+        eventType: draft.eventType,
         lead: draft.lead,
         instructor: draft.instructor.trim(),
         moderator: draft.moderator.trim(),
@@ -156,30 +169,31 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
               onChange={(e) => setDraft({ ...draft, marketingDate: e.target.value })}
             />
           </Field>
-          <Field label="Online or In-Person">
-            <select
-              className={fieldClass}
-              value={draft.format}
-              onChange={(e) => setDraft({ ...draft, format: e.target.value })}
-            >
-              <option value="">Select format</option>
-              {EVENT_FORMAT_OPTIONS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Type">
+          <Field label="Category">
             <select
               className={fieldClass}
               value={draft.type}
-              onChange={(e) => setDraft({ ...draft, type: e.target.value })}
+              onChange={(e) => selectCategory(e.target.value, (v) => setDraft((d) => ({ ...d, type: v })))}
             >
-              <option value="">Select type</option>
-              {EVENT_TYPE_OPTIONS.map((t) => (
+              <option value="">Select category</option>
+              {categoryOptions.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
+                </option>
+              ))}
+              <option value="__add_category__">+ Add category</option>
+            </select>
+          </Field>
+          <Field label="Event Type">
+            <select
+              className={fieldClass}
+              value={draft.eventType}
+              onChange={(e) => setDraft({ ...draft, eventType: e.target.value })}
+            >
+              <option value="">Select event type</option>
+              {EVENT_KIND_OPTIONS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
                 </option>
               ))}
             </select>
