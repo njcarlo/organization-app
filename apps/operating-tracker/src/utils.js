@@ -1,5 +1,4 @@
 import {
-  EVENT_TYPE_OPTIONS,
   HEALTH_ALIASES,
   SOCIAL_GRAPHICS_STATUS_OPTIONS,
   SOCIAL_POST_STATUS_OPTIONS,
@@ -229,14 +228,6 @@ export function toNameList(value) {
 /** Formats a lead/owner field as a comma-separated display string. */
 export function namesLabel(value) {
   return toNameList(value).join(', ')
-}
-
-export function eventTypeBadgeClass(type) {
-  return EVENT_TYPE_OPTIONS.find((o) => o.value === type)?.className || 'bg-gray-200 text-black'
-}
-
-export function eventTypeLabel(type) {
-  return EVENT_TYPE_OPTIONS.find((o) => o.value === type)?.label || type || '—'
 }
 
 function toISODate(date) {
