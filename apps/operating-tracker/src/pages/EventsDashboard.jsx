@@ -40,7 +40,7 @@ const COLUMN_COUNT = 14
 
 export default function EventsDashboard() {
   const { userProfile } = useAuth()
-  const { options: categoryOptions, addCategory, renameCategory, deleteCategory } =
+  const { options: categoryOptions, addCategory, renameCategory, deleteCategory, setCategoryColor } =
     useEventCategories()
   const categoryByValue = useMemo(() => {
     const map = new Map()
@@ -301,6 +301,7 @@ export default function EventsDashboard() {
         options={categoryOptions}
         onRename={renameAndReload}
         onDelete={deleteAndReload}
+        onRecolor={setCategoryColor}
       />
 
       <Modal

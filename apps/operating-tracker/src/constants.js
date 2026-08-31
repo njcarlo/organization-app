@@ -70,6 +70,24 @@ export const EVENT_TYPE_OPTIONS = [
   { value: 'Webinar', label: 'Webinar', className: 'bg-amber-200 text-amber-900' },
 ]
 
+/** Curated badge colors offered when assigning a color to an event Category. */
+export const CATEGORY_COLOR_OPTIONS = [
+  { label: 'Gray', className: 'bg-gray-200 text-black' },
+  { label: 'Crimson', className: 'bg-hae-crimson text-white' },
+  { label: 'Red', className: 'bg-red-200 text-red-900' },
+  { label: 'Rose', className: 'bg-rose-100 text-rose-900' },
+  { label: 'Amber', className: 'bg-amber-200 text-amber-900' },
+  { label: 'Yellow', className: 'bg-yellow-100 text-black' },
+  { label: 'Green', className: 'bg-green-200 text-green-900' },
+  { label: 'Cyan', className: 'bg-cyan-200 text-cyan-900' },
+  { label: 'Sky', className: 'bg-sky-200 text-sky-900' },
+  { label: 'Blue', className: 'bg-blue-600 text-white' },
+  { label: 'Indigo', className: 'bg-indigo-950 text-white' },
+  { label: 'Purple', className: 'bg-purple-200 text-purple-900' },
+  { label: 'Slate', className: 'bg-slate-900 text-white' },
+  { label: 'Stone', className: 'bg-stone-500 text-white' },
+]
+
 export const GRAPHICS_STATUS_OPTIONS = [
   'Not Started',
   'Ongoing',

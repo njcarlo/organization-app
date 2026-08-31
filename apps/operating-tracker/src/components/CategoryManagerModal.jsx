@@ -1,7 +1,43 @@
 import { useEffect, useState } from 'react'
 import { Modal } from '@hae/ui'
+import { CATEGORY_COLOR_OPTIONS } from '../constants'
 
-function CategoryRow({ category, onRename, onDelete }) {
+function ColorSwatches({ category, onRecolor }) {
+  const [saving, setSaving] = useState(false)
+
+  const pick = async (className) => {
+    if (className === category.className || saving) return
+    setSaving(true)
+    try {
+      await onRecolor(category, className)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {CATEGORY_COLOR_OPTIONS.map((c) => {
+        const active = c.className === category.className
+        return (
+          <button
+            key={c.className}
+            type="button"
+            title={c.label}
+            aria-label={`Set color to ${c.label}`}
+            disabled={saving}
+            onClick={() => pick(c.className)}
+            className={`h-5 w-5 rounded-full border-2 disabled:opacity-60 ${c.className.split(' ')[0]} ${
+              active ? 'border-hae-ink' : 'border-transparent'
+            }`}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+function CategoryRow({ category, onRename, onDelete, onRecolor }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(category.label)
   const [saving, setSaving] = useState(false)
@@ -48,6 +84,9 @@ function CategoryRow({ category, onRename, onDelete }) {
   return (
     <div className="border-b border-hae-line/60 py-2">
       <div className="flex items-center gap-2">
+        <span
+          className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${category.className.split(' ')[0]}`}
+        />
         {editing ? (
           <input
             autoFocus
@@ -102,12 +141,13 @@ function CategoryRow({ category, onRename, onDelete }) {
         )}
       </div>
       {error ? <p className="mt-1 text-xs text-hae-crimson">{error}</p> : null}
+      <ColorSwatches category={category} onRecolor={onRecolor} />
     </div>
   )
 }
 
-/** Rename or delete event Categories in place — options come from useEventCategories. */
-export default function CategoryManagerModal({ open, onClose, options, onRename, onDelete }) {
+/** Rename, recolor, or delete event Categories in place — options come from useEventCategories. */
+export default function CategoryManagerModal({ open, onClose, options, onRename, onDelete, onRecolor }) {
   return (
     <Modal open={open} onClose={onClose} title="Manage categories">
       <div className="max-h-[60vh] overflow-y-auto">
@@ -120,6 +160,7 @@ export default function CategoryManagerModal({ open, onClose, options, onRename,
               category={category}
               onRename={onRename}
               onDelete={onDelete}
+              onRecolor={onRecolor}
             />
           ))
         )}

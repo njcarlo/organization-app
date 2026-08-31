@@ -84,14 +84,27 @@ export function useEventCategories() {
       if (!trimmed) return null
       const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase())
       if (existing) return existing.name
+      // Re-adding a built-in name (e.g. after deleting it) restores its original color.
+      const builtIn = EVENT_TYPE_OPTIONS.find(
+        (o) => o.value.toLowerCase() === trimmed.toLowerCase()
+      )
       await addDoc(collection(db, 'eventCategories'), {
         name: trimmed,
+        className: builtIn?.className || null,
         createdAt: serverTimestamp(),
       })
       await load()
       return trimmed
     },
     [categories, load]
+  )
+
+  const setCategoryColor = useCallback(
+    async (category, className) => {
+      await updateDoc(doc(db, 'eventCategories', category.id), { className })
+      await load()
+    },
+    [load]
   )
 
   const renameCategory = useCallback(
@@ -125,5 +138,12 @@ export function useEventCategories() {
     [load]
   )
 
-  return { options: toOptions(categories), categories, addCategory, renameCategory, deleteCategory }
+  return {
+    options: toOptions(categories),
+    categories,
+    addCategory,
+    renameCategory,
+    deleteCategory,
+    setCategoryColor,
+  }
 }
