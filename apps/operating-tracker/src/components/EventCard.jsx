@@ -49,7 +49,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState(() => draftFromEvent(event))
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false)
-  const { options: categoryOptions, addCategory, renameCategory, deleteCategory } =
+  const { options: categoryOptions, addCategory, renameCategory, deleteCategory, setCategoryColor } =
     useEventCategories()
 
   useEffect(() => {
@@ -300,6 +300,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       options={categoryOptions}
       onRename={renameAndSync}
       onDelete={deleteAndSync}
+      onRecolor={setCategoryColor}
     />
     </>
   )
