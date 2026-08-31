@@ -73,7 +73,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
 
   const renameAndSync = async (category, newName) => {
     await renameCategory(category, newName)
-    if (draft.type === category.name) setDraft((d) => ({ ...d, type: newName.trim() }))
+    if (draft.type === category.value) setDraft((d) => ({ ...d, type: newName.trim() }))
     onChanged?.()
   }
 

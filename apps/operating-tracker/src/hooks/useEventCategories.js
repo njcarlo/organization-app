@@ -96,15 +96,16 @@ export function useEventCategories() {
 
   const renameCategory = useCallback(
     async (category, newName) => {
+      const oldName = category.value ?? category.name
       const trimmed = newName.trim()
-      if (!trimmed || trimmed === category.name) return
+      if (!trimmed || trimmed === oldName) return
       const dupe = categories.find(
         (c) => c.id !== category.id && c.name.toLowerCase() === trimmed.toLowerCase()
       )
       if (dupe) throw new Error(`"${trimmed}" already exists.`)
       await updateDoc(doc(db, 'eventCategories', category.id), { name: trimmed })
       const affected = await getDocs(
-        query(collection(db, 'trackerEvents'), where('type', '==', category.name))
+        query(collection(db, 'trackerEvents'), where('type', '==', oldName))
       )
       if (!affected.empty) {
         const batch = writeBatch(db)
