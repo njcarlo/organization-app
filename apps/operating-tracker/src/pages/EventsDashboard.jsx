@@ -7,11 +7,10 @@ import { db } from '../firebase'
 import LeadSelect from '../components/LeadSelect'
 import EventCard from '../components/EventCard'
 import ModuleImportPanel from '../components/ModuleImportPanel'
+import CategoryManagerModal from '../components/CategoryManagerModal'
 import { useEventCategories } from '../hooks/useEventCategories'
 import { EVENT_KIND_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import {
-  eventTypeBadgeClass,
-  eventTypeLabel,
   formatLongDate,
   groupEventsByWeek,
   healthBadgeClass,
@@ -41,7 +40,13 @@ const COLUMN_COUNT = 14
 
 export default function EventsDashboard() {
   const { userProfile } = useAuth()
-  const { options: categoryOptions, addCategory } = useEventCategories()
+  const { options: categoryOptions, addCategory, renameCategory, deleteCategory } =
+    useEventCategories()
+  const categoryByValue = useMemo(() => {
+    const map = new Map()
+    categoryOptions.forEach((c) => map.set(c.value, c))
+    return map
+  }, [categoryOptions])
   const [searchParams, setSearchParams] = useSearchParams()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -50,6 +55,7 @@ export default function EventsDashboard() {
   const [form, setForm] = useState(emptyForm)
   const [expandedId, setExpandedId] = useState(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [deleting, setDeleting] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
@@ -130,6 +136,10 @@ export default function EventsDashboard() {
   }
 
   const selectCategory = async (value, apply) => {
+    if (value === '__manage_categories__') {
+      setManageCategoriesOpen(true)
+      return
+    }
     if (value !== '__add_category__') {
       apply(value)
       return
@@ -138,6 +148,16 @@ export default function EventsDashboard() {
     if (!name || !name.trim()) return
     const added = await addCategory(name)
     if (added) apply(added)
+  }
+
+  const renameAndReload = async (category, newName) => {
+    await renameCategory(category, newName)
+    await load()
+  }
+
+  const deleteAndReload = async (category) => {
+    await deleteCategory(category)
+    await load()
   }
 
   const toggleSelected = (id) => {
@@ -275,6 +295,14 @@ export default function EventsDashboard() {
         />
       </Modal>
 
+      <CategoryManagerModal
+        open={manageCategoriesOpen}
+        onClose={() => setManageCategoriesOpen(false)}
+        options={categoryOptions}
+        onRename={renameAndReload}
+        onDelete={deleteAndReload}
+      />
+
       <Modal
         open={open}
         onClose={close}
@@ -324,6 +352,7 @@ export default function EventsDashboard() {
                 </option>
               ))}
               <option value="__add_category__">+ Add category</option>
+              <option value="__manage_categories__">Manage categories…</option>
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -525,9 +554,9 @@ export default function EventsDashboard() {
                       </td>
                       <td className="px-3 py-2">
                         <span
-                          className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${eventTypeBadgeClass(event.type)}`}
+                          className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${categoryByValue.get(event.type)?.className || 'bg-gray-200 text-black'}`}
                         >
-                          {eventTypeLabel(event.type)}
+                          {categoryByValue.get(event.type)?.label || event.type || '—'}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-sm text-hae-ink">{event.eventType || '—'}</td>

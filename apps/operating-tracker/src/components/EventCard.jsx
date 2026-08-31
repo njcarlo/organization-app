@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
 import EventChecklist from './EventChecklist'
 import CommentsPanel from './CommentsPanel'
+import CategoryManagerModal from './CategoryManagerModal'
 import { EVENT_KIND_OPTIONS, HEALTH_OPTIONS } from '../constants'
 import { useEventCategories } from '../hooks/useEventCategories'
 import { toNameList } from '../utils'
@@ -47,13 +48,19 @@ function draftFromEvent(event) {
 export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState(() => draftFromEvent(event))
-  const { options: categoryOptions, addCategory } = useEventCategories()
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false)
+  const { options: categoryOptions, addCategory, renameCategory, deleteCategory } =
+    useEventCategories()
 
   useEffect(() => {
     setDraft(draftFromEvent(event))
   }, [event.id])
 
   const selectCategory = async (value, apply) => {
+    if (value === '__manage_categories__') {
+      setManageCategoriesOpen(true)
+      return
+    }
     if (value !== '__add_category__') {
       apply(value)
       return
@@ -62,6 +69,17 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
     if (!name || !name.trim()) return
     const added = await addCategory(name)
     if (added) apply(added)
+  }
+
+  const renameAndSync = async (category, newName) => {
+    await renameCategory(category, newName)
+    if (draft.type === category.name) setDraft((d) => ({ ...d, type: newName.trim() }))
+    onChanged?.()
+  }
+
+  const deleteAndSync = async (category) => {
+    await deleteCategory(category)
+    onChanged?.()
   }
 
   const save = async () => {
@@ -104,6 +122,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   }
 
   return (
+    <>
     <Modal
       open
       onClose={handleClose}
@@ -182,6 +201,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
                 </option>
               ))}
               <option value="__add_category__">+ Add category</option>
+              <option value="__manage_categories__">Manage categories…</option>
             </select>
           </Field>
           <Field label="Event Type">
@@ -274,5 +294,13 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
         </div>
       </div>
     </Modal>
+    <CategoryManagerModal
+      open={manageCategoriesOpen}
+      onClose={() => setManageCategoriesOpen(false)}
+      options={categoryOptions}
+      onRename={renameAndSync}
+      onDelete={deleteAndSync}
+    />
+    </>
   )
 }
