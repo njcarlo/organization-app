@@ -298,6 +298,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       open={manageCategoriesOpen}
       onClose={() => setManageCategoriesOpen(false)}
       options={categoryOptions}
+      onAdd={addCategory}
       onRename={renameAndSync}
       onDelete={deleteAndSync}
       onRecolor={setCategoryColor}
