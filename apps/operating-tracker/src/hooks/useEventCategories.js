@@ -16,6 +16,13 @@ import { EVENT_TYPE_OPTIONS } from '../constants'
 
 let cache = null
 let inflight = null
+const listeners = new Set()
+
+/** Pushes a fresh list to every mounted useEventCategories() instance, not just the caller's. */
+function broadcast(list) {
+  cache = list
+  listeners.forEach((setCategories) => setCategories(list))
+}
 
 function toOptions(categories) {
   return [...categories]
@@ -46,10 +53,6 @@ function fetchCategories() {
     inflight = getDocs(collection(db, 'eventCategories'))
       .then((snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() })))
       .then(seedIfEmpty)
-      .then((categories) => {
-        cache = categories
-        return categories
-      })
   }
   return inflight
 }
@@ -57,6 +60,8 @@ function fetchCategories() {
 /**
  * Event "Category" dropdown, backed by Firestore so it can be renamed/deleted from the UI.
  * Renaming updates every trackerEvents doc using the old name so existing events stay correct.
+ * Every mounted instance (dashboard table, add form, edit modal, …) shares one live list, so a
+ * change made from any of them (rename/delete/recolor) is reflected everywhere immediately.
  */
 export function useEventCategories() {
   const [categories, setCategories] = useState(cache || [])
@@ -64,18 +69,22 @@ export function useEventCategories() {
   const load = useCallback(async () => {
     inflight = null
     const list = await fetchCategories()
-    setCategories(list)
+    broadcast(list)
   }, [])
 
   useEffect(() => {
-    if (cache) return
-    let cancelled = false
-    fetchCategories().then((list) => {
-      if (!cancelled) setCategories(list)
-    })
-    return () => {
-      cancelled = true
+    listeners.add(setCategories)
+    if (!cache) {
+      let cancelled = false
+      fetchCategories().then((list) => {
+        if (!cancelled) broadcast(list)
+      })
+      return () => {
+        cancelled = true
+        listeners.delete(setCategories)
+      }
     }
+    return () => listeners.delete(setCategories)
   }, [])
 
   const addCategory = useCallback(

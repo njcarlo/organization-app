@@ -299,6 +299,7 @@ export default function EventsDashboard() {
         open={manageCategoriesOpen}
         onClose={() => setManageCategoriesOpen(false)}
         options={categoryOptions}
+        onAdd={addCategory}
         onRename={renameAndReload}
         onDelete={deleteAndReload}
         onRecolor={setCategoryColor}

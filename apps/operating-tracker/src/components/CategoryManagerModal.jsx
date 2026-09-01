@@ -2,6 +2,47 @@ import { useEffect, useState } from 'react'
 import { Modal } from '@hae/ui'
 import { CATEGORY_COLOR_OPTIONS } from '../constants'
 
+function AddCategoryForm({ onAdd }) {
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed || saving) return
+    setSaving(true)
+    setError('')
+    try {
+      const added = await onAdd(trimmed)
+      if (added) setName('')
+      else setError(`"${trimmed}" already exists.`)
+    } catch (err) {
+      setError(err.message || 'Could not add category.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mb-3 flex items-start gap-2">
+      <div className="flex-1">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="New category name"
+          disabled={saving}
+          className="w-full rounded-md border border-hae-line px-2 py-1.5 text-sm outline-none focus:border-hae-crimson"
+        />
+        {error ? <p className="mt-1 text-xs text-hae-crimson">{error}</p> : null}
+      </div>
+      <button type="submit" className="hae-btn px-3 py-1.5 text-xs disabled:opacity-60" disabled={saving}>
+        {saving ? 'Adding…' : 'Add'}
+      </button>
+    </form>
+  )
+}
+
 function ColorSwatches({ category, onRecolor }) {
   const [saving, setSaving] = useState(false)
 
@@ -146,10 +187,19 @@ function CategoryRow({ category, onRename, onDelete, onRecolor }) {
   )
 }
 
-/** Rename, recolor, or delete event Categories in place — options come from useEventCategories. */
-export default function CategoryManagerModal({ open, onClose, options, onRename, onDelete, onRecolor }) {
+/** Add, rename, recolor, or delete event Categories in place — options come from useEventCategories. */
+export default function CategoryManagerModal({
+  open,
+  onClose,
+  options,
+  onAdd,
+  onRename,
+  onDelete,
+  onRecolor,
+}) {
   return (
     <Modal open={open} onClose={onClose} title="Manage categories">
+      <AddCategoryForm onAdd={onAdd} />
       <div className="max-h-[60vh] overflow-y-auto">
         {options.length === 0 ? (
           <p className="text-sm text-hae-slate">No categories yet.</p>
