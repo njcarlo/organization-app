@@ -13,7 +13,17 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 
-const emptyRow = { name: '', url: '', createdBy: '', filePath: '', notes: '' }
+const emptyRow = {
+  name: '',
+  url: '',
+  createdBy: '',
+  filePath: '',
+  notes: '',
+  status: 'Active',
+  loginUrl: '',
+}
+
+const PASSWORD_STATUS_OPTIONS = ['Active', 'Inactive']
 
 const cellInputClass =
   'w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-hae-crimson focus:bg-white'
@@ -92,6 +102,9 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
         createdBy: editRow.createdBy.trim(),
         filePath: editRow.filePath.trim(),
         notes: (editRow.notes || '').trim(),
+        ...(isPassword
+          ? { status: editRow.status || 'Active', loginUrl: (editRow.loginUrl || '').trim() }
+          : {}),
       })
       setEditRow(null)
       await load()
@@ -131,6 +144,9 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
         groupId,
         order: maxOrder + 1,
         createdAt: serverTimestamp(),
+        ...(isPassword
+          ? { status: newRow.status || 'Active', loginUrl: newRow.loginUrl.trim() }
+          : {}),
       })
       setNewRow(emptyRow)
       setShowNewPassword(false)
@@ -203,7 +219,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
         </div>
       )}
       <div className="hae-table-scroll rounded-xl border border-hae-line bg-white">
-        <table className="w-full min-w-[720px] text-left">
+        <table className={`w-full text-left ${isPassword ? 'min-w-[960px]' : 'min-w-[720px]'}`}>
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">
@@ -218,6 +234,8 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
               <th className="px-3 py-2 font-semibold">{labels.url}</th>
               {!isPassword && <th className="px-3 py-2 font-semibold">Created by</th>}
               <th className="px-3 py-2 font-semibold">{labels.filePath}</th>
+              {isPassword && <th className="px-3 py-2 font-semibold">Login URL</th>}
+              {isPassword && <th className="px-3 py-2 font-semibold">Status</th>}
               {showNotes && <th className="px-3 py-2 font-semibold">Notes</th>}
               <th className="px-3 py-2 font-semibold" />
             </tr>
@@ -261,6 +279,26 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 <td className="px-3 py-2 text-sm text-hae-slate">
                   {isPassword ? (row.filePath ? MASKED_VALUE : '—') : row.filePath || '—'}
                 </td>
+                {isPassword && (
+                  <td className="px-3 py-2 text-sm text-hae-slate">
+                    {row.loginUrl ? (
+                      <a
+                        href={row.loginUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-hae-crimson hover:underline"
+                      >
+                        {row.loginUrl}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                )}
+                {isPassword && (
+                  <td className="px-3 py-2 text-sm text-hae-slate">{row.status || 'Active'}</td>
+                )}
                 {showNotes && (
                   <td className="px-3 py-2 text-sm text-hae-slate">{row.notes || '—'}</td>
                 )}
@@ -328,6 +366,32 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                   />
                 )}
               </td>
+              {isPassword && (
+                <td className="px-1 py-1">
+                  <input
+                    placeholder="Login URL"
+                    className={cellInputClass}
+                    value={newRow.loginUrl}
+                    onChange={(e) => setNewRow({ ...newRow, loginUrl: e.target.value })}
+                    onKeyDown={onEnterCommitNewRow}
+                  />
+                </td>
+              )}
+              {isPassword && (
+                <td className="px-1 py-1">
+                  <select
+                    className={cellInputClass}
+                    value={newRow.status}
+                    onChange={(e) => setNewRow({ ...newRow, status: e.target.value })}
+                  >
+                    {PASSWORD_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              )}
               {showNotes && (
                 <td className="px-1 py-1">
                   <input
@@ -446,6 +510,32 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 />
               )}
             </label>
+            {isPassword && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Login URL</span>
+                <input
+                  value={editRow.loginUrl || ''}
+                  onChange={(e) => setEditRow({ ...editRow, loginUrl: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                />
+              </label>
+            )}
+            {isPassword && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-xs font-medium text-hae-slate">Status</span>
+                <select
+                  value={editRow.status || 'Active'}
+                  onChange={(e) => setEditRow({ ...editRow, status: e.target.value })}
+                  className="rounded-md border border-hae-line px-3 py-2 text-sm outline-none focus:border-hae-crimson"
+                >
+                  {PASSWORD_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {showNotes && (
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-xs font-medium text-hae-slate">Notes</span>
