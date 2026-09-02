@@ -4,6 +4,7 @@ import { PlatformHeader } from '@hae/ui'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from './Sidebar'
 import NotificationsBell from './NotificationsBell'
+import GlobalSearch from './GlobalSearch'
 
 export default function Layout() {
   const { userProfile, roleLabel, canAccessModule } = useAuth()
@@ -33,7 +34,12 @@ export default function Layout() {
           canAccessModule={canAccessModule}
           onMenuClick={() => setNavOpen(true)}
           menuOpen={navOpen}
-          actions={<NotificationsBell />}
+          actions={
+            <>
+              <GlobalSearch />
+              <NotificationsBell />
+            </>
+          }
         />
       </div>
 
