@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Simple centered modal dialog.
@@ -39,7 +40,7 @@ export default function Modal({
           ? 'max-w-4xl'
           : 'max-w-xl'
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[80] flex items-start justify-center p-4 sm:items-center sm:p-6">
       <button
         type="button"
@@ -75,6 +76,7 @@ export default function Modal({
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
