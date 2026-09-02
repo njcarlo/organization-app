@@ -95,6 +95,12 @@ export function AuthProvider({ children }) {
     !isSuperAdmin && !isAdmin && isSectionRestricted(userProfile?.sectionAccess)
       ? userProfile.sectionAccess
       : null
+  // Sections this user can view but not edit — independent of the
+  // sidebar-visibility restriction above.
+  const sectionReadOnly =
+    !isSuperAdmin && !isAdmin && Array.isArray(userProfile?.sectionReadOnly)
+      ? userProfile.sectionReadOnly
+      : []
 
   const value = useMemo(
     () => ({
@@ -112,6 +118,8 @@ export function AuthProvider({ children }) {
       isStaff,
       isSuperAdmin,
       sectionAccess,
+      sectionReadOnly,
+      isSectionReadOnly: (sectionId) => sectionReadOnly.includes(sectionId),
       hasPermission: (perm) => isSuperAdmin || hasPermission(permissions, perm),
       hasAnyPermission: (perms) =>
         isSuperAdmin || hasAnyPermission(permissions, perms),
@@ -128,6 +136,7 @@ export function AuthProvider({ children }) {
       isStaff,
       isSuperAdmin,
       sectionAccess,
+      sectionReadOnly,
     ]
   )
 

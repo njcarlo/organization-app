@@ -18,7 +18,7 @@ const cellInputClass =
  * mirrors DocumentLinksTable's trailing-blank-row pattern, but for
  * checkbox + text checklist items instead of document links.
  */
-export default function EventChecklist({ eventId }) {
+export default function EventChecklist({ eventId, readOnly = false }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -51,6 +51,7 @@ export default function EventChecklist({ eventId }) {
   }
 
   const toggleDone = async (item) => {
+    if (readOnly) return
     setError('')
     try {
       await updateDoc(doc(db, 'trackerEventChecklist', item.id), { done: !item.done })
@@ -61,6 +62,7 @@ export default function EventChecklist({ eventId }) {
   }
 
   const saveText = async (item) => {
+    if (readOnly) return
     setError('')
     try {
       await updateDoc(doc(db, 'trackerEventChecklist', item.id), { text: item.text.trim() })
@@ -71,6 +73,7 @@ export default function EventChecklist({ eventId }) {
   }
 
   const removeItem = async (id) => {
+    if (readOnly) return
     if (!confirm('Delete this checklist item? This action cannot be undone.')) return
     setError('')
     try {
@@ -82,7 +85,7 @@ export default function EventChecklist({ eventId }) {
   }
 
   const commitNewItem = async () => {
-    if (!newText.trim()) return
+    if (readOnly || !newText.trim()) return
     setError('')
     try {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.order ?? 0), 0)
@@ -122,34 +125,44 @@ export default function EventChecklist({ eventId }) {
         <ul className="divide-y divide-hae-line">
           {items.map((item) => (
             <li key={item.id} className="group flex items-center gap-2 px-2 py-1">
-              <input type="checkbox" checked={!!item.done} onChange={() => toggleDone(item)} />
+              <input
+                type="checkbox"
+                checked={!!item.done}
+                onChange={() => toggleDone(item)}
+                disabled={readOnly}
+              />
               <input
                 className={`${cellInputClass} ${item.done ? 'text-hae-slate line-through' : ''}`}
                 value={item.text}
                 onChange={(e) => updateLocalItem(item.id, 'text', e.target.value)}
                 onBlur={() => saveText(item)}
                 onKeyDown={(e) => onEnterSaveText(e, item)}
+                disabled={readOnly}
               />
-              <button
-                type="button"
-                onClick={() => removeItem(item.id)}
-                className="shrink-0 text-xs text-hae-slate opacity-100 hover:text-hae-red sm:opacity-0 sm:group-hover:opacity-100"
-              >
-                Delete
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.id)}
+                  className="shrink-0 text-xs text-hae-slate opacity-100 hover:text-hae-red sm:opacity-0 sm:group-hover:opacity-100"
+                >
+                  Delete
+                </button>
+              )}
             </li>
           ))}
-          <li className="flex items-center gap-2 px-2 py-1">
-            <input type="checkbox" disabled className="opacity-30" />
-            <input
-              ref={newInputRef}
-              placeholder="Add a checklist item"
-              className={cellInputClass}
-              value={newText}
-              onChange={(e) => setNewText(e.target.value)}
-              onKeyDown={onEnterCommitNewItem}
-            />
-          </li>
+          {!readOnly && (
+            <li className="flex items-center gap-2 px-2 py-1">
+              <input type="checkbox" disabled className="opacity-30" />
+              <input
+                ref={newInputRef}
+                placeholder="Add a checklist item"
+                className={cellInputClass}
+                value={newText}
+                onChange={(e) => setNewText(e.target.value)}
+                onKeyDown={onEnterCommitNewItem}
+              />
+            </li>
+          )}
         </ul>
       </div>
     </div>

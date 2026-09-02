@@ -47,7 +47,14 @@ const leaderName = (leader) =>
   [leader.firstName, leader.lastName].filter(Boolean).join(' ') || 'Chapter leader'
 
 /** Floating popup for a chapter leader row — record fields with edit/save/delete, plus comments. */
-export default function ChapterLeaderDetailCard({ leader, chapterNames = [], onClose, onChanged, onDeleted }) {
+export default function ChapterLeaderDetailCard({
+  leader,
+  chapterNames = [],
+  onClose,
+  onChanged,
+  onDeleted,
+  readOnly = false,
+}) {
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
@@ -79,6 +86,7 @@ export default function ChapterLeaderDetailCard({ leader, chapterNames = [], onC
   }
 
   const saveRecord = async () => {
+    if (readOnly) return
     if (!draft?.firstName.trim() || saving) return
     setSaving(true)
     setError('')
@@ -103,6 +111,7 @@ export default function ChapterLeaderDetailCard({ leader, chapterNames = [], onC
   }
 
   const removeLeader = async () => {
+    if (readOnly) return
     if (!confirm(`Delete "${leaderName(leader)}"? This action cannot be undone.`)) return
     setError('')
     try {
@@ -161,12 +170,16 @@ export default function ChapterLeaderDetailCard({ leader, chapterNames = [], onC
           </>
         ) : (
           <>
-            <button type="button" className="hae-btn-secondary" onClick={removeLeader}>
-              Delete
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-              Edit
-            </button>
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={removeLeader}>
+                Delete
+              </button>
+            )}
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={startEdit}>
+                Edit
+              </button>
+            )}
             <button type="button" className="hae-btn-secondary" onClick={handleClose}>
               Close
             </button>
@@ -174,7 +187,7 @@ export default function ChapterLeaderDetailCard({ leader, chapterNames = [], onC
         )
       }
     >
-      {editing && draft ? (
+      {editing && draft && !readOnly ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Chapter">
             <select

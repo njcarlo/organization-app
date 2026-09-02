@@ -29,13 +29,14 @@ export function sanitizeLinks(links) {
  * show the label as a clickable link plus an "×" to remove; pass onAdd to
  * reveal a "+ Add Link" row that appends without leaving this view.
  */
-export function LinksTable({ links, onAdd, onDelete }) {
+export function LinksTable({ links, onAdd, onDelete, readOnly = false }) {
   const list = parseLinks(links)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
   const [newUrl, setNewUrl] = useState('')
 
   const commitAdd = () => {
+    if (readOnly) return
     const url = newUrl.trim()
     if (!/^https?:\/\//i.test(url)) return
     onAdd?.({ name: newName.trim() || url, url })
@@ -49,7 +50,7 @@ export function LinksTable({ links, onAdd, onDelete }) {
     setNewUrl('')
   }
 
-  if (!list.length && !adding && !onAdd) {
+  if (!list.length && !adding && (!onAdd || readOnly)) {
     return <p className="text-sm text-hae-slate">No links yet.</p>
   }
 
@@ -66,7 +67,7 @@ export function LinksTable({ links, onAdd, onDelete }) {
                       {l.name || l.url}
                     </a>
                   </td>
-                  {onDelete && (
+                  {onDelete && !readOnly && (
                     <td className="w-8 px-2 py-1.5 text-center">
                       <button
                         type="button"
@@ -80,7 +81,7 @@ export function LinksTable({ links, onAdd, onDelete }) {
                   )}
                 </tr>
               ))}
-              {adding && (
+              {adding && !readOnly && (
                 <tr className="border-b border-hae-line/60 last:border-0">
                   <td className="p-1.5">
                     <div className="flex gap-1.5">
@@ -116,7 +117,7 @@ export function LinksTable({ links, onAdd, onDelete }) {
           </table>
         </div>
       ) : null}
-      {onAdd && !adding && (
+      {onAdd && !adding && !readOnly && (
         <button
           type="button"
           className="mt-1.5 text-xs font-semibold text-hae-crimson hover:underline"

@@ -54,6 +54,14 @@ export function isSectionRestricted(sectionAccess) {
   return Array.isArray(sectionAccess) && sectionAccess.length > 0
 }
 
+/** `users/{uid}.sectionReadOnly` is an array of section ids (same id space as
+ * `sectionAccess`) where the user can view the section but not create, edit,
+ * or delete within it. Independent of `sectionAccess` — a section can be
+ * read-only whether or not the user's sidebar is restricted to it. */
+export function isSectionReadOnly(sectionReadOnly, id) {
+  return Array.isArray(sectionReadOnly) && sectionReadOnly.includes(id)
+}
+
 /** Find the best entry point for a restricted user: a section dashboard, or
  * the first item (by `order`) in the first allowed section that has one. */
 export async function firstAllowedPath(sectionAccess, { getDocs, collection, db }) {

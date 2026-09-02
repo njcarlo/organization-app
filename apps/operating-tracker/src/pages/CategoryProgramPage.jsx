@@ -57,7 +57,12 @@ const emptyProject = {
  * by a different top-level Firestore collection (e.g. academyPrograms,
  * customPrograms) so it can power additional sidebar categories.
  */
-export default function CategoryProgramPage({ collectionName, categoryLabel, sectionLabel }) {
+export default function CategoryProgramPage({
+  collectionName,
+  categoryLabel,
+  sectionLabel,
+  sectionReadOnly = false,
+}) {
   const { itemId } = useParams()
   const navigate = useNavigate()
   const programPath = `${PROGRAM_PATH_PREFIX_BY_COLLECTION[collectionName] || '/programs'}/${itemId}`
@@ -157,7 +162,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
 
   const createProject = async (e) => {
     e.preventDefault()
-    if (!newProject.name.trim() || saving) return
+    if (sectionReadOnly || !newProject.name.trim() || saving) return
     setSaving(true)
     try {
       const maxOrder = projects.reduce((m, p) => Math.max(m, p.order ?? 0), -1)
@@ -181,6 +186,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
   }
 
   const reorderProjects = async (reorderedItems) => {
+    if (sectionReadOnly) return
     const batch = writeBatch(db)
     reorderedItems.forEach((p, i) => {
       if (p.order !== i) batch.update(doc(db, 'projects', p.id), { order: i })
@@ -215,6 +221,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
   }
 
   const deleteSelected = async () => {
+    if (sectionReadOnly) return
     const selected = projects.filter((p) => selectedIds.has(p.id))
     if (!selected.length) return
     const label =
@@ -263,7 +270,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
 
   const saveEditEvent = async (e) => {
     e.preventDefault()
-    if (!eventForm?.name.trim() || eventSaving) return
+    if (sectionReadOnly || !eventForm?.name.trim() || eventSaving) return
     setEventSaving(true)
     try {
       await updateDoc(doc(db, collectionName, itemId), {
@@ -285,6 +292,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
   }
 
   const deleteEvent = async () => {
+    if (sectionReadOnly) return
     if (!confirm(`Delete "${program.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, collectionName, itemId))
     navigate(
@@ -318,7 +326,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
 
   const saveEditAcademy = async (e) => {
     e.preventDefault()
-    if (!academyForm?.name.trim() || academySaving) return
+    if (sectionReadOnly || !academyForm?.name.trim() || academySaving) return
     setAcademySaving(true)
     try {
       await updateDoc(doc(db, collectionName, itemId), {
@@ -358,7 +366,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
 
   const saveEditChapter = async (e) => {
     e.preventDefault()
-    if (!chapterForm?.name.trim() || chapterSaving) return
+    if (sectionReadOnly || !chapterForm?.name.trim() || chapterSaving) return
     setChapterSaving(true)
     try {
       await updateDoc(doc(db, collectionName, itemId), {
@@ -393,7 +401,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
 
   const saveEditGeneric = async (e) => {
     e.preventDefault()
-    if (!genericForm?.name.trim() || genericSaving) return
+    if (sectionReadOnly || !genericForm?.name.trim() || genericSaving) return
     setGenericSaving(true)
     try {
       await updateDoc(doc(db, collectionName, itemId), {
@@ -416,7 +424,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
   // so it shows in the sidebar as a top-level category — projects/tasks stay
   // keyed to the same itemId, so nothing underneath it moves.
   const promoteToCategory = async () => {
-    if (promoting) return
+    if (sectionReadOnly || promoting) return
     if (
       !confirm(
         `Move "${program.name}" out of this section and make it its own top-level category? Its projects and tasks are unaffected.`
@@ -666,12 +674,12 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          {!noProjects ? (
+          {!noProjects && !sectionReadOnly ? (
             <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
               + Add Project
             </button>
           ) : null}
-          {isEventsMode ? (
+          {isEventsMode && !sectionReadOnly ? (
             <>
               <button type="button" onClick={startEditEvent} className="hae-btn-secondary">
                 Edit
@@ -685,22 +693,22 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
               </button>
             </>
           ) : null}
-          {collectionName === 'academyPrograms' ? (
+          {collectionName === 'academyPrograms' && !sectionReadOnly ? (
             <button type="button" onClick={startEditAcademy} className="hae-btn-secondary">
               Edit
             </button>
           ) : null}
-          {collectionName === 'chapters' ? (
+          {collectionName === 'chapters' && !sectionReadOnly ? (
             <button type="button" onClick={startEditChapter} className="hae-btn-secondary">
               Edit
             </button>
           ) : null}
-          {isGenericEditable ? (
+          {isGenericEditable && !sectionReadOnly ? (
             <button type="button" onClick={startEditGeneric} className="hae-btn-secondary">
               Edit
             </button>
           ) : null}
-          {collectionName === 'customSectionItems' ? (
+          {collectionName === 'customSectionItems' && !sectionReadOnly ? (
             <button
               type="button"
               onClick={promoteToCategory}
@@ -1095,7 +1103,11 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
               Documents
             </h2>
           )}
-          <DocumentGroupsSection programId={itemId} variant={isPasswordSection ? 'password' : undefined} />
+          <DocumentGroupsSection
+            programId={itemId}
+            variant={isPasswordSection ? 'password' : undefined}
+            readOnly={sectionReadOnly}
+          />
         </section>
       ) : null}
 
@@ -1104,7 +1116,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
           <h2 className="text-sm font-semibold uppercase tracking-wider text-hae-slate">
             Checklist
           </h2>
-          <EventChecklist eventId={itemId} />
+          <EventChecklist eventId={itemId} readOnly={sectionReadOnly} />
         </section>
       ) : null}
 
@@ -1186,16 +1198,20 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
           ) : (
             <DraggableList
               items={visibleProjects}
-              onReorder={reorderProjects}
-              renderCheckbox={(project) => (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(project.id)}
-                  onChange={(e) => toggleSelect(project.id, e.target.checked)}
-                  aria-label={`Select ${project.name}`}
-                  className="h-4 w-4 shrink-0 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
-                />
-              )}
+              onReorder={sectionReadOnly ? undefined : reorderProjects}
+              renderCheckbox={
+                sectionReadOnly
+                  ? undefined
+                  : (project) => (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(project.id)}
+                        onChange={(e) => toggleSelect(project.id, e.target.checked)}
+                        aria-label={`Select ${project.name}`}
+                        className="h-4 w-4 shrink-0 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
+                      />
+                    )
+              }
               renderItem={(project) => (
                 <ProjectCard
                   project={project}
@@ -1203,6 +1219,7 @@ export default function CategoryProgramPage({ collectionName, categoryLabel, sec
                   programPath={programPath}
                   tasks={tasksByProject[project.id] || []}
                   onChanged={load}
+                  readOnly={sectionReadOnly}
                 />
               )}
             />

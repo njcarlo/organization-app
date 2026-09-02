@@ -162,6 +162,7 @@ function SubtaskList({
   onSaveNew,
   onCancelAdd,
   saving,
+  readOnly = false,
 }) {
   const subtasks = task.subtasks || []
   return (
@@ -170,7 +171,7 @@ function SubtaskList({
         <div className="text-[10px] font-semibold tracking-wide text-hae-slate/70 uppercase">
           Subtasks
         </div>
-        {!adding ? (
+        {!adding && !readOnly ? (
           <button
             type="button"
             onClick={onStartAdd}
@@ -206,22 +207,24 @@ function SubtaskList({
                 <span className="text-xs whitespace-nowrap text-hae-slate">
                   Due {formatDate(sub.dueDate)}
                 </span>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onStartEdit(sub)}
-                    className="text-xs text-hae-slate hover:text-hae-crimson"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(sub.id)}
-                    className="text-xs text-hae-slate hover:text-hae-red"
-                  >
-                    Delete
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onStartEdit(sub)}
+                      className="text-xs text-hae-slate hover:text-hae-crimson"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(sub.id)}
+                      className="text-xs text-hae-slate hover:text-hae-red"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
               {sub.notes ? (
                 <p className="mt-1 whitespace-pre-wrap text-xs text-hae-slate/90">
@@ -232,7 +235,7 @@ function SubtaskList({
           )
         )}
       </ul>
-      {adding ? (
+      {adding && !readOnly ? (
         <SubtaskForm
           draft={newSubtask}
           setDraft={setNewSubtask}
@@ -383,6 +386,7 @@ const TaskTable = forwardRef(function TaskTable(
     program,
     onChanged,
     showOwner = true,
+    readOnly = false,
   },
   ref
 ) {
@@ -417,7 +421,7 @@ const TaskTable = forwardRef(function TaskTable(
   }, [tasks])
 
   const reorderActive = async (draggedTaskId, targetTaskId) => {
-    if (draggedTaskId === targetTaskId) return
+    if (readOnly || draggedTaskId === targetTaskId) return
     const from = active.findIndex((t) => t.id === draggedTaskId)
     const to = active.findIndex((t) => t.id === targetTaskId)
     if (from === -1 || to === -1) return
@@ -462,6 +466,7 @@ const TaskTable = forwardRef(function TaskTable(
   const visible = showCompleted ? [...active, ...completed] : active
 
   const startAdd = () => {
+    if (readOnly) return
     setAdding(true)
     setNewTask({
       ...emptyNew,
@@ -480,7 +485,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const saveNew = async () => {
-    if (!newTask.name.trim() || saving) return
+    if (readOnly || !newTask.name.trim() || saving) return
     setSaving(true)
     try {
       await addDoc(collection(db, 'tasks'), {
@@ -509,6 +514,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const startEdit = (task) => {
+    if (readOnly) return
     setAdding(false)
     setEditingId(task.id)
     setExpandedId(task.id)
@@ -532,7 +538,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const saveEdit = async () => {
-    if (!draft?.name.trim() || saving) return
+    if (readOnly || !draft?.name.trim() || saving) return
     setSaving(true)
     try {
       const before = tasks.find((t) => t.id === editingId)
@@ -570,6 +576,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const removeTask = async (id) => {
+    if (readOnly) return
     if (!confirm('Delete this task? This action cannot be undone.')) return
     const before = tasks.find((t) => t.id === id)
     await deleteDoc(doc(db, 'tasks', id))
@@ -590,6 +597,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const addTaskLink = async (task, link) => {
+    if (readOnly) return
     await updateDoc(doc(db, 'tasks', task.id), {
       links: [...parseLinks(task.links), link],
     })
@@ -597,6 +605,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const deleteTaskLink = async (task, idx) => {
+    if (readOnly) return
     await updateDoc(doc(db, 'tasks', task.id), {
       links: parseLinks(task.links).filter((_, i) => i !== idx),
     })
@@ -604,6 +613,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const startAddSubtask = (taskId) => {
+    if (readOnly) return
     setEditingSubtask(null)
     setSubtaskDraft(null)
     setAddingSubtaskFor(taskId)
@@ -616,7 +626,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const saveNewSubtask = async (task) => {
-    if (!newSubtask.name.trim() || subtaskSaving) return
+    if (readOnly || !newSubtask.name.trim() || subtaskSaving) return
     setSubtaskSaving(true)
     try {
       const subtask = {
@@ -647,6 +657,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const startEditSubtask = (sub) => {
+    if (readOnly) return
     setAddingSubtaskFor(null)
     setEditingSubtask(sub.id)
     setSubtaskDraft({
@@ -663,7 +674,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const saveEditSubtask = async (task) => {
-    if (!subtaskDraft?.name.trim() || subtaskSaving) return
+    if (readOnly || !subtaskDraft?.name.trim() || subtaskSaving) return
     setSubtaskSaving(true)
     try {
       const updated = (task.subtasks || []).map((s) =>
@@ -696,6 +707,7 @@ const TaskTable = forwardRef(function TaskTable(
   }
 
   const removeSubtask = async (task, subtaskId) => {
+    if (readOnly) return
     if (!confirm('Delete this subtask? This action cannot be undone.')) return
     const removed = (task.subtasks || []).find((s) => s.id === subtaskId)
     const updated = (task.subtasks || []).filter((s) => s.id !== subtaskId)
@@ -739,7 +751,7 @@ const TaskTable = forwardRef(function TaskTable(
             return (
               <li
                 key={task.id}
-                {...(isComplete(task) ? {} : dragHandlers(task.id))}
+                {...(isComplete(task) || readOnly ? {} : dragHandlers(task.id))}
                 className={`rounded-lg border border-hae-line/70 bg-white/90 ${
                   isComplete(task) ? 'opacity-65' : ''
                 } ${draggedId === task.id ? 'opacity-40' : ''} ${
@@ -761,7 +773,7 @@ const TaskTable = forwardRef(function TaskTable(
                 ) : (
                   <>
                     <div className="flex items-start gap-2 px-3 py-2.5">
-                      {!isComplete(task) ? (
+                      {!isComplete(task) && !readOnly ? (
                         <span
                           className="mt-1 shrink-0 cursor-grab select-none text-hae-slate/50"
                           aria-hidden="true"
@@ -809,22 +821,24 @@ const TaskTable = forwardRef(function TaskTable(
                           ) : null}
                         </div>
                       </button>
-                      <div className="flex shrink-0 gap-2 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(task)}
-                          className="text-xs text-hae-slate hover:text-hae-crimson"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeTask(task.id)}
-                          className="text-xs text-hae-slate hover:text-hae-red"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      {!readOnly && (
+                        <div className="flex shrink-0 gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(task)}
+                            className="text-xs text-hae-slate hover:text-hae-crimson"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeTask(task.id)}
+                            className="text-xs text-hae-slate hover:text-hae-red"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                     {open ? (
                       <div className="border-t border-hae-line/60 bg-hae-mist/40 px-3 py-3">
@@ -878,6 +892,7 @@ const TaskTable = forwardRef(function TaskTable(
                             links={task.links}
                             onAdd={(link) => addTaskLink(task, link)}
                             onDelete={(idx) => deleteTaskLink(task, idx)}
+                            readOnly={readOnly}
                           />
                         </div>
                         <div className="mt-3 border-t border-hae-line/50 pt-3">
@@ -897,6 +912,7 @@ const TaskTable = forwardRef(function TaskTable(
                             onSaveNew={() => saveNewSubtask(task)}
                             onCancelAdd={cancelAddSubtask}
                             saving={subtaskSaving}
+                            readOnly={readOnly}
                           />
                         </div>
                       </div>

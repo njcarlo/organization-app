@@ -45,7 +45,7 @@ function BadgeRow({ label, value, className }) {
 }
 
 /** Floating popup for a graphic — record fields with inline edit/save/delete, plus where to post, caption, tagging, and comments. */
-export default function GraphicDetailCard({ graphic, onClose, onChanged, onDeleted }) {
+export default function GraphicDetailCard({ graphic, onClose, onChanged, onDeleted, readOnly = false }) {
   const [caption, setCaption] = useState(graphic.caption || '')
   const [whoToTag, setWhoToTag] = useState(graphic.whoToTag || '')
   const [saving, setSaving] = useState(false)
@@ -65,6 +65,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   const wherePosted = Array.isArray(graphic.whereToPost) ? graphic.whereToPost : []
 
   const toggleWhereToPost = async (option) => {
+    if (readOnly) return
     const next = wherePosted.includes(option)
       ? wherePosted.filter((o) => o !== option)
       : [...wherePosted, option]
@@ -80,7 +81,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   const hasChanges = caption !== (graphic.caption || '') || whoToTag !== (graphic.whoToTag || '')
 
   const saveDetails = async () => {
-    if (!hasChanges || saving) return
+    if (readOnly || !hasChanges || saving) return
     setSaving(true)
     setError('')
     try {
@@ -97,6 +98,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   }
 
   const startEdit = () => {
+    if (readOnly) return
     setDraft({
       eventOrProgram: graphic.eventOrProgram || '',
       title: graphic.title || '',
@@ -115,7 +117,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   }
 
   const saveRecord = async () => {
-    if (!draft?.title.trim() || savingRecord) return
+    if (readOnly || !draft?.title.trim() || savingRecord) return
     setSavingRecord(true)
     setError('')
     try {
@@ -138,6 +140,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
   }
 
   const removeGraphic = async () => {
+    if (readOnly) return
     if (!confirm('Delete this graphic row? This action cannot be undone.')) return
     setError('')
     try {
@@ -200,12 +203,16 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
           </>
         ) : (
           <>
-            <button type="button" className="hae-btn-secondary" onClick={removeGraphic}>
-              Delete
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-              Edit
-            </button>
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={removeGraphic}>
+                Delete
+              </button>
+            )}
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={startEdit}>
+                Edit
+              </button>
+            )}
             <button type="button" className="hae-btn-secondary" onClick={handleClose}>
               Close
             </button>
@@ -299,6 +306,7 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
                       type="checkbox"
                       checked={wherePosted.includes(option)}
                       onChange={() => toggleWhereToPost(option)}
+                      disabled={readOnly}
                     />
                     {option}
                   </label>
@@ -313,24 +321,32 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
                 className={fieldClass}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
+                disabled={readOnly}
               />
             </label>
 
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-semibold tracking-wider text-hae-slate uppercase">Who to tag</span>
-              <input className={fieldClass} value={whoToTag} onChange={(e) => setWhoToTag(e.target.value)} />
+              <input
+                className={fieldClass}
+                value={whoToTag}
+                onChange={(e) => setWhoToTag(e.target.value)}
+                disabled={readOnly}
+              />
             </label>
 
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="hae-btn disabled:opacity-60"
-                onClick={saveDetails}
-                disabled={!hasChanges || saving}
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="hae-btn disabled:opacity-60"
+                  onClick={saveDetails}
+                  disabled={!hasChanges || saving}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">

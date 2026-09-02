@@ -74,7 +74,7 @@ const emptyForm = {
   endTime: '',
 }
 
-export default function AcademyCalendar() {
+export default function AcademyCalendar({ sectionReadOnly = false }) {
   const { isStaff } = useAuth()
   const navigate = useNavigate()
   const now = new Date()
@@ -208,6 +208,7 @@ export default function AcademyCalendar() {
 
   const save = async (e) => {
     e.preventDefault()
+    if (sectionReadOnly) return
     if (!form.name.trim() || !form.eventDate || saving) return
     setSaving(true)
     try {
@@ -243,6 +244,7 @@ export default function AcademyCalendar() {
   }
 
   const remove = async () => {
+    if (sectionReadOnly) return
     if (!editingId || saving || editingKind !== 'event') return
     if (!confirm('Delete this course date? This action cannot be undone.')) return
     setSaving(true)
@@ -274,7 +276,7 @@ export default function AcademyCalendar() {
             from the main Operations Calendar.
           </p>
         </div>
-        {isStaff ? (
+        {isStaff && !sectionReadOnly ? (
           <button type="button" onClick={() => openAdd(null)} className="hae-btn">
             + Add course date
           </button>
@@ -395,7 +397,7 @@ export default function AcademyCalendar() {
           <h2 className="text-sm font-semibold text-hae-ink">
             {selectedDay ? formatDate(selectedDay) : 'Select a day'}
           </h2>
-          {isStaff && selectedDay ? (
+          {isStaff && selectedDay && !sectionReadOnly ? (
             <button
               type="button"
               onClick={() => openAdd(selectedDay)}
@@ -423,7 +425,7 @@ export default function AcademyCalendar() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => (isStaff ? openEdit(item) : null)}
+                    onClick={() => (isStaff && !sectionReadOnly ? openEdit(item) : null)}
                     className="flex-1 text-left"
                   >
                     <div className="text-sm font-semibold text-hae-ink">
@@ -444,7 +446,7 @@ export default function AcademyCalendar() {
                       View course →
                     </button>
                   ) : null}
-                  {isStaff ? (
+                  {isStaff && !sectionReadOnly ? (
                     <button
                       type="button"
                       onClick={() => openEdit(item)}
@@ -474,7 +476,7 @@ export default function AcademyCalendar() {
         busy={saving}
         footer={
           <>
-            {editingId && editingKind === 'event' ? (
+            {editingId && editingKind === 'event' && !sectionReadOnly ? (
               <button
                 type="button"
                 className="hae-btn-secondary border-hae-crimson text-hae-crimson"

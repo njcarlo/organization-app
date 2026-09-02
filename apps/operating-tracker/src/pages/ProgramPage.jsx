@@ -32,7 +32,7 @@ const emptyProject = {
   notes: '',
 }
 
-export default function ProgramPage() {
+export default function ProgramPage({ sectionReadOnly = false }) {
   const { programId } = useParams()
   const { user, userProfile } = useAuth()
   const [program, setProgram] = useState(null)
@@ -101,7 +101,7 @@ export default function ProgramPage() {
 
   const createProject = async (e) => {
     e.preventDefault()
-    if (!newProject.name.trim() || saving) return
+    if (sectionReadOnly || !newProject.name.trim() || saving) return
     setSaving(true)
     try {
       const maxOrder = projects.reduce((m, p) => Math.max(m, p.order ?? 0), -1)
@@ -125,6 +125,7 @@ export default function ProgramPage() {
   }
 
   const reorderProjects = async (reorderedItems) => {
+    if (sectionReadOnly) return
     const batch = writeBatch(db)
     reorderedItems.forEach((p, i) => {
       if (p.order !== i) batch.update(doc(db, 'projects', p.id), { order: i })
@@ -159,6 +160,7 @@ export default function ProgramPage() {
   }
 
   const deleteSelected = async () => {
+    if (sectionReadOnly) return
     const selected = projects.filter((p) => selectedIds.has(p.id))
     if (!selected.length) return
     const label =
@@ -198,7 +200,7 @@ export default function ProgramPage() {
 
   const saveEdit = async (e) => {
     e.preventDefault()
-    if (!editForm?.name.trim() || editSaving) return
+    if (sectionReadOnly || !editForm?.name.trim() || editSaving) return
     setEditSaving(true)
     try {
       await updateDoc(doc(db, 'programs', programId), {
@@ -247,12 +249,16 @@ export default function ProgramPage() {
                 : `Show ${completedProjects.length} completed`}
             </button>
           ) : null}
-          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-            + Add Project
-          </button>
-          <button type="button" onClick={startEdit} className="hae-btn-secondary">
-            Edit
-          </button>
+          {!sectionReadOnly ? (
+            <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+              + Add Project
+            </button>
+          ) : null}
+          {!sectionReadOnly ? (
+            <button type="button" onClick={startEdit} className="hae-btn-secondary">
+              Edit
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -371,16 +377,20 @@ export default function ProgramPage() {
         ) : (
           <DraggableList
             items={visibleProjects}
-            onReorder={reorderProjects}
-            renderCheckbox={(project) => (
-              <input
-                type="checkbox"
-                checked={selectedIds.has(project.id)}
-                onChange={(e) => toggleSelect(project.id, e.target.checked)}
-                aria-label={`Select ${project.name}`}
-                className="h-4 w-4 shrink-0 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
-              />
-            )}
+            onReorder={sectionReadOnly ? undefined : reorderProjects}
+            renderCheckbox={
+              sectionReadOnly
+                ? undefined
+                : (project) => (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(project.id)}
+                      onChange={(e) => toggleSelect(project.id, e.target.checked)}
+                      aria-label={`Select ${project.name}`}
+                      className="h-4 w-4 shrink-0 rounded border-hae-line text-hae-crimson focus:ring-hae-crimson"
+                    />
+                  )
+            }
             renderItem={(project) => (
               <ProjectCard
                 project={project}
@@ -388,6 +398,7 @@ export default function ProgramPage() {
                 programPath={`/programs/${programId}`}
                 tasks={tasksByProject[project.id] || []}
                 onChanged={load}
+                readOnly={sectionReadOnly}
               />
             )}
           />

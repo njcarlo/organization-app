@@ -45,7 +45,7 @@ function draftFromEvent(event) {
 }
 
 /** Floating edit modal for an event — form fields + checklist + comments/@mentions. */
-export default function EventCard({ event, onClose, onChanged, onDeleted }) {
+export default function EventCard({ event, onClose, onChanged, onDeleted, readOnly = false }) {
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState(() => draftFromEvent(event))
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false)
@@ -58,6 +58,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
 
   const selectCategory = async (value, apply) => {
     if (value === '__manage_categories__') {
+      if (readOnly) return
       setManageCategoriesOpen(true)
       return
     }
@@ -65,6 +66,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
       apply(value)
       return
     }
+    if (readOnly) return
     const name = window.prompt('New category name')
     if (!name || !name.trim()) return
     const added = await addCategory(name)
@@ -72,18 +74,20 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   }
 
   const renameAndSync = async (category, newName) => {
+    if (readOnly) return
     await renameCategory(category, newName)
     if (draft.type === category.value) setDraft((d) => ({ ...d, type: newName.trim() }))
     onChanged?.()
   }
 
   const deleteAndSync = async (category) => {
+    if (readOnly) return
     await deleteCategory(category)
     onChanged?.()
   }
 
   const save = async () => {
-    if (!draft.name.trim() || saving) return
+    if (readOnly || !draft.name.trim() || saving) return
     setSaving(true)
     try {
       await updateDoc(doc(db, 'trackerEvents', event.id), {
@@ -111,6 +115,7 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
   }
 
   const removeEvent = async () => {
+    if (readOnly) return
     if (!confirm(`Delete "${event.name}"? Its checklist is not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, 'trackerEvents', event.id))
     onDeleted?.()
@@ -126,30 +131,36 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
     <Modal
       open
       onClose={handleClose}
-      title={`Editing · ${event.name}`}
+      title={readOnly ? event.name : `Editing · ${event.name}`}
       size="xl"
       busy={saving}
       footer={
-        <>
-          <button type="button" className="hae-btn-secondary" onClick={removeEvent} disabled={saving}>
-            Delete
-          </button>
-          <button type="button" className="hae-btn-secondary" onClick={handleClose} disabled={saving}>
+        readOnly ? (
+          <button type="button" className="hae-btn-secondary" onClick={handleClose}>
             Close
           </button>
-          <button
-            type="button"
-            className="hae-btn disabled:opacity-60"
-            onClick={save}
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        </>
+        ) : (
+          <>
+            <button type="button" className="hae-btn-secondary" onClick={removeEvent} disabled={saving}>
+              Delete
+            </button>
+            <button type="button" className="hae-btn-secondary" onClick={handleClose} disabled={saving}>
+              Close
+            </button>
+            <button
+              type="button"
+              className="hae-btn disabled:opacity-60"
+              onClick={save}
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </>
+        )
       }
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <fieldset disabled={readOnly} className="grid gap-3 sm:grid-cols-2">
           <Field label="Event Title" className="sm:col-span-2">
             <input
               autoFocus
@@ -280,13 +291,13 @@ export default function EventCard({ event, onClose, onChanged, onDeleted }) {
               ))}
             </select>
           </Field>
-        </div>
+        </fieldset>
         <div className="space-y-4 border-t border-hae-line/60 pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
           <div>
             <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
               Checklist
             </h4>
-            <EventChecklist eventId={event.id} />
+            <EventChecklist eventId={event.id} readOnly={readOnly} />
           </div>
           <div className="border-t border-hae-line/60 pt-4">
             <CommentsPanel parentType="trackerEvents" parentId={event.id} parentName={event.name} />

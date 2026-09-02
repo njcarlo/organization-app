@@ -1,3 +1,4 @@
+import { cloneElement } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { AuthActionPage, FeaturesProvider, useFeatures, FEATURES } from '@hae/ui'
@@ -48,11 +49,11 @@ function Home() {
 /** Gates a section's routes for section-restricted users; unrestricted users
  * (sectionAccess === null) always pass. */
 function SectionRoute({ sectionId, children }) {
-  const { sectionAccess } = useAuth()
+  const { sectionAccess, isSectionReadOnly } = useAuth()
   if (sectionAccess && !sectionAccess.includes(sectionId)) {
     return <Navigate to="/" replace />
   }
-  return children
+  return cloneElement(children, { sectionReadOnly: isSectionReadOnly(sectionId) })
 }
 
 function CustomSectionItemRoute({ children }) {

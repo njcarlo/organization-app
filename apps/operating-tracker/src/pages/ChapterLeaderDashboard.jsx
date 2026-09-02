@@ -21,7 +21,7 @@ const emptyForm = {
  * Membership Status, Membership Expiration Date at a glance. Add via modal.
  * Click a row to open its detail popup, which owns Edit/Save/Delete plus comments.
  */
-export default function ChapterLeaderDashboard() {
+export default function ChapterLeaderDashboard({ sectionReadOnly = false }) {
   const [rows, setRows] = useState([])
   const [chapterNames, setChapterNames] = useState([])
   const [loading, setLoading] = useState(true)
@@ -65,6 +65,7 @@ export default function ChapterLeaderDashboard() {
 
   const submitModal = async (e) => {
     e.preventDefault()
+    if (sectionReadOnly) return
     if (!modal?.form.firstName.trim() || saving) return
     setSaving(true)
     setError('')
@@ -112,9 +113,11 @@ export default function ChapterLeaderDashboard() {
             Every chapter leader at a glance — click a row to view details and comments.
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={openAdd}>
-          + Add a Chapter Leader
-        </button>
+        {!sectionReadOnly && (
+          <button type="button" className="hae-btn" onClick={openAdd}>
+            + Add a Chapter Leader
+          </button>
+        )}
       </header>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
@@ -275,6 +278,7 @@ export default function ChapterLeaderDashboard() {
           chapterNames={chapterNames}
           onClose={() => setSelectedId(null)}
           onChanged={load}
+          readOnly={sectionReadOnly}
           onDeleted={() => {
             setSelectedId(null)
             load()
