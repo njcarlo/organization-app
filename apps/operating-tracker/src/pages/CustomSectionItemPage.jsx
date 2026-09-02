@@ -5,7 +5,7 @@ import { db } from '../firebase'
 import CategoryProgramPage from './CategoryProgramPage'
 
 /** Wraps CategoryProgramPage for user-created sections, resolving the section's label for the header. */
-export default function CustomSectionItemPage() {
+export default function CustomSectionItemPage({ sectionReadOnly }) {
   const { sectionId } = useParams()
   const [label, setLabel] = useState('')
 
@@ -26,6 +26,7 @@ export default function CustomSectionItemPage() {
       collectionName="customSectionItems"
       categoryLabel={label || 'Section'}
       sectionLabel={label}
+      sectionReadOnly={sectionReadOnly}
     />
   )
 }

@@ -38,7 +38,7 @@ const emptyForm = {
 
 const COLUMN_COUNT = 14
 
-export default function EventsDashboard() {
+export default function EventsDashboard({ sectionReadOnly = false }) {
   const { userProfile } = useAuth()
   const { options: categoryOptions, addCategory, renameCategory, deleteCategory, setCategoryColor } =
     useEventCategories()
@@ -177,7 +177,7 @@ export default function EventsDashboard() {
   }
 
   const deleteSelected = async () => {
-    if (deleting || selectedIds.size === 0) return
+    if (sectionReadOnly || deleting || selectedIds.size === 0) return
     if (
       !confirm(
         `Delete ${selectedIds.size} event${selectedIds.size === 1 ? '' : 's'}? Their checklists are not cascade-deleted. This action cannot be undone.`
@@ -197,7 +197,7 @@ export default function EventsDashboard() {
 
   const save = async (e) => {
     e.preventDefault()
-    if (!form.name.trim() || saving) return
+    if (sectionReadOnly || !form.name.trim() || saving) return
     setSaving(true)
     try {
       const maxOrder = events.reduce((m, ev) => Math.max(m, ev.order ?? 0), 0)
@@ -250,7 +250,7 @@ export default function EventsDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {selectedIds.size > 0 ? (
+          {selectedIds.size > 0 && !sectionReadOnly ? (
             <button
               type="button"
               className="hae-btn-secondary border-hae-crimson text-hae-crimson disabled:opacity-60"
@@ -271,12 +271,16 @@ export default function EventsDashboard() {
                 : `Show past weeks (${archivedEventCount})`}
             </button>
           ) : null}
-          <button type="button" className="hae-btn-secondary" onClick={() => setImportOpen(true)}>
-            Import Events & Programs
-          </button>
-          <button type="button" className="hae-btn" onClick={openAdd}>
-            + Add an Event
-          </button>
+          {!sectionReadOnly ? (
+            <button type="button" className="hae-btn-secondary" onClick={() => setImportOpen(true)}>
+              Import Events & Programs
+            </button>
+          ) : null}
+          {!sectionReadOnly ? (
+            <button type="button" className="hae-btn" onClick={openAdd}>
+              + Add an Event
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -471,15 +475,17 @@ export default function EventsDashboard() {
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(el) => {
-                    if (el) el.indeterminate = someSelected
-                  }}
-                  onChange={toggleSelectAll}
-                  aria-label="Select all events"
-                />
+                {!sectionReadOnly && (
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someSelected
+                    }}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all events"
+                  />
+                )}
               </th>
               <th className="px-3 py-2 font-semibold">Date of Event</th>
               <th className="px-3 py-2 font-semibold">Category</th>
@@ -543,13 +549,15 @@ export default function EventsDashboard() {
                       }`}
                     >
                       <td className="px-3 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(event.id)}
-                          onChange={() => toggleSelected(event.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label={`Select ${event.name}`}
-                        />
+                        {!sectionReadOnly && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(event.id)}
+                            onChange={() => toggleSelected(event.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${event.name}`}
+                          />
+                        )}
                       </td>
                       <td className="px-3 py-2 text-sm whitespace-nowrap text-hae-ink">
                         {formatLongDate(event.eventDate)}
@@ -599,6 +607,7 @@ export default function EventsDashboard() {
             setExpandedId(null)
             load()
           }}
+          readOnly={sectionReadOnly}
         />
       ) : null}
     </div>

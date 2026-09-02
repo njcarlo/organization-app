@@ -59,7 +59,7 @@ export default function DraggableList({ items, onReorder, renderItem, renderChec
     if (!over || active.id === over.id) return
     const oldIndex = items.findIndex((it) => it.id === active.id)
     const newIndex = items.findIndex((it) => it.id === over.id)
-    if (oldIndex === -1 || newIndex === -1) return
+    if (oldIndex === -1 || newIndex === -1 || !onReorder) return
     onReorder(arrayMove(items, oldIndex, newIndex))
   }
 

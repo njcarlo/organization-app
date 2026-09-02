@@ -16,7 +16,12 @@ import DocumentLinksTable from './DocumentLinksTable'
  * Groups nested under a single Documents & Assets category item. Each group
  * gets its own DocumentLinksTable of link rows.
  */
-export default function DocumentGroupsSection({ programId, showNotes = false, variant }) {
+export default function DocumentGroupsSection({
+  programId,
+  showNotes = false,
+  variant,
+  readOnly = false,
+}) {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -55,7 +60,7 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
 
   const createGroup = async (e) => {
     e.preventDefault()
-    if (!name.trim() || saving) return
+    if (readOnly || !name.trim() || saving) return
     setSaving(true)
     try {
       const maxOrder = groups.reduce((m, g) => Math.max(m, g.order ?? 0), 0)
@@ -86,6 +91,7 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
   }
 
   const commitEditGroupName = async () => {
+    if (readOnly) return
     const trimmed = editingName.trim()
     const group = groups.find((g) => g.id === editingGroupId)
     if (!trimmed || !group || trimmed === group.name) {
@@ -103,6 +109,7 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
   }
 
   const removeGroup = async (groupId) => {
+    if (readOnly) return
     if (
       !confirm('Delete this group? Its links are not cascade-deleted. This action cannot be undone.')
     ) {
@@ -123,11 +130,13 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
     <div className="space-y-4">
       {error && <p className="text-sm text-hae-red">{error}</p>}
 
-      <div className="flex justify-end">
-        <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
-          + Create Group
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end">
+          <button type="button" className="hae-btn" onClick={() => setOpen(true)}>
+            + Create Group
+          </button>
+        </div>
+      )}
 
       {groups.length === 0 ? (
         <div className="rounded-xl border border-dashed border-hae-line bg-white/60 px-4 py-10 text-center text-sm text-hae-slate">
@@ -137,7 +146,7 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
         groups.map((group) => (
           <div key={group.id} className="space-y-2">
             <div className="flex items-center justify-between">
-              {editingGroupId === group.id ? (
+              {!readOnly && editingGroupId === group.id ? (
                 <input
                   autoFocus
                   value={editingName}
@@ -156,29 +165,34 @@ export default function DocumentGroupsSection({ programId, showNotes = false, va
               ) : (
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-sm font-semibold text-hae-ink">{group.name}</h3>
-                  <button
-                    type="button"
-                    onClick={() => startEditGroupName(group)}
-                    title="Edit group name"
-                    aria-label="Edit group name"
-                    className="rounded p-0.5 text-hae-slate hover:bg-hae-mist/60 hover:text-hae-crimson"
-                  >
-                    <NavIcon name="edit" className="h-3.5 w-3.5" />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => startEditGroupName(group)}
+                      title="Edit group name"
+                      aria-label="Edit group name"
+                      className="rounded p-0.5 text-hae-slate hover:bg-hae-mist/60 hover:text-hae-crimson"
+                    >
+                      <NavIcon name="edit" className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => removeGroup(group.id)}
-                className="text-xs text-hae-slate hover:text-hae-red"
-              >
-                Delete group
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => removeGroup(group.id)}
+                  className="text-xs text-hae-slate hover:text-hae-red"
+                >
+                  Delete group
+                </button>
+              )}
             </div>
             <DocumentLinksTable
               groupId={group.id}
               showNotes={variant === 'password' ? true : showNotes}
               variant={variant}
+              readOnly={readOnly}
             />
           </div>
         ))

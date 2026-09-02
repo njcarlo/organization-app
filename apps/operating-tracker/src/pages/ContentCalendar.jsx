@@ -55,7 +55,7 @@ const emptyForm = {
  * (sorted by date within each group); Calendar reflects the same data on a month grid.
  * Click a row/entry to open its detail card with file, hashtags, comments, and activity log.
  */
-export default function ContentCalendar() {
+export default function ContentCalendar({ sectionReadOnly = false }) {
   const [tab, setTab] = useState('table')
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -140,6 +140,7 @@ export default function ContentCalendar() {
 
   const submitModal = async (e) => {
     e.preventDefault()
+    if (sectionReadOnly) return
     if (!modal?.form.creative.trim() || saving) return
     setSaving(true)
     setError('')
@@ -184,9 +185,11 @@ export default function ContentCalendar() {
             the calendar.
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={() => openAdd(selectedDay)}>
-          + Add creative
-        </button>
+        {!sectionReadOnly && (
+          <button type="button" className="hae-btn" onClick={() => openAdd(selectedDay)}>
+            + Add creative
+          </button>
+        )}
       </header>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
@@ -443,9 +446,11 @@ export default function ContentCalendar() {
             <div className="rounded-xl border border-hae-line bg-white p-4">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="font-display text-lg text-hae-ink">{formatDate(selectedDay)}</h3>
-                <button type="button" className="hae-btn" onClick={() => openAdd(selectedDay)}>
-                  + Add creative
-                </button>
+                {!sectionReadOnly && (
+                  <button type="button" className="hae-btn" onClick={() => openAdd(selectedDay)}>
+                    + Add creative
+                  </button>
+                )}
               </div>
               {selectedPosts.length === 0 ? (
                 <p className="text-sm text-hae-slate">Nothing scheduled for this day.</p>
@@ -479,6 +484,7 @@ export default function ContentCalendar() {
           post={expandedRow}
           onClose={() => setExpandedId(null)}
           onChanged={load}
+          readOnly={sectionReadOnly}
           onDeleted={() => {
             setExpandedId(null)
             load()

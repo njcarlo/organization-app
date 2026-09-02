@@ -21,7 +21,7 @@ const emptyForm = {
  * Status at a glance. Add via modal. Click a row to expand its floating card,
  * which owns Edit/Save/Delete plus where-to-post, caption, tagging, and comments.
  */
-export default function GraphicsDashboard() {
+export default function GraphicsDashboard({ sectionReadOnly = false }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -56,7 +56,7 @@ export default function GraphicsDashboard() {
 
   const submitModal = async (e) => {
     e.preventDefault()
-    if (!modal?.form.title.trim() || saving) return
+    if (sectionReadOnly || !modal?.form.title.trim() || saving) return
     setSaving(true)
     setError('')
     try {
@@ -107,9 +107,11 @@ export default function GraphicsDashboard() {
             comments.
           </p>
         </div>
-        <button type="button" className="hae-btn" onClick={openAdd}>
-          + Add Graphics
-        </button>
+        {!sectionReadOnly ? (
+          <button type="button" className="hae-btn" onClick={openAdd}>
+            + Add Graphics
+          </button>
+        ) : null}
       </header>
 
       {error && <p className="text-sm text-hae-red">{error}</p>}
@@ -268,6 +270,7 @@ export default function GraphicsDashboard() {
             setExpandedId(null)
             load()
           }}
+          readOnly={sectionReadOnly}
         />
       ) : null}
     </div>

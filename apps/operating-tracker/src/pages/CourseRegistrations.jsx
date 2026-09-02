@@ -75,7 +75,7 @@ const COLUMNS = [
   { key: 'createdAt', label: 'Date Added' },
 ]
 
-export default function CourseRegistrations() {
+export default function CourseRegistrations({ sectionReadOnly = false }) {
   const [registrations, setRegistrations] = useState([])
   const [academyCourseNames, setAcademyCourseNames] = useState([])
   const [participantCounts, setParticipantCounts] = useState({})
@@ -278,6 +278,7 @@ export default function CourseRegistrations() {
 
   const addRegistration = async (e) => {
     e.preventDefault()
+    if (sectionReadOnly) return
     if (!form.course.trim() || !form.firstName.trim() || !form.lastName.trim()) return
     setError('')
     try {
@@ -298,6 +299,7 @@ export default function CourseRegistrations() {
   }
 
   const saveRegistration = async () => {
+    if (sectionReadOnly) return
     if (!draft?.course.trim() || !draft?.firstName.trim() || !draft?.lastName.trim()) return
     setError('')
     try {
@@ -321,6 +323,7 @@ export default function CourseRegistrations() {
   }
 
   const saveParticipantCount = async (course, value) => {
+    if (sectionReadOnly) return
     const cleaned = Math.max(0, Number(value) || 0)
     setError('')
     try {
@@ -341,6 +344,7 @@ export default function CourseRegistrations() {
   }
 
   const saveEnrollmentCount = async (course, field, value) => {
+    if (sectionReadOnly) return
     const cleaned = Math.max(0, Number(value) || 0)
     const existing = enrollmentCounts[course] || {
       paid: 0,
@@ -368,6 +372,7 @@ export default function CourseRegistrations() {
   }
 
   const removeRegistration = async (id) => {
+    if (sectionReadOnly) return
     if (!confirm('Delete this registration? This action cannot be undone.')) return
     setError('')
     try {
@@ -389,7 +394,7 @@ export default function CourseRegistrations() {
             Manually enter enrollees and payments for Academy courses.
           </p>
         </div>
-        {activeTab === 'registrations' && (
+        {activeTab === 'registrations' && !sectionReadOnly && (
           <button
             type="button"
             onClick={() => setShowImport((v) => !v)}
@@ -489,7 +494,8 @@ export default function CourseRegistrations() {
                                 setEnrollmentDrafts((prev) => ({ ...prev, [draftKey]: ev.target.value }))
                               }
                               onBlur={(ev) => saveEnrollmentCount(e.course, field, ev.target.value)}
-                              className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                              disabled={sectionReadOnly}
+                              className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson disabled:opacity-60"
                             />
                           </td>
                         )
@@ -601,7 +607,8 @@ export default function CourseRegistrations() {
                         setParticipantDrafts((prev) => ({ ...prev, [t.course]: e.target.value }))
                       }
                       onBlur={(e) => saveParticipantCount(t.course, e.target.value)}
-                      className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson"
+                      disabled={sectionReadOnly}
+                      className="w-20 rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson disabled:opacity-60"
                     />
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{t.count}</td>
@@ -622,6 +629,7 @@ export default function CourseRegistrations() {
         </div>
       </div>
 
+      {!sectionReadOnly && (
       <form
         onSubmit={addRegistration}
         className="grid gap-3 rounded-xl border border-hae-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-6"
@@ -691,6 +699,7 @@ export default function CourseRegistrations() {
           </button>
         </div>
       </form>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <input
@@ -806,33 +815,35 @@ export default function CourseRegistrations() {
                   <div className="hae-mobile-card__title min-w-0 flex-1">
                     {r.firstName} {r.lastName}
                   </div>
-                  <div className="flex gap-2 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingId(r.id)
-                        setDraft({
-                          course: r.course || '',
-                          programType: normalizeProgramType(r.programType),
-                          firstName: r.firstName || '',
-                          lastName: r.lastName || '',
-                          email: r.email || '',
-                          amountPaid: r.amountPaid ?? '',
-                          createdAt: toDateInputValue(r.createdAt),
-                        })
-                      }}
-                      className="text-hae-slate hover:text-hae-crimson"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeRegistration(r.id)}
-                      className="text-hae-slate hover:text-hae-red"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {!sectionReadOnly && (
+                    <div className="flex gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(r.id)
+                          setDraft({
+                            course: r.course || '',
+                            programType: normalizeProgramType(r.programType),
+                            firstName: r.firstName || '',
+                            lastName: r.lastName || '',
+                            email: r.email || '',
+                            amountPaid: r.amountPaid ?? '',
+                            createdAt: toDateInputValue(r.createdAt),
+                          })
+                        }}
+                        className="text-hae-slate hover:text-hae-crimson"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeRegistration(r.id)}
+                        className="text-hae-slate hover:text-hae-red"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="hae-mobile-card__meta">
                   <span>{r.course}</span>
@@ -958,33 +969,35 @@ export default function CourseRegistrations() {
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(r.createdAt)}</td>
                   <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingId(r.id)
-                          setDraft({
-                            course: r.course || '',
-                            programType: normalizeProgramType(r.programType),
-                            firstName: r.firstName || '',
-                            lastName: r.lastName || '',
-                            email: r.email || '',
-                            amountPaid: r.amountPaid ?? '',
-                            createdAt: toDateInputValue(r.createdAt),
-                          })
-                        }}
-                        className="text-xs text-hae-slate hover:text-hae-crimson"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeRegistration(r.id)}
-                        className="text-xs text-hae-slate hover:text-hae-red"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {!sectionReadOnly && (
+                      <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(r.id)
+                            setDraft({
+                              course: r.course || '',
+                              programType: normalizeProgramType(r.programType),
+                              firstName: r.firstName || '',
+                              lastName: r.lastName || '',
+                              email: r.email || '',
+                              amountPaid: r.amountPaid ?? '',
+                              createdAt: toDateInputValue(r.createdAt),
+                            })
+                          }}
+                          className="text-xs text-hae-slate hover:text-hae-crimson"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeRegistration(r.id)}
+                          className="text-xs text-hae-slate hover:text-hae-red"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )

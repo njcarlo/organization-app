@@ -42,6 +42,7 @@ export default function ProjectCard({
   programPath,
   tasks,
   onChanged,
+  readOnly = false,
 }) {
   const { user, userProfile } = useAuth()
   const [open, setOpen] = useState(false)
@@ -78,7 +79,7 @@ export default function ProjectCard({
   }
 
   const saveEdit = async () => {
-    if (!draft?.name.trim()) return
+    if (readOnly || !draft?.name.trim()) return
     const payload = {
       name: draft.name.trim(),
       lead: draft.lead,
@@ -122,6 +123,7 @@ export default function ProjectCard({
   }
 
   const removeProject = async () => {
+    if (readOnly) return
     if (!confirm(`Delete project "${project.name}"? Tasks are not cascade-deleted. This action cannot be undone.`)) return
     await deleteDoc(doc(db, 'projects', project.id))
     logHistory({
@@ -143,6 +145,7 @@ export default function ProjectCard({
   }
 
   const addLink = async (link) => {
+    if (readOnly) return
     await updateDoc(doc(db, 'projects', project.id), {
       links: [...parseLinks(project.links), link],
     })
@@ -150,6 +153,7 @@ export default function ProjectCard({
   }
 
   const deleteLink = async (idx) => {
+    if (readOnly) return
     await updateDoc(doc(db, 'projects', project.id), {
       links: parseLinks(project.links).filter((_, i) => i !== idx),
     })
@@ -283,14 +287,16 @@ export default function ProjectCard({
 
         {!editing && (
           <div className="flex flex-wrap items-center gap-1">
-            <button
-              type="button"
-              onClick={handleAddTask}
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
-            >
-              <PlusIcon className="h-3.5 w-3.5" />
-              Add task
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={handleAddTask}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+                Add task
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setCommentsOpen(true)}
@@ -301,24 +307,28 @@ export default function ProjectCard({
               <CommentIcon className="h-4 w-4" />
               <CommentIndicator count={project.commentCount} />
             </button>
-            <button
-              type="button"
-              onClick={startEdit}
-              className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
-              aria-label="Edit project"
-              title="Edit"
-            >
-              <EditIcon className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={removeProject}
-              className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-red"
-              aria-label="Delete project"
-              title="Delete"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </button>
+            {!readOnly && (
+              <>
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-crimson"
+                  aria-label="Edit project"
+                  title="Edit"
+                >
+                  <EditIcon className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={removeProject}
+                  className="rounded-md p-1.5 text-hae-slate hover:bg-hae-mist hover:text-hae-red"
+                  aria-label="Delete project"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -329,7 +339,12 @@ export default function ProjectCard({
             <h4 className="mb-1 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
               Links
             </h4>
-            <LinksTable links={project.links} onAdd={addLink} onDelete={deleteLink} />
+            <LinksTable
+              links={project.links}
+              onAdd={addLink}
+              onDelete={deleteLink}
+              readOnly={readOnly}
+            />
           </div>
           <div>
             <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
@@ -341,6 +356,7 @@ export default function ProjectCard({
               project={project}
               program={program}
               onChanged={onChanged}
+              readOnly={readOnly}
             />
           </div>
         </div>

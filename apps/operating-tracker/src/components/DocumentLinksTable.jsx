@@ -42,7 +42,7 @@ const MASKED_VALUE = '••••••••'
  * blank row is directly editable — pressing Enter commits it and a fresh blank
  * row appears below.
  */
-export default function DocumentLinksTable({ groupId, showNotes = false, variant }) {
+export default function DocumentLinksTable({ groupId, showNotes = false, variant, readOnly = false }) {
   const isPassword = variant === 'password'
   const labels = COLUMN_LABELS[isPassword ? 'password' : 'documents']
   const { user, userProfile } = useAuth()
@@ -93,7 +93,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
 
   const saveEdit = async (e) => {
     e.preventDefault()
-    if (!editRow?.name.trim() || saving) return
+    if (readOnly || !editRow?.name.trim() || saving) return
     setSaving(true)
     try {
       await updateDoc(doc(db, 'trackerDocumentFiles', editRow.id), {
@@ -116,7 +116,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
   }
 
   const removeEdit = async () => {
-    if (!editRow) return
+    if (readOnly || !editRow) return
     if (!confirm('Delete this link? This action cannot be undone.')) return
     setSaving(true)
     try {
@@ -131,7 +131,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
   }
 
   const commitNewRow = async () => {
-    if (!newRow.name.trim()) return
+    if (readOnly || !newRow.name.trim()) return
     setError('')
     try {
       const maxOrder = rows.reduce((m, r) => Math.max(m, r.order ?? 0), 0)
@@ -177,7 +177,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
   }
 
   const deleteSelected = async () => {
-    if (selected.size === 0) return
+    if (readOnly || selected.size === 0) return
     if (
       !confirm(
         `Delete ${selected.size} selected link${selected.size === 1 ? '' : 's'}? This action cannot be undone.`
@@ -205,7 +205,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
   return (
     <div className="space-y-2">
       {error && <p className="text-sm text-hae-red">{error}</p>}
-      {selected.size > 0 && (
+      {!readOnly && selected.size > 0 && (
         <div className="flex items-center justify-between rounded-lg border border-hae-crimson/30 bg-hae-crimson/5 px-3 py-2">
           <span className="text-xs font-medium text-hae-ink">{selected.size} selected</span>
           <button
@@ -223,12 +223,14 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
           <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
             <tr>
               <th className="px-3 py-2 font-semibold">
-                <input
-                  type="checkbox"
-                  checked={rows.length > 0 && selected.size === rows.length}
-                  onChange={toggleAll}
-                  aria-label="Select all links"
-                />
+                {!readOnly && (
+                  <input
+                    type="checkbox"
+                    checked={rows.length > 0 && selected.size === rows.length}
+                    onChange={toggleAll}
+                    aria-label="Select all links"
+                  />
+                )}
               </th>
               <th className="px-3 py-2 font-semibold">{labels.name}</th>
               <th className="px-3 py-2 font-semibold">{labels.url}</th>
@@ -248,12 +250,14 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 className="cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40"
               >
                 <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(row.id)}
-                    onChange={() => toggleRow(row.id)}
-                    aria-label={`Select ${row.name || 'link'}`}
-                  />
+                  {!readOnly && (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(row.id)}
+                      onChange={() => toggleRow(row.id)}
+                      aria-label={`Select ${row.name || 'link'}`}
+                    />
+                  )}
                 </td>
                 <td className="px-3 py-2 text-sm font-medium text-hae-ink">{row.name || '—'}</td>
                 <td className="px-3 py-2 text-sm text-hae-slate">
@@ -305,6 +309,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 <td className="px-3 py-2" />
               </tr>
             ))}
+            {!readOnly && (
             <tr className="border-b border-hae-line/70">
               <td className="px-1 py-1" />
               <td className="px-1 py-1">
@@ -414,49 +419,59 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 </button>
               </td>
             </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      <button
-        type="button"
-        onClick={() => newNameRef.current?.focus()}
-        className="text-xs font-medium text-hae-crimson hover:underline"
-      >
-        + Add a new row
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() => newNameRef.current?.focus()}
+          className="text-xs font-medium text-hae-crimson hover:underline"
+        >
+          + Add a new row
+        </button>
+      )}
 
       <Modal
         open={!!editRow}
         onClose={closeEdit}
-        title={isPassword ? 'Edit password' : 'Edit link'}
+        title={isPassword ? (readOnly ? 'View password' : 'Edit password') : readOnly ? 'View link' : 'Edit link'}
         busy={saving}
         footer={
-          <>
-            <button
-              type="button"
-              onClick={removeEdit}
-              disabled={saving}
-              className="mr-auto text-xs text-hae-slate hover:text-hae-red"
-            >
-              Delete
+          readOnly ? (
+            <button type="button" className="hae-btn-secondary" onClick={closeEdit}>
+              Close
             </button>
-            <button
-              type="button"
-              className="hae-btn-secondary"
-              onClick={closeEdit}
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button type="submit" form="edit-link-form" className="hae-btn" disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={removeEdit}
+                disabled={saving}
+                className="mr-auto text-xs text-hae-slate hover:text-hae-red"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="hae-btn-secondary"
+                onClick={closeEdit}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button type="submit" form="edit-link-form" className="hae-btn" disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          )
         }
       >
         {editRow ? (
           <form id="edit-link-form" onSubmit={saveEdit} className="grid gap-3">
+            <fieldset disabled={readOnly} className="grid gap-3">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium text-hae-slate">{labels.name}</span>
               <input
@@ -547,6 +562,7 @@ export default function DocumentLinksTable({ groupId, showNotes = false, variant
                 />
               </label>
             )}
+            </fieldset>
           </form>
         ) : null}
       </Modal>

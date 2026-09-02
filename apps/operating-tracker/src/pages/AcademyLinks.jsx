@@ -2,7 +2,7 @@ import DocumentGroupsSection from '../components/DocumentGroupsSection'
 
 const ACADEMY_LINKS_PROGRAM_ID = 'academy-links'
 
-export default function AcademyLinks() {
+export default function AcademyLinks({ sectionReadOnly = false }) {
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +10,11 @@ export default function AcademyLinks() {
         <p className="text-sm text-hae-slate">All approved links for the Academy.</p>
       </div>
 
-      <DocumentGroupsSection programId={ACADEMY_LINKS_PROGRAM_ID} showNotes />
+      <DocumentGroupsSection
+        programId={ACADEMY_LINKS_PROGRAM_ID}
+        showNotes
+        readOnly={sectionReadOnly}
+      />
     </div>
   )
 }

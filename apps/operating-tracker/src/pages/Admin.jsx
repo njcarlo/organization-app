@@ -128,6 +128,7 @@ export default function Admin() {
   const [userDraft, setUserDraft] = useState(null)
   const [sectionAccessUser, setSectionAccessUser] = useState(null)
   const [sectionAccessDraft, setSectionAccessDraft] = useState([])
+  const [sectionReadOnlyDraft, setSectionReadOnlyDraft] = useState([])
   const [savingSectionAccess, setSavingSectionAccess] = useState(false)
 
   const [newProgram, setNewProgram] = useState({ name: '', lead: [] })
@@ -270,12 +271,14 @@ export default function Admin() {
   const openSectionAccess = (u) => {
     setSectionAccessUser(u)
     setSectionAccessDraft(Array.isArray(u.sectionAccess) ? u.sectionAccess : [])
+    setSectionReadOnlyDraft(Array.isArray(u.sectionReadOnly) ? u.sectionReadOnly : [])
   }
 
   const closeSectionAccess = () => {
     if (savingSectionAccess) return
     setSectionAccessUser(null)
     setSectionAccessDraft([])
+    setSectionReadOnlyDraft([])
   }
 
   const toggleSectionAccessDraft = (id) => {
@@ -284,18 +287,27 @@ export default function Admin() {
     )
   }
 
+  const toggleSectionReadOnlyDraft = (id) => {
+    setSectionReadOnlyDraft((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
   const saveSectionAccess = async () => {
     if (!sectionAccessUser) return
     setSavingSectionAccess(true)
     try {
-      await updateDoc(
-        doc(db, 'users', sectionAccessUser.id),
-        sectionAccessDraft.length
+      await updateDoc(doc(db, 'users', sectionAccessUser.id), {
+        ...(sectionAccessDraft.length
           ? { sectionAccess: sectionAccessDraft }
-          : { sectionAccess: deleteField() }
-      )
+          : { sectionAccess: deleteField() }),
+        ...(sectionReadOnlyDraft.length
+          ? { sectionReadOnly: sectionReadOnlyDraft }
+          : { sectionReadOnly: deleteField() }),
+      })
       setSectionAccessUser(null)
       setSectionAccessDraft([])
+      setSectionReadOnlyDraft([])
       await load()
     } catch (err) {
       setError(err.message || 'Failed to save section access')
@@ -539,6 +551,9 @@ export default function Admin() {
                           {Array.isArray(u.sectionAccess) && u.sectionAccess.length
                             ? `${u.sectionAccess.length} section${u.sectionAccess.length === 1 ? '' : 's'}`
                             : 'All sections'}
+                          {Array.isArray(u.sectionReadOnly) && u.sectionReadOnly.length
+                            ? ` · ${u.sectionReadOnly.length} view-only`
+                            : ''}
                         </button>
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -602,32 +617,36 @@ export default function Admin() {
               </>
             }
           >
-            <p className="text-sm text-hae-slate">
-              Leave everything unchecked for full access to all Tracker sections (the
-              default). Check specific sections to limit this user to only those —
-              their sidebar and navigation will be restricted accordingly.
-            </p>
-            <div className="mt-3 space-y-1.5">
-              {TRACKER_SECTIONS.map((s) => (
-                <label key={s.id} className="flex items-center gap-2 text-sm text-hae-ink">
-                  <input
-                    type="checkbox"
-                    checked={sectionAccessDraft.includes(s.id)}
-                    onChange={() => toggleSectionAccessDraft(s.id)}
-                  />
-                  {s.label}
-                </label>
-              ))}
-              {customSections.map((s) => (
-                <label key={s.id} className="flex items-center gap-2 text-sm text-hae-ink">
-                  <input
-                    type="checkbox"
-                    checked={sectionAccessDraft.includes(s.id)}
-                    onChange={() => toggleSectionAccessDraft(s.id)}
-                  />
-                  {sectionLabel(s.id, customSections)}
-                </label>
-              ))}
+            <div className="mt-3">
+              <div className="grid grid-cols-[1fr_88px_88px] items-center gap-x-2 pb-1.5 text-[11px] font-semibold uppercase text-hae-slate">
+                <span />
+                <span className="text-center">View and edit</span>
+                <span className="text-center">View only</span>
+              </div>
+              <div className="space-y-1.5">
+                {[...TRACKER_SECTIONS, ...customSections].map((s) => (
+                  <div
+                    key={s.id}
+                    className="grid grid-cols-[1fr_88px_88px] items-center gap-x-2 text-sm text-hae-ink"
+                  >
+                    <span>{sectionLabel(s.id, customSections)}</span>
+                    <span className="flex justify-center">
+                      <input
+                        type="checkbox"
+                        checked={sectionAccessDraft.includes(s.id)}
+                        onChange={() => toggleSectionAccessDraft(s.id)}
+                      />
+                    </span>
+                    <span className="flex justify-center">
+                      <input
+                        type="checkbox"
+                        checked={sectionReadOnlyDraft.includes(s.id)}
+                        onChange={() => toggleSectionReadOnlyDraft(s.id)}
+                      />
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </Modal>
         </div>

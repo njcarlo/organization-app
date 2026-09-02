@@ -60,7 +60,7 @@ function emptyDraftFrom(post) {
 }
 
 /** Floating detail card for a social media post — inline edit/save/delete, plus comments and activity log. */
-export default function SocialPostDetailCard({ post, onClose, onChanged, onDeleted }) {
+export default function SocialPostDetailCard({ post, onClose, onChanged, onDeleted, readOnly = false }) {
   const { user, userProfile } = useAuth()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
@@ -86,6 +86,7 @@ export default function SocialPostDetailCard({ post, onClose, onChanged, onDelet
   }
 
   const saveRecord = async () => {
+    if (readOnly) return
     if (!draft?.creative.trim() || saving) return
     setSaving(true)
     setError('')
@@ -124,6 +125,7 @@ export default function SocialPostDetailCard({ post, onClose, onChanged, onDelet
   }
 
   const removePost = async () => {
+    if (readOnly) return
     if (!confirm('Delete this post? This action cannot be undone.')) return
     setError('')
     try {
@@ -187,12 +189,16 @@ export default function SocialPostDetailCard({ post, onClose, onChanged, onDelet
           </>
         ) : (
           <>
-            <button type="button" className="hae-btn-secondary" onClick={removePost}>
-              Delete
-            </button>
-            <button type="button" className="hae-btn-secondary" onClick={startEdit}>
-              Edit
-            </button>
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={removePost}>
+                Delete
+              </button>
+            )}
+            {!readOnly && (
+              <button type="button" className="hae-btn-secondary" onClick={startEdit}>
+                Edit
+              </button>
+            )}
             <button type="button" className="hae-btn-secondary" onClick={handleClose}>
               Close
             </button>
@@ -200,7 +206,7 @@ export default function SocialPostDetailCard({ post, onClose, onChanged, onDelet
         )
       }
     >
-      {editing && draft ? (
+      {editing && draft && !readOnly ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {error && <p className="text-sm text-hae-red sm:col-span-2">{error}</p>}
           <Field label="Creative" className="sm:col-span-2">
