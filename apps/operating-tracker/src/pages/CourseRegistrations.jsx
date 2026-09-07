@@ -77,7 +77,7 @@ const COLUMNS = [
 
 export default function CourseRegistrations({ sectionReadOnly = false }) {
   const [registrations, setRegistrations] = useState([])
-  const [academyCourseNames, setAcademyCourseNames] = useState([])
+  const [academyPrograms, setAcademyPrograms] = useState([])
   const [participantCounts, setParticipantCounts] = useState({})
   const [participantDrafts, setParticipantDrafts] = useState({})
   const [enrollmentCounts, setEnrollmentCounts] = useState({})
@@ -141,16 +141,26 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'academyPrograms'), (snap) => {
-      setAcademyCourseNames(
+      setAcademyPrograms(
         snap.docs
-          .map((d) => d.data())
+          .map((d) => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((d) => d.name)
-          .filter(Boolean)
+          .filter((p) => p.name)
       )
     })
     return unsubscribe
   }, [])
+
+  const academyCourseNames = useMemo(
+    () => academyPrograms.map((p) => p.name),
+    [academyPrograms]
+  )
+
+  const academyProgramByCourse = useMemo(() => {
+    const map = new Map()
+    for (const p of academyPrograms) map.set(p.name, p)
+    return map
+  }, [academyPrograms])
 
   const totalsByCourse = useMemo(() => {
     const map = new Map()
@@ -190,10 +200,11 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
       return {
         course,
         ...counts,
+        startDate: academyProgramByCourse.get(course)?.startDate || '',
         total: counts.paid + counts.promotional + counts.free + counts.subscription,
       }
     })
-  }, [enrollmentCounts, academyCourseNames])
+  }, [enrollmentCounts, academyCourseNames, academyProgramByCourse])
 
   const enrollmentGrandTotal = useMemo(
     () =>
@@ -224,6 +235,8 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
     const dir = summarySortDir === 'asc' ? 1 : -1
     return [...list].sort((a, b) => {
       if (summarySortKey === 'course') return dir * a.course.localeCompare(b.course)
+      if (summarySortKey === 'startDate')
+        return dir * (a.startDate || '').localeCompare(b.startDate || '')
       return dir * ((a[summarySortKey] || 0) - (b[summarySortKey] || 0))
     })
   }, [enrollmentByCourse, summarySearch, summarySortKey, summarySortDir])
@@ -371,6 +384,27 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
     }
   }
 
+  const saveAcademyStartDate = async (course, value) => {
+    if (sectionReadOnly) return
+    const program = academyProgramByCourse.get(course)
+    if (!program) return
+    setError('')
+    try {
+      await updateDoc(doc(db, 'academyPrograms', program.id), { startDate: value })
+      setAcademyPrograms((prev) =>
+        prev.map((p) => (p.id === program.id ? { ...p, startDate: value } : p))
+      )
+    } catch (err) {
+      setError(err.message || 'Failed to save start date')
+    } finally {
+      setEnrollmentDrafts((prev) => {
+        const next = { ...prev }
+        delete next[`${course}:startDate`]
+        return next
+      })
+    }
+  }
+
   const removeRegistration = async (id) => {
     if (sectionReadOnly) return
     if (!confirm('Delete this registration? This action cannot be undone.')) return
@@ -450,6 +484,7 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
                 <tr>
                   {[
                     { key: 'course', label: 'Academy' },
+                    { key: 'startDate', label: 'Start Date' },
                     { key: 'subscription', label: 'Subscription' },
                     { key: 'paid', label: 'Paid Enrollment' },
                     { key: 'promotional', label: 'Promotional Enrollment' },
@@ -479,9 +514,29 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
                     return Number(raw) || 0
                   })
                   const liveTotal = liveValues.reduce((sum, v) => sum + v, 0)
+                  const startDateDraftKey = `${e.course}:startDate`
                   return (
                     <tr key={e.course} className="border-b border-hae-line/70">
                       <td className="px-3 py-2 text-sm font-medium text-hae-ink">{e.course}</td>
+                      <td className="px-3 py-2 text-sm text-hae-slate">
+                        <input
+                          type="date"
+                          value={
+                            startDateDraftKey in enrollmentDrafts
+                              ? enrollmentDrafts[startDateDraftKey]
+                              : e.startDate || ''
+                          }
+                          onChange={(ev) =>
+                            setEnrollmentDrafts((prev) => ({
+                              ...prev,
+                              [startDateDraftKey]: ev.target.value,
+                            }))
+                          }
+                          onBlur={(ev) => saveAcademyStartDate(e.course, ev.target.value)}
+                          disabled={sectionReadOnly}
+                          className="rounded border border-hae-line px-2 py-1 text-sm outline-none focus:border-hae-crimson disabled:opacity-60"
+                        />
+                      </td>
                       {['subscription', 'paid', 'promotional', 'free'].map((field) => {
                         const draftKey = `${e.course}:${field}`
                         return (
@@ -506,7 +561,7 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
                 })}
                 {sortedEnrollmentByCourse.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-sm text-hae-slate">
+                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-hae-slate">
                       {enrollmentByCourse.length === 0
                         ? 'No registrations yet.'
                         : 'No courses match your search.'}
@@ -518,6 +573,7 @@ export default function CourseRegistrations({ sectionReadOnly = false }) {
                 <tfoot>
                   <tr className="bg-hae-mist/40">
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">All courses</td>
+                    <td className="px-3 py-2 text-sm font-semibold text-hae-ink">—</td>
                     <td className="px-3 py-2 text-sm font-semibold text-hae-ink">
                       {enrollmentGrandTotal.subscription}
                     </td>
