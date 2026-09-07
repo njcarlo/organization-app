@@ -28,6 +28,7 @@ function draftFromEvent(event) {
   return {
     name: event.name || '',
     eventDate: event.eventDate || '',
+    tentative: Boolean(event.tentative),
     time: event.time || '',
     timeZone: event.timeZone || '',
     marketingDate: event.marketingDate || '',
@@ -92,7 +93,8 @@ export default function EventCard({ event, onClose, onChanged, onDeleted, readOn
     try {
       await updateDoc(doc(db, 'trackerEvents', event.id), {
         name: draft.name.trim(),
-        eventDate: draft.eventDate,
+        eventDate: draft.tentative ? '' : draft.eventDate,
+        tentative: draft.tentative,
         time: draft.time.trim(),
         timeZone: draft.timeZone.trim(),
         marketingDate: draft.marketingDate,
@@ -172,10 +174,21 @@ export default function EventCard({ event, onClose, onChanged, onDeleted, readOn
           <Field label="Date of Event">
             <input
               type="date"
-              className={fieldClass}
+              disabled={draft.tentative}
+              className={`${fieldClass} disabled:bg-hae-mist disabled:text-hae-slate`}
               value={draft.eventDate}
               onChange={(e) => setDraft({ ...draft, eventDate: e.target.value })}
             />
+            <label className="mt-1 flex items-center gap-1.5 text-xs text-hae-slate">
+              <input
+                type="checkbox"
+                checked={draft.tentative}
+                onChange={(e) =>
+                  setDraft({ ...draft, tentative: e.target.checked, eventDate: e.target.checked ? '' : draft.eventDate })
+                }
+              />
+              Tentative (no date yet)
+            </label>
           </Field>
           <Field label="Time">
             <input

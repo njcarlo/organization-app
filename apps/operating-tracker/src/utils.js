@@ -268,13 +268,19 @@ export function formatWeekRangeLabel(start, end) {
 
 /**
  * Buckets already-date-sorted events into Monday–Sunday week groups.
+ * Events flagged `tentative` are pulled into a leading "Tentative" group regardless of date.
  * Events without a parseable eventDate are collected into a trailing "No date set" group.
  */
 export function groupEventsByWeek(sortedEvents) {
   const groups = []
+  const tentative = []
   const undated = []
   let currentKey = null
   for (const event of sortedEvents) {
+    if (event.tentative) {
+      tentative.push(event)
+      continue
+    }
     const range = event.eventDate ? getWeekRange(event.eventDate) : null
     if (!range) {
       undated.push(event)
@@ -287,6 +293,9 @@ export function groupEventsByWeek(sortedEvents) {
       currentKey = key
     }
     groups[groups.length - 1].events.push(event)
+  }
+  if (tentative.length) {
+    groups.unshift({ key: 'tentative', start: null, end: null, label: 'Tentative', events: tentative })
   }
   if (undated.length) {
     groups.push({ key: 'no-date', start: null, end: null, label: 'No date set', events: undated })
