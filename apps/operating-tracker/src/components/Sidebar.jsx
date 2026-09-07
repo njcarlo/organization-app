@@ -31,7 +31,7 @@ const SECTION_TEMPLATE_OPTIONS = [
   { value: 'events', label: 'Events Tracker (Events & Programs Dashboard)' },
 ]
 
-const CATEGORY_META = {
+export const CATEGORY_META = {
   programs: { label: 'Program', pathPrefix: '/programs' },
   academyPrograms: { label: 'Academy item', pathPrefix: '/academy', showCourseFields: true },
   customPrograms: { label: 'Custom Program', pathPrefix: '/custom-programs', showCustomProgramFields: true },
