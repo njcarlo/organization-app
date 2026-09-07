@@ -27,6 +27,12 @@ export const TRACKER_SECTIONS = [
     collectionName: 'trackerDocuments',
     pathPrefix: '/documents',
   },
+  {
+    id: 'password',
+    label: 'Password',
+    collectionName: 'trackerPasswords',
+    pathPrefix: '/passwords',
+  },
   { id: 'events', label: 'Events & Programs', landingPath: '/events-dashboard', pathPrefix: '/events' },
   { id: 'graphics', label: 'Graphics', landingPath: '/graphics-dashboard', pathPrefix: '/graphics' },
   { id: 'data', label: 'Data Projects', collectionName: 'trackerData', pathPrefix: '/data' },
