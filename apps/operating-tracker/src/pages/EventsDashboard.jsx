@@ -21,6 +21,7 @@ import {
 const emptyForm = {
   name: '',
   eventDate: '',
+  tentative: false,
   type: '',
   eventType: '',
   lead: [],
@@ -203,7 +204,8 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
       const maxOrder = events.reduce((m, ev) => Math.max(m, ev.order ?? 0), 0)
       await addDoc(collection(db, 'trackerEvents'), {
         name: form.name.trim(),
-        eventDate: form.eventDate,
+        eventDate: form.tentative ? '' : form.eventDate,
+        tentative: form.tentative,
         type: form.type,
         eventType: form.eventType,
         lead: form.lead,
@@ -339,10 +341,21 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
             <span className="text-xs font-medium text-hae-slate">Date of Event</span>
             <input
               type="date"
+              disabled={form.tentative}
               value={form.eventDate}
               onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-              className="rounded-md border border-hae-line px-3 py-2 text-sm"
+              className="rounded-md border border-hae-line px-3 py-2 text-sm disabled:bg-hae-mist disabled:text-hae-slate"
             />
+            <label className="mt-1 flex items-center gap-1.5 text-xs text-hae-slate">
+              <input
+                type="checkbox"
+                checked={form.tentative}
+                onChange={(e) =>
+                  setForm({ ...form, tentative: e.target.checked, eventDate: e.target.checked ? '' : form.eventDate })
+                }
+              />
+              Tentative (no date yet)
+            </label>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-xs font-medium text-hae-slate">Category</span>
@@ -560,7 +573,13 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
                         )}
                       </td>
                       <td className="px-3 py-2 text-sm whitespace-nowrap text-hae-ink">
-                        {formatLongDate(event.eventDate)}
+                        {event.tentative ? (
+                          <span className="inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+                            Tentative
+                          </span>
+                        ) : (
+                          formatLongDate(event.eventDate)
+                        )}
                       </td>
                       <td className="px-3 py-2">
                         <span
