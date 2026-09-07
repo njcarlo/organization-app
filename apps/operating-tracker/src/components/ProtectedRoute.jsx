@@ -1,9 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import {
-  hasAnyPermission,
-  hasPermission,
-} from '../../../../packages/ui/src/rbac.js'
 
 export default function ProtectedRoute({
   adminOnly = false,
@@ -11,7 +7,15 @@ export default function ProtectedRoute({
   permission = null,
   anyOf = null,
 }) {
-  const { user, userProfile, loading, isAdmin, isStaff, permissions } = useAuth()
+  const {
+    user,
+    userProfile,
+    loading,
+    isAdmin,
+    isStaff,
+    hasPermission,
+    hasAnyPermission,
+  } = useAuth()
 
   if (loading) {
     return (
@@ -36,10 +40,10 @@ export default function ProtectedRoute({
 
   if (adminOnly && !isAdmin) return <Navigate to="/" replace />
   if (staffOnly && !isStaff) return <Navigate to="/" replace />
-  if (permission && !hasPermission(permissions, permission)) {
+  if (permission && !hasPermission(permission)) {
     return <Navigate to="/" replace />
   }
-  if (anyOf?.length && !hasAnyPermission(permissions, anyOf)) {
+  if (anyOf?.length && !hasAnyPermission(anyOf)) {
     return <Navigate to="/" replace />
   }
 

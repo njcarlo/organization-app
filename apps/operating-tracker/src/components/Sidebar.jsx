@@ -749,10 +749,12 @@ export default function Sidebar({ open = false, onClose }) {
   ]
 
   const sections = useMemo(() => {
-    // Section-restricted users don't get the org-wide Dashboard or Activity
-    // feed — they land in (and stay within) their assigned section(s).
+    // Dashboard is always available (it filters itself to the user's allowed
+    // sections). Section-restricted users just don't get the org-wide
+    // Activity feed or Advancement dashboard.
     const workspaceItems = sectionAccess
       ? [
+          { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
         ]
