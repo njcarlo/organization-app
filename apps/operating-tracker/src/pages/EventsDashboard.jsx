@@ -60,6 +60,7 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [deleting, setDeleting] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
+  const [tentativeCollapsed, setTentativeCollapsed] = useState(true)
 
   const load = useCallback(async () => {
     const snap = await getDocs(collection(db, 'trackerEvents'))
@@ -538,6 +539,8 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
             ) : (
               displayedGroups.map((group) => {
                 const isArchived = group.end && group.end < todayStart
+                const isTentativeGroup = group.key === 'tentative'
+                const isCollapsed = isTentativeGroup && tentativeCollapsed
                 return (
                 <Fragment key={group.key}>
                   <tr className="bg-hae-mist border-b border-hae-line">
@@ -545,13 +548,33 @@ export default function EventsDashboard({ sectionReadOnly = false }) {
                       colSpan={COLUMN_COUNT}
                       className="px-3 py-1.5 text-[11px] font-semibold tracking-wide text-hae-ink uppercase"
                     >
-                      {group.label}
-                      {isArchived ? (
-                        <span className="ml-2 normal-case tracking-normal text-hae-slate">(archived)</span>
-                      ) : null}
+                      {isTentativeGroup ? (
+                        <button
+                          type="button"
+                          onClick={() => setTentativeCollapsed((v) => !v)}
+                          className="inline-flex items-center gap-2 normal-case tracking-normal"
+                        >
+                          <span className={`transition-transform ${isCollapsed ? '' : 'rotate-90'}`}>▶</span>
+                          <span className="tracking-wide uppercase">{group.label}</span>
+                          {isCollapsed ? (
+                            <span className="rounded-full bg-hae-crimson px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                              {group.events.length}
+                            </span>
+                          ) : null}
+                        </button>
+                      ) : (
+                        <>
+                          {group.label}
+                          {isArchived ? (
+                            <span className="ml-2 normal-case tracking-normal text-hae-slate">(archived)</span>
+                          ) : null}
+                        </>
+                      )}
                     </td>
                   </tr>
-                  {group.events.map((event) => (
+                  {isCollapsed
+                    ? null
+                    : group.events.map((event) => (
                     <tr
                       key={event.id}
                       onClick={() => setExpandedId(event.id)}
