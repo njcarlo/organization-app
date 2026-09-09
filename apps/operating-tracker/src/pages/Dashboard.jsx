@@ -21,6 +21,13 @@ const CATEGORIES = [
   },
 ]
 
+// The "Startup World Cup 2026" custom section (see
+// scripts/promote-startup-world-cup-category.mjs) is surfaced here as its own
+// dashboard category, visible to everyone regardless of sectionAccess, since
+// its Firestore doc id isn't known until the migration runs.
+const SWC_SECTION_LABEL = 'Startup World Cup 2026'
+const SWC_CATEGORY_ID = 'startup-world-cup'
+
 export const DASHBOARD_LINKS = [
   {
     id: 'programs',
@@ -61,40 +68,70 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [programs, setPrograms] = useState([])
+  const [swcSection, setSwcSection] = useState(null)
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState(null)
 
-  const visibleLinks = useMemo(
-    () =>
-      sectionAccess
-        ? DASHBOARD_LINKS.filter((d) => sectionAccess.includes(d.sectionId))
-        : DASHBOARD_LINKS,
-    [sectionAccess]
-  )
+  const visibleLinks = useMemo(() => {
+    const base = sectionAccess
+      ? DASHBOARD_LINKS.filter((d) => sectionAccess.includes(d.sectionId))
+      : DASHBOARD_LINKS
+    if (!swcSection || base.some((d) => d.id === SWC_CATEGORY_ID)) return base
+    return [
+      ...base,
+      { id: SWC_CATEGORY_ID, label: swcSection.label, icon: 'certificate', sectionId: swcSection.id },
+    ]
+  }, [sectionAccess, swcSection])
 
-  const visibleCategories = useMemo(
-    () => (sectionAccess ? CATEGORIES.filter((c) => sectionAccess.includes(c.id)) : CATEGORIES),
-    [sectionAccess]
-  )
+  const visibleCategories = useMemo(() => {
+    const base = sectionAccess ? CATEGORIES.filter((c) => sectionAccess.includes(c.id)) : CATEGORIES
+    if (!swcSection || base.some((c) => c.id === SWC_CATEGORY_ID)) return base
+    return [
+      ...base,
+      {
+        id: SWC_CATEGORY_ID,
+        label: swcSection.label,
+        collectionName: 'customSectionItems',
+        pathPrefix: `/custom-sections/${swcSection.id}`,
+      },
+    ]
+  }, [sectionAccess, swcSection])
 
   const loadData = useCallback(async () => {
-    const [taskSnap, projectSnap, ...categorySnaps] = await Promise.all([
+    const [taskSnap, projectSnap, sectionSnap, itemSnap, ...categorySnaps] = await Promise.all([
       getDocs(collection(db, 'tasks')),
       getDocs(collection(db, 'projects')),
+      getDocs(collection(db, 'customSections')),
+      getDocs(collection(db, 'customSectionItems')),
       ...CATEGORIES.map((c) => getDocs(collection(db, c.collectionName))),
     ])
     setTasks(taskSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     setProjects(projectSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setPrograms(
-      categorySnaps.flatMap((snap, i) =>
+
+    const swcDoc = sectionSnap.docs.find((d) => d.data().label === SWC_SECTION_LABEL)
+    setSwcSection(swcDoc ? { id: swcDoc.id, label: swcDoc.data().label } : null)
+    const swcItems = swcDoc
+      ? itemSnap.docs
+          .filter((d) => d.data().sectionId === swcDoc.id)
+          .map((d) => ({
+            id: d.id,
+            ...d.data(),
+            category: SWC_CATEGORY_ID,
+            pathPrefix: `/custom-sections/${swcDoc.id}`,
+          }))
+      : []
+
+    setPrograms([
+      ...categorySnaps.flatMap((snap, i) =>
         snap.docs.map((d) => ({
           id: d.id,
           ...d.data(),
           category: CATEGORIES[i].id,
           pathPrefix: CATEGORIES[i].pathPrefix,
         }))
-      )
-    )
+      ),
+      ...swcItems,
+    ])
     setLoading(false)
   }, [])
 
