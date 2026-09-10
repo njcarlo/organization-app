@@ -125,9 +125,10 @@ export default function PrioritiesSection({ tasks, programsById, projectsById, o
   const [selected, setSelected] = useState(null)
 
   const { thisWeek, upcoming } = useMemo(() => {
+    const active = tasks.filter((t) => t.status !== 'Complete')
     const week = []
     const later = []
-    for (const t of tasks) {
+    for (const t of active) {
       if (t.status === 'Time Sensitive') {
         week.push(t)
         continue
