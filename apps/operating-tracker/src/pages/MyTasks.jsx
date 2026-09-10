@@ -60,7 +60,7 @@ export default function MyTasks() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewAll, setViewAll] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('Active')
+  const [statusFilter, setStatusFilter] = useState('All')
   const [page, setPage] = useState(0)
   const [editingId, setEditingId] = useState(null)
   const [commentsOpen, setCommentsOpen] = useState(false)

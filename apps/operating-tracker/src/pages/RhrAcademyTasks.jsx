@@ -53,7 +53,7 @@ export default function RhrAcademyTasks() {
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
   const [commentsOpen, setCommentsOpen] = useState(false)
-  const [showCompleted, setShowCompleted] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(true)
 
   const load = useCallback(async () => {
     const [courseSnap, taskSnap, projectSnap] = await Promise.all([
