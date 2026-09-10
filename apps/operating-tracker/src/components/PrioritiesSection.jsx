@@ -125,7 +125,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById, o
   const [selected, setSelected] = useState(null)
 
   const { thisWeek, upcoming } = useMemo(() => {
-    const active = tasks.filter((t) => t.status !== 'Complete')
+    const active = tasks.filter((t) => String(t.status || '').toLowerCase() !== 'complete')
     const week = []
     const later = []
     for (const t of active) {

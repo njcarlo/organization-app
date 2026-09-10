@@ -31,7 +31,11 @@ export default function WaitingOnSection({ tasks, programsById, projectsById, on
 
   const items = useMemo(() => {
     return tasks
-      .filter((t) => t.status !== 'Complete' && String(t.waitingOn || '').trim())
+      .filter(
+        (t) =>
+          String(t.status || '').toLowerCase() !== 'complete' &&
+          String(t.waitingOn || '').trim()
+      )
       .sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'))
   }, [tasks])
 
