@@ -123,13 +123,11 @@ export default function Notifications() {
   const myEmail = (user?.email || '').toLowerCase()
 
   const digest = useMemo(() => {
-    let myTasks = tasks.filter(
-      (t) =>
-        toNameList(t.owner).some((n) => n.toLowerCase() === myName) &&
-        t.status !== 'Complete'
+    let myTasks = tasks.filter((t) =>
+      toNameList(t.owner).some((n) => n.toLowerCase() === myName)
     )
     if (isStaff && !myName) {
-      myTasks = tasks.filter((t) => t.status !== 'Complete')
+      myTasks = tasks
     }
 
     const overdueTasks = myTasks

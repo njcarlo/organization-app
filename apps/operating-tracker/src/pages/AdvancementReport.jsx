@@ -433,8 +433,6 @@ export default function AdvancementReport() {
 
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
-  const excludeCompleteActionItems = useCallback((list) => list.filter((r) => r.status !== 'Complete'), [])
-
   const attentionRequiredActionItems = useMemo(
     () => actionItems.filter((i) => i.status === 'Attention Required'),
     [actionItems]
@@ -1004,7 +1002,6 @@ export default function AdvancementReport() {
         tone={sectionTone('highPriorityActionItems', 'orange')}
         onToneCommit={(t) => commitSectionTone('highPriorityActionItems', t)}
         onRowsChange={setActionItems}
-        filterRows={excludeCompleteActionItems}
         columns={[
           { id: 'commitment', label: 'Commitment', type: 'text' },
           { id: 'assignedTo', label: 'Assigned To', type: 'text' },

@@ -62,7 +62,7 @@ export default function Calendar() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewAll, setViewAll] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('Active')
+  const [statusFilter, setStatusFilter] = useState('All')
   const [selectedDay, setSelectedDay] = useState(null)
   const [detailTask, setDetailTask] = useState(null)
 
