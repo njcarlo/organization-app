@@ -2,13 +2,14 @@ import {
   effectivePriority,
   formatDate,
   namesLabel,
+  normalizeTaskStatus,
   priorityBadgeClass,
   programNameOf,
   projectNameOf,
   sortByPriorityThenDue,
   daysUntil,
 } from '../utils'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import CommentIndicator from './CommentIndicator'
 import TaskDetailPopup from './TaskDetailPopup'
 
@@ -120,14 +121,18 @@ function DesktopTaskTable({ tasks, programsById, projectsById, emptyLabel, onOpe
   )
 }
 
+const WEEK_PAGE_SIZE = 10
+
 export default function PrioritiesSection({ tasks, programsById, projectsById, onDataChanged }) {
   const [upcomingOpen, setUpcomingOpen] = useState(false)
   const [selected, setSelected] = useState(null)
+  const [weekPage, setWeekPage] = useState(0)
 
   const { thisWeek, upcoming } = useMemo(() => {
     const week = []
     const later = []
     for (const t of tasks) {
+      if (normalizeTaskStatus(t.status) === 'Complete') continue
       if (t.status === 'Time Sensitive') {
         week.push(t)
         continue
@@ -140,6 +145,17 @@ export default function PrioritiesSection({ tasks, programsById, projectsById, o
     later.sort(sortByPriorityThenDue)
     return { thisWeek: week, upcoming: later }
   }, [tasks])
+
+  useEffect(() => {
+    setWeekPage(0)
+  }, [thisWeek.length])
+
+  const weekTotalPages = Math.max(1, Math.ceil(thisWeek.length / WEEK_PAGE_SIZE))
+  const weekSafePage = Math.min(weekPage, weekTotalPages - 1)
+  const thisWeekPage = thisWeek.slice(
+    weekSafePage * WEEK_PAGE_SIZE,
+    weekSafePage * WEEK_PAGE_SIZE + WEEK_PAGE_SIZE,
+  )
 
   const upcomingTop = upcoming.slice(0, 5)
 
@@ -154,7 +170,7 @@ export default function PrioritiesSection({ tasks, programsById, projectsById, o
         </div>
         <div className="hae-mobile-only">
           <MobileTaskCards
-            tasks={thisWeek}
+            tasks={thisWeekPage}
             programsById={programsById}
             projectsById={projectsById}
             emptyLabel="No priorities this week"
@@ -163,13 +179,36 @@ export default function PrioritiesSection({ tasks, programsById, projectsById, o
         </div>
         <div className="hae-desktop-only">
           <DesktopTaskTable
-            tasks={thisWeek}
+            tasks={thisWeekPage}
             programsById={programsById}
             projectsById={projectsById}
             emptyLabel="No priorities this week"
             onOpen={setSelected}
           />
         </div>
+        {thisWeek.length > WEEK_PAGE_SIZE ? (
+          <div className="flex items-center justify-end gap-2 border-t border-hae-line px-4 py-3 text-xs text-hae-slate">
+            <button
+              type="button"
+              onClick={() => setWeekPage((p) => Math.max(0, p - 1))}
+              disabled={weekSafePage === 0}
+              className="disabled:cursor-not-allowed disabled:opacity-40 hover:text-hae-ink"
+            >
+              Prev
+            </button>
+            <span>
+              {weekSafePage + 1}/{weekTotalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setWeekPage((p) => Math.min(weekTotalPages - 1, p + 1))}
+              disabled={weekSafePage >= weekTotalPages - 1}
+              className="disabled:cursor-not-allowed disabled:opacity-40 hover:text-hae-ink"
+            >
+              Next
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-hae-line bg-white">
