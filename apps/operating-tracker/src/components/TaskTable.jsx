@@ -843,20 +843,22 @@ const TaskTable = forwardRef(function TaskTable(
                     {open ? (
                       <div className="border-t border-hae-line/60 bg-hae-mist/40 px-3 py-3">
                         <div className="grid gap-2 text-xs text-hae-slate sm:grid-cols-3">
-                          <div>
-                            <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
-                              Priority
+                          {effectivePriority(task) ? (
+                            <div>
+                              <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
+                                Priority
+                              </div>
+                              <div className="mt-0.5">
+                                <span
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
+                                    effectivePriority(task)
+                                  )}`}
+                                >
+                                  {effectivePriority(task)}
+                                </span>
+                              </div>
                             </div>
-                            <div className="mt-0.5">
-                              <span
-                                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
-                                  effectivePriority(task)
-                                )}`}
-                              >
-                                {effectivePriority(task)}
-                              </span>
-                            </div>
-                          </div>
+                          ) : null}
                           <div>
                             <div className="text-[10px] font-semibold tracking-wide uppercase text-hae-slate/70">
                               Waiting on

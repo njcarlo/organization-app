@@ -362,9 +362,9 @@ export default function Calendar() {
                   {visible.map((t) => (
                     <div
                       key={t.id}
-                      className={`truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight ${priorityBadgeClass(
-                        effectivePriority(t)
-                      )}`}
+                      className={`truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight ${
+                        effectivePriority(t) ? priorityBadgeClass(effectivePriority(t)) : 'bg-hae-mist text-hae-slate'
+                      }`}
                       title={t.name || t.title}
                     >
                       {t.name || t.title || 'Task'}
@@ -446,13 +446,15 @@ export default function Calendar() {
                       {` · ${projectNameOf(t, projectsById)}`}
                     </div>
                   </div>
-                  <span
-                    className={`rounded px-2 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
-                      effectivePriority(t)
-                    )}`}
-                  >
-                    {effectivePriority(t)}
-                  </span>
+                  {effectivePriority(t) ? (
+                    <span
+                      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${priorityBadgeClass(
+                        effectivePriority(t)
+                      )}`}
+                    >
+                      {effectivePriority(t)}
+                    </span>
+                  ) : null}
                 </button>
               </li>
             ))}

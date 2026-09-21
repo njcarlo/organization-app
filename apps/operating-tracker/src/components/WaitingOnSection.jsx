@@ -14,6 +14,7 @@ const PAGE_SIZE = 5
 
 function PriorityCell({ task }) {
   const priority = effectivePriority(task)
+  if (!priority) return null
   const isManual = Boolean(task.priority)
   return (
     <span

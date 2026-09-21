@@ -236,11 +236,13 @@ export default function RhrAcademyTasks() {
                       <span className="min-w-0">{task.name}</span>
                       <CommentIndicator count={task.commentCount} />
                     </div>
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                    >
-                      {effectivePriority(task)}
-                    </span>
+                    {effectivePriority(task) ? (
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                      >
+                        {effectivePriority(task)}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="hae-mobile-card__meta">
                     <span
@@ -268,6 +270,7 @@ export default function RhrAcademyTasks() {
                     <col className="w-1/3" />
                     <col />
                     <col className="w-32" />
+                    <col className="w-28" />
                     <col className="w-20" />
                   </colgroup>
                   <thead className="bg-hae-mist/80 text-[11px] tracking-wide text-hae-slate uppercase">
@@ -276,6 +279,7 @@ export default function RhrAcademyTasks() {
                       <th className="px-3 py-2 font-semibold">Projects</th>
                       <th className="px-3 py-2 font-semibold">Tasks</th>
                       <th className="px-3 py-2 font-semibold">Due Date</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
                       <th className="px-3 py-2 font-semibold" />
                     </tr>
                   </thead>
@@ -287,11 +291,13 @@ export default function RhrAcademyTasks() {
                         className="group cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40"
                       >
                         <td className="px-3 py-2">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                          >
-                            {effectivePriority(task)}
-                          </span>
+                          {effectivePriority(task) ? (
+                            <span
+                              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                            >
+                              {effectivePriority(task)}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-3 py-2 text-sm text-hae-slate">
                           <span className="line-clamp-2">
@@ -306,6 +312,13 @@ export default function RhrAcademyTasks() {
                         </td>
                         <td className="whitespace-nowrap px-3 py-2 text-sm text-hae-slate">
                           {formatDate(task.dueDate)}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadgeClass(task.status)}`}
+                          >
+                            {task.status ? normalizeTaskStatus(task.status) : '—'}
+                          </span>
                         </td>
                         <td className="px-3 py-2 text-right">
                           <button
