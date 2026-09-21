@@ -391,13 +391,14 @@ export default function TaskDetailPopup({
 export function taskDetailRows(task, { programsById = {}, projectsById = {} } = {}) {
   if (!task) return []
   const programPath = programPathOf(task, programsById)
+  const priority = effectivePriority(task)
   return [
     { label: 'Status', value: normalizeTaskStatus(task.status) || 'Not Started' },
     { label: 'Due', value: formatDate(task.dueDate) },
     { label: 'Owner', value: namesLabel(task.owner) || '—' },
     { label: 'Program', value: programNameOf(task, programsById), to: programPath },
     { label: 'Project', value: projectNameOf(task, projectsById), to: programPath },
-    { label: 'Priority', value: effectivePriority(task) },
+    ...(priority ? [{ label: 'Priority', value: priority }] : []),
     { label: 'Waiting on', value: task.waitingOn || '—' },
     { label: 'Leadership', value: task.leadershipAttention || 'None' },
     { label: 'Next action', value: task.nextAction || '—' },

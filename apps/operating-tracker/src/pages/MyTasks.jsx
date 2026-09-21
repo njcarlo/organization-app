@@ -383,11 +383,13 @@ export default function MyTasks() {
                   ) : null}
                   <CommentIndicator count={task.commentCount} />
                 </div>
-                <span
-                  className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                >
-                  {effectivePriority(task)}
-                </span>
+                {effectivePriority(task) ? (
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                  >
+                    {effectivePriority(task)}
+                  </span>
+                ) : null}
               </div>
               <div className="hae-mobile-card__meta">
                 <span
@@ -631,14 +633,16 @@ export default function MyTasks() {
                             ⠿
                           </span>
                           <div className="min-w-0">
-                            <span
-                              className={`mb-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
-                            >
-                              {effectivePriority(task)}
-                              {task.priority ? (
-                                <span className="text-[9px] opacity-70">M</span>
-                              ) : null}
-                            </span>
+                            {effectivePriority(task) ? (
+                              <span
+                                className={`mb-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadgeClass(effectivePriority(task))}`}
+                              >
+                                {effectivePriority(task)}
+                                {task.priority ? (
+                                  <span className="text-[9px] opacity-70">M</span>
+                                ) : null}
+                              </span>
+                            ) : null}
                             <div className="flex items-center gap-1.5">
                               <span className="line-clamp-2">{task.name}</span>
                               {task.subtasks?.length ? (

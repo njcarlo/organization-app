@@ -34,8 +34,9 @@ export function autoPriority(dueDate) {
   return 'LOW'
 }
 
-/** Effective priority: Time Sensitive status forces HIGH, else manual override or auto-calculated */
+/** Effective priority: Time Sensitive status forces HIGH, else manual override or auto-calculated. Complete tasks have no priority. */
 export function effectivePriority(task) {
+  if (normalizeTaskStatus(task.status) === 'Complete') return null
   if (normalizeTaskStatus(task.status) === 'Time Sensitive') return 'HIGH'
   if (task.priority) return task.priority
   return autoPriority(task.dueDate)

@@ -15,6 +15,7 @@ import TaskDetailPopup from './TaskDetailPopup'
 
 function PriorityCell({ task }) {
   const priority = effectivePriority(task)
+  if (!priority) return null
   const isManual = Boolean(task.priority)
   return (
     <span
