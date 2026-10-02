@@ -21,7 +21,7 @@ import {
   attachmentsToFormLines,
   formLinesToAttachments,
 } from '../components/Attachments'
-import { CommentsPanel, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
+import { formatDate, CommentsPanel, FEATURES, Linkify, Modal, useFeatures } from '@hae/ui'
 
 const emptyForm = {
   name: '',
@@ -331,7 +331,7 @@ export default function Contacts() {
                       : '—'}
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
-                    {c.followUpDate || '—'}
+                    {formatDate(c.followUpDate)}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button

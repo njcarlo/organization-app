@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collectionGroup, getDocs, limit, orderBy, query } from 'firebase/firestore'
+import { formatDateTime } from '@hae/ui'
 import { db } from '../firebase'
 import { describeAction } from '../utils/activityLog'
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
-  return ts.toDate().toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatDateTime(ts)
 }
 
 function entryHref(e) {

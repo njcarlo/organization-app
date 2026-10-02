@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { courseEarningsCents, formatMoney } from '../money'
+import { formatDate } from '@hae/ui'
 
 export default function Dashboard() {
   const [courses, setCourses] = useState([])
@@ -349,7 +350,7 @@ export default function Dashboard() {
                 <li key={s.id} className="px-4 py-3">
                   <div className="text-sm font-medium">{s.title || 'Office Hours'}</div>
                   <div className="text-xs text-hae-slate">
-                    {s.date} · {s.courseName || '—'} · {s.zoomLink ? 'Zoom' : s.location || 'TBD'}
+                    {formatDate(s.date)} · {s.courseName || '—'} · {s.zoomLink ? 'Zoom' : s.location || 'TBD'}
                   </div>
                 </li>
               ))}
@@ -374,7 +375,7 @@ export default function Dashboard() {
                     {c.type} · {c.learnerName || 'Learner'}
                   </div>
                   <div className="text-xs text-hae-slate">
-                    Due {c.dueDate} · {c.courseName || '—'}
+                    Due {formatDate(c.dueDate)} · {c.courseName || '—'}
                   </div>
                 </li>
               ))}

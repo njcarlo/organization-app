@@ -9,6 +9,7 @@ import {
   enrollmentRisk,
   todayIso,
 } from '../learningInsights'
+import { formatDate } from '@hae/ui'
 
 export default function Tracking() {
   const [enrollments, setEnrollments] = useState([])
@@ -381,7 +382,7 @@ export default function Tracking() {
                       {c.type} · {c.learnerName || 'Learner'}
                     </div>
                     <div className="text-xs text-hae-slate">
-                      Due {c.dueDate} · {c.courseName || '—'}
+                      Due {formatDate(c.dueDate)} · {c.courseName || '—'}
                     </div>
                   </div>
                   {c.learnerEmail ? (
@@ -417,7 +418,7 @@ export default function Tracking() {
                     {c.type} · {c.learnerName || 'Learner'}
                   </div>
                   <div className="text-xs text-hae-slate">
-                    Due {c.dueDate} · {c.courseName || '—'}
+                    Due {formatDate(c.dueDate)} · {c.courseName || '—'}
                   </div>
                 </li>
               ))}

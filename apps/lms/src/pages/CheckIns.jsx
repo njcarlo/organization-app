@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { formatDate, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { CHECKIN_TYPES } from '../constants'
 
@@ -190,7 +190,7 @@ export default function CheckIns() {
             ) : (
               items.map((c) => (
                 <tr key={c.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm text-hae-slate">{c.dueDate || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(c.dueDate)}</td>
                   <td className="px-3 py-2 text-sm font-medium">{c.type}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     <div>{c.learnerName}</div>

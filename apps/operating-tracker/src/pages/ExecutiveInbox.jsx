@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
+import { formatDateTime } from '@hae/ui'
 import { db, functions } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { EXEC_INBOX_EMAILS } from '../constants'
@@ -17,17 +18,6 @@ const OAUTH_ERROR_MESSAGES = {
   oauth_failed: 'Google connection failed. Check the OAuth client redirect URI and try again.',
 }
 
-function formatDateTime(value) {
-  if (!value) return '—'
-  const date = typeof value === 'number' ? new Date(value) : new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
 
 function EmailSection({ title, emails }) {
   return (
@@ -51,7 +41,7 @@ function EmailSection({ title, emails }) {
               </a>
               <p className="text-xs text-hae-slate">{email.from}</p>
               <p className="mt-1 line-clamp-2 text-xs text-hae-slate">{email.snippet}</p>
-              <p className="mt-1 text-[11px] text-hae-slate">{formatDateTime(email.receivedAt)}</p>
+              <p className="mt-1 text-[11px] text-hae-slate">{formatDateTime(email.receivedAt, '—')}</p>
             </li>
           ))}
         </ul>
@@ -81,7 +71,7 @@ function MeetingsSection({ meetings }) {
                 {meeting.title}
               </a>
               <p className="text-xs text-hae-slate">
-                {formatDateTime(meeting.start)}
+                {formatDateTime(meeting.start, '—')}
                 {meeting.location ? ` · ${meeting.location}` : ''}
               </p>
             </li>
@@ -195,9 +185,7 @@ export default function ExecutiveInbox() {
           </h1>
           <p className="mt-1 text-sm text-hae-slate">
             {status?.connected
-              ? `Connected: ${status.connectedEmail} · Last synced ${formatDateTime(
-                  status.lastSyncedAt?.toDate ? status.lastSyncedAt.toDate() : status.lastSyncedAt
-                )}`
+              ? `Connected: ${status.connectedEmail} · Last synced ${formatDateTime(status.lastSyncedAt, '—')}`
               : 'Not connected yet.'}
           </p>
         </div>

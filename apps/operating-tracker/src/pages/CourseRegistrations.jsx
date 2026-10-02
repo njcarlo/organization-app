@@ -11,6 +11,7 @@ import {
   Timestamp,
   updateDoc,
 } from 'firebase/firestore'
+import { formatDate as formatDisplayDate } from '@hae/ui'
 import { db } from '../firebase'
 import ModuleImportPanel from '../components/ModuleImportPanel'
 
@@ -40,11 +41,7 @@ function toMillis(value) {
 function formatDate(value) {
   const millis = toMillis(value)
   if (!millis) return '—'
-  return new Date(millis).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatDisplayDate(millis)
 }
 
 function toDateInputValue(value) {

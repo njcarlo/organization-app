@@ -1,3 +1,4 @@
+import { formatDate as formatDisplayDate, formatDateWithWeekday } from '@hae/ui'
 import {
   HEALTH_ALIASES,
   SOCIAL_GRAPHICS_STATUS_OPTIONS,
@@ -69,25 +70,14 @@ export function sortByOrder(a, b) {
   return oa - ob
 }
 
+/** Platform date format, e.g. "Jul 13, 2026". */
 export function formatDate(dateStr) {
-  if (!dateStr) return '—'
-  const [y, m, d] = dateStr.split('-')
-  if (!y || !m || !d) return dateStr
-  return `${m}/${d}/${y.slice(2)}`
+  return formatDisplayDate(dateStr)
 }
 
-/** Long-form date with weekday, e.g. "Monday, July 13, 2026". */
+/** Date with weekday, e.g. "Monday, Jul 13, 2026". */
 export function formatLongDate(dateStr) {
-  if (!dateStr) return '—'
-  const [y, m, d] = dateStr.split('-')
-  if (!y || !m || !d) return dateStr
-  const date = new Date(Number(y), Number(m) - 1, Number(d))
-  return date.toLocaleDateString(undefined, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return formatDateWithWeekday(dateStr)
 }
 
 export function programNameOf(task, programsById) {
@@ -251,20 +241,9 @@ export function getWeekRange(dateStr) {
   return { start, end }
 }
 
-/** e.g. "Week of Jul 13 – Jul 19, 2026" (or "Dec 29, 2025 – Jan 4, 2026" across a year boundary). */
+/** e.g. "Week of Jul 13, 2026 – Jul 19, 2026". */
 export function formatWeekRangeLabel(start, end) {
-  const spansYearBoundary = start.getFullYear() !== end.getFullYear()
-  const startLabel = start.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: spansYearBoundary ? 'numeric' : undefined,
-  })
-  const endLabel = end.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-  return `Week of ${startLabel} – ${endLabel}`
+  return `Week of ${formatDisplayDate(start)} – ${formatDisplayDate(end)}`
 }
 
 /**

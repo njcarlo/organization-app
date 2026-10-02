@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
-import { useAuth, timeOfDayGreeting } from '@hae/ui'
+import { formatDate, useAuth, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 import { PIPELINE_STAGES } from '../constants'
 
@@ -101,7 +101,7 @@ export default function Dashboard() {
                     {i.type} · {i.contactName || 'Contact'}
                   </div>
                   <div className="text-xs text-hae-slate">
-                    {i.date || '—'}
+                    {formatDate(i.date)}
                     {i.subject ? ` · ${i.subject}` : ''}
                   </div>
                 </li>
@@ -125,7 +125,7 @@ export default function Dashboard() {
                 <li key={c.id} className="px-4 py-3">
                   <div className="text-sm font-medium">{c.name}</div>
                   <div className="text-xs text-hae-slate">
-                    Due {c.followUpDate} · {c.stage || '—'} · {c.type || '—'}
+                    Due {formatDate(c.followUpDate)} · {c.stage || '—'} · {c.type || '—'}
                   </div>
                 </li>
               ))}

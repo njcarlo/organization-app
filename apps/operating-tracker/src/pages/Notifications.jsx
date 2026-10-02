@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
-import { moduleUrl } from '@hae/ui'
+import { formatDateTime, moduleUrl } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { PROJECT_DESTINATION_GROUPS } from '../constants'
@@ -26,12 +26,7 @@ async function resolveLegacyProgramPath(programId) {
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
-  return ts.toDate().toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatDateTime(ts)
 }
 
 function todayIso() {
@@ -182,19 +177,19 @@ export default function Notifications() {
       `Overdue tasks: ${digest.overdueTasks.length}`,
       ...digest.overdueTasks
         .slice(0, 15)
-        .map((t) => `- ${t.title || 'Task'} (due ${t.dueDate})`),
+        .map((t) => `- ${t.title || 'Task'} (due ${formatDate(t.dueDate)})`),
       '',
       `Due in 7 days: ${digest.dueSoonTasks.length}`,
       ...digest.dueSoonTasks
         .slice(0, 15)
-        .map((t) => `- ${t.title || 'Task'} (due ${t.dueDate})`),
+        .map((t) => `- ${t.title || 'Task'} (due ${formatDate(t.dueDate)})`),
       '',
       `Overdue check-ins: ${digest.overdueCheckIns.length}`,
       ...digest.overdueCheckIns
         .slice(0, 15)
         .map(
           (c) =>
-            `- ${c.learnerName || c.learnerEmail || 'Learner'} · ${c.courseName || 'Course'} (due ${c.dueDate})`
+            `- ${c.learnerName || c.learnerEmail || 'Learner'} · ${c.courseName || 'Course'} (due ${formatDate(c.dueDate)})`
         ),
       '',
       'Open Tracker → Notifications for the full list.',
@@ -320,7 +315,7 @@ export default function Notifications() {
                 ? `${c.learnerName || c.learnerEmail || 'Learner'} · ${c.label || c.type || 'Check-in'}`
                 : c.label || c.type || 'Check-in'
             }
-            meta={`Due ${c.dueDate} · ${c.courseName || '—'}`}
+            meta={`Due ${formatDate(c.dueDate)} · ${c.courseName || '—'}`}
             href={
               isStaff ? moduleUrl('lms', '/tracking') : moduleUrl('lms')
             }
@@ -343,7 +338,7 @@ export default function Notifications() {
                 ? `${c.learnerName || c.learnerEmail || 'Learner'} · ${c.label || c.type || 'Check-in'}`
                 : c.label || c.type || 'Check-in'
             }
-            meta={`Due ${c.dueDate} · ${c.courseName || '—'}`}
+            meta={`Due ${formatDate(c.dueDate)} · ${c.courseName || '—'}`}
             href={
               isStaff ? moduleUrl('lms', '/tracking') : moduleUrl('lms')
             }

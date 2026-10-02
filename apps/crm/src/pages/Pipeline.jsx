@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { PIPELINE_STAGES } from '../constants'
+import { formatDate } from '@hae/ui'
 
 export default function Pipeline() {
   const [contacts, setContacts] = useState([])
@@ -154,7 +155,7 @@ export default function Pipeline() {
                     </select>
                   </td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
-                    {c.followUpDate || '—'}
+                    {formatDate(c.followUpDate)}
                   </td>
                 </tr>
               ))

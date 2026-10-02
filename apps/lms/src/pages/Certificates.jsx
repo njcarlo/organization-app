@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { formatDate, Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Certificates() {
@@ -142,7 +142,7 @@ export default function Certificates() {
             ) : (
               items.map((c) => (
                 <tr key={c.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm text-hae-slate">{c.issuedAt}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(c.issuedAt)}</td>
                   <td className="px-3 py-2">
                     <div className="text-sm font-medium">{c.learnerName}</div>
                     <div className="text-xs text-hae-slate">{c.learnerEmail || '—'}</div>

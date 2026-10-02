@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { formatDate, Modal } from '@hae/ui'
 import { downloadIcs, FEATURES, useFeatures } from '@hae/ui'
 import { db } from '../firebase'
 
@@ -213,7 +213,7 @@ export default function Sessions() {
               sessions.map((s) => (
                 <tr key={s.id} className="group border-b border-hae-line/70">
                   <td className="px-3 py-2 text-sm text-hae-slate">
-                    {s.date || '—'}
+                    {formatDate(s.date)}
                     {s.time ? ` ${s.time}` : ''}
                   </td>
                   <td className="px-3 py-2 text-sm font-medium">{s.title}</td>

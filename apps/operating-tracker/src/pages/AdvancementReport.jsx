@@ -248,16 +248,6 @@ function HeaderAddButton({ onClick, children }) {
   )
 }
 
-// Long-form date without the weekday, e.g. "July 13, 2026" — used for the
-// membership goal date range, where the weekday isn't meaningful.
-function formatLongDateNoWeekday(dateStr) {
-  if (!dateStr) return '—'
-  const [y, m, d] = dateStr.split('-')
-  if (!y || !m || !d) return dateStr
-  const date = new Date(Number(y), Number(m) - 1, Number(d))
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-}
-
 // Click-to-edit primitive shared by every editable value on the Report —
 // mirrors AdvancementEditableList's inline cell editing so the whole page
 // (not just list sections) uses one consistent edit interaction.
@@ -849,7 +839,7 @@ export default function AdvancementReport() {
             </p>
             {previousTotalMembers != null && (
               <p className="mt-0.5 text-[10px] text-hae-slate">
-                vs {previousTotalMembers}{membership.previousTotalMembersDate ? ` on ${membership.previousTotalMembersDate}` : ' previously'}
+                vs {previousTotalMembers}{membership.previousTotalMembersDate ? ` on ${formatDate(membership.previousTotalMembersDate)}` : ' previously'}
               </p>
             )}
           </div>
@@ -883,7 +873,7 @@ export default function AdvancementReport() {
               From
               <InlineEdit
                 value={membership.goalStartDate || ''}
-                display={membership.goalStartDate ? formatLongDateNoWeekday(membership.goalStartDate) : 'Set date'}
+                display={membership.goalStartDate ? formatDate(membership.goalStartDate) : 'Set date'}
                 type="date"
                 className="text-hae-ink underline decoration-dotted"
                 inputClassName="w-32"
@@ -894,7 +884,7 @@ export default function AdvancementReport() {
               to
               <InlineEdit
                 value={membership.goalEndDate || ''}
-                display={membership.goalEndDate ? formatLongDateNoWeekday(membership.goalEndDate) : 'Set date'}
+                display={membership.goalEndDate ? formatDate(membership.goalEndDate) : 'Set date'}
                 type="date"
                 className="text-hae-ink underline decoration-dotted"
                 inputClassName="w-32"

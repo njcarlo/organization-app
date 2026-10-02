@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { sendMentionEmail } from '@hae/ui'
+import { formatDateTime, sendMentionEmail } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { useStaffUsers } from '../hooks/useStaffUsers'
@@ -29,12 +29,7 @@ function mentionDeepLink({ parentType, parentId, programId, programPath }) {
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
-  return ts.toDate().toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatDateTime(ts)
 }
 
 function escapeRegExp(value) {

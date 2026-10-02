@@ -9,7 +9,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { Modal } from '@hae/ui'
+import { formatDate, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import {
   MEMBERSHIP_TIERS,
@@ -269,7 +269,7 @@ export default function Memberships() {
                       ) : null}
                     </td>
                     <td className="px-3 py-2 text-sm text-hae-slate">
-                      {m.renewalDate || '—'}
+                      {formatDate(m.renewalDate)}
                     </td>
                     <td className="px-3 py-2">
                       <select

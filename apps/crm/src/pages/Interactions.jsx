@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Linkify, Modal } from '@hae/ui'
+import { formatDate, CommentsPanel, Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { INTERACTION_TYPES } from '../constants'
 import {
@@ -251,7 +251,7 @@ export default function Interactions() {
             ) : (
               interactions.map((row) => (
                 <tr key={row.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm text-hae-slate">{row.date || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(row.date)}</td>
                   <td className="px-3 py-2 text-sm font-medium">{row.type}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">
                     {row.contactName || '—'}

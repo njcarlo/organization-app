@@ -14,15 +14,11 @@ import { db } from '@hae/firebase'
 import { useAuth } from './AuthContext.jsx'
 import { useStaffUsers } from './useStaffUsers.js'
 import { sendMentionEmail } from './mentionEmail.js'
+import { formatDateTime } from './dates.js'
 
 function formatTimestamp(ts) {
   if (!ts?.toDate) return ''
-  return ts.toDate().toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatDateTime(ts)
 }
 
 function escapeRegExp(value) {
