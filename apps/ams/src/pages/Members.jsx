@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Modal } from '@hae/ui'
+import { formatDate, CommentsPanel, Modal } from '@hae/ui'
 import { db } from '../firebase'
 import { MEMBER_STATUSES } from '../constants'
 
@@ -223,7 +223,7 @@ export default function Members() {
                   <td className="px-3 py-2 text-sm text-hae-slate">{m.cohort || '—'}</td>
                   <td className="px-3 py-2 text-sm text-hae-slate">{m.chapter || '—'}</td>
                   <td className="px-3 py-2 text-sm capitalize text-hae-slate">{m.status}</td>
-                  <td className="px-3 py-2 text-sm text-hae-slate">{m.joinDate || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(m.joinDate)}</td>
                   <td className="px-3 py-2 text-right text-xs">
                     <button
                       type="button"

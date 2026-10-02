@@ -9,6 +9,7 @@ import {
   updateDoc,
   writeBatch,
 } from 'firebase/firestore'
+import { formatDate, formatDateWithWeekday } from '@hae/ui'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import DraggableList from '../components/DraggableList'
@@ -26,25 +27,6 @@ function timeInZone(date, timeZone) {
   } catch {
     return ''
   }
-}
-
-function formatLongDate(dateIso) {
-  if (!dateIso) return ''
-  return new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function formatShortDate(dateIso) {
-  if (!dateIso) return ''
-  return new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 function greetingWord() {
@@ -282,7 +264,7 @@ export default function DailyBriefing() {
   const buildCopyText = () => {
     const lines = []
     lines.push('MEETINGS TODAY')
-    lines.push(formatLongDate(selectedDate))
+    lines.push(formatDateWithWeekday(selectedDate))
     if (dayMeetings.length === 0) lines.push('No meetings today.')
     dayMeetings.forEach((m) => {
       const start = m.start ? new Date(m.start) : null
@@ -300,7 +282,7 @@ export default function DailyBriefing() {
       const start = zonedTimeToDate(r.date, r.timeET, ET_ZONE)
       const local = start ? localTimeLabel(start, getActiveTravel(r.date, travel)) : null
       lines.push(
-        `${r.date || ''} ${r.timeET ? `${r.timeET} ET` : ''}${local ? ` / ${local}` : ''} — ${r.meeting || ''}${r.comments ? ` (${r.comments})` : ''}`
+        `${formatDate(r.date, '')} ${r.timeET ? `${r.timeET} ET` : ''}${local ? ` / ${local}` : ''} — ${r.meeting || ''}${r.comments ? ` (${r.comments})` : ''}`
       )
     })
     lines.push('')
@@ -316,7 +298,7 @@ export default function DailyBriefing() {
     const openReminders = reminders.filter((r) => !r.resolved)
     if (openReminders.length === 0) lines.push('None.')
     openReminders.forEach((r) => {
-      lines.push(`${r.date ? `${r.date} — ` : ''}${r.account ? `${r.account}: ` : ''}${r.subject || ''}`)
+      lines.push(`${r.date ? `${formatDate(r.date)} — ` : ''}${r.account ? `${r.account}: ` : ''}${r.subject || ''}`)
       if (r.body) lines.push(r.body)
       if (r.comments) lines.push(`RR: ${r.comments}`)
     })
@@ -339,7 +321,7 @@ export default function DailyBriefing() {
       <header className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm text-hae-slate">{formatLongDate(todayIso())}</p>
+            <p className="text-sm text-hae-slate">{formatDateWithWeekday(todayIso())}</p>
             <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">
               {greetingWord()}
               {firstName ? `, ${firstName}` : ''}
@@ -559,7 +541,7 @@ function MeetingsTodaySection({
   return (
     <SectionCard
       title="Meetings Today"
-      meta={formatLongDate(selectedDate)}
+      meta={formatDateWithWeekday(selectedDate)}
       editing={editing}
       onToggleEdit={() => setEditing((e) => !e)}
       extra={
@@ -812,7 +794,7 @@ function MajorMeetingsSection({ majorMeetings, travel, addItem, commitField, rem
             return (
               <li key={r.id} className="rounded-lg border border-hae-line/70 p-3">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-semibold text-hae-ink">{formatShortDate(r.date)}</span>
+                  <span className="text-sm font-semibold text-hae-ink">{formatDateWithWeekday(r.date, { weekday: 'short' })}</span>
                   {r.timeET ? <span className="text-xs text-hae-slate">{r.timeET} ET</span> : null}
                   {local ? <span className="text-xs text-hae-slate">{local}</span> : null}
                 </div>
@@ -1085,7 +1067,7 @@ function RemindersSection({ reminders, showResolved, setShowResolved, addItem, c
                 </div>
                 {r.date || r.account ? (
                   <p className="text-xs text-hae-slate">
-                    {[r.date, r.account].filter(Boolean).join(' · ')}
+                    {[formatDate(r.date, ''), r.account].filter(Boolean).join(' · ')}
                   </p>
                 ) : null}
                 {r.body ? <p className="mt-1 whitespace-pre-line text-xs text-hae-slate">{r.body}</p> : null}

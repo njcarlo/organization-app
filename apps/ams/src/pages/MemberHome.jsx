@@ -9,7 +9,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { useAuth, timeOfDayGreeting } from '@hae/ui'
+import { formatDate, useAuth, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 import { formatMoney, needsPayment } from '../constants'
 import {
@@ -158,7 +158,7 @@ export default function MemberHome() {
                           {m.paymentStatus || 'Pending'}
                         </strong>
                       </span>
-                      {m.renewalDate ? <span>Renewal {m.renewalDate}</span> : null}
+                      {m.renewalDate ? <span>Renewal {formatDate(m.renewalDate)}</span> : null}
                       {Number.isFinite(Number(amountCents)) ? (
                         <span>Dues {formatMoney(amountCents, currency)}</span>
                       ) : null}
@@ -204,7 +204,7 @@ export default function MemberHome() {
               <li key={ev.id} className="px-4 py-3 text-sm">
                 <div className="font-medium">{ev.name || ev.title}</div>
                 <div className="text-xs text-hae-slate">
-                  {ev.date || 'Date TBD'}
+                  {formatDate(ev.date, 'Date TBD')}
                   {ev.location ? ` · ${ev.location}` : ''}
                 </div>
               </li>

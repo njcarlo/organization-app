@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { MEMBER_STATUSES } from '../constants'
+import { formatDate } from '@hae/ui'
 
 export default function Dashboard() {
   const [members, setMembers] = useState([])
@@ -94,7 +95,7 @@ export default function Dashboard() {
                   <div className="text-sm font-medium">{e.name}</div>
                   <div className="text-xs text-hae-slate">{e.location || '—'}</div>
                 </div>
-                <div className="text-sm text-hae-slate">{e.date}</div>
+                <div className="text-sm text-hae-slate">{formatDate(e.date)}</div>
               </li>
             ))}
           </ul>

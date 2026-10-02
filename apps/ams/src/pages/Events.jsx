@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from 'firebase/firestore'
-import { useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Linkify, Modal } from '@hae/ui'
+import { formatDate, useAuth, PERMISSIONS, downloadIcs, FEATURES, useFeatures, Linkify, Modal } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function Events() {
@@ -198,7 +198,7 @@ export default function Events() {
             ) : (
               events.map((e) => (
                 <tr key={e.id} className="group border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm text-hae-slate">{e.date || '—'}</td>
+                  <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(e.date)}</td>
                   <td className="px-3 py-2">
                     <div className="text-sm font-medium">{e.name}</div>
                     {e.description ? (

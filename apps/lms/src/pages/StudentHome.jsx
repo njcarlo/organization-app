@@ -6,7 +6,7 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import { useAuth, downloadIcs, FEATURES, useFeatures, timeOfDayGreeting } from '@hae/ui'
+import { formatDate, useAuth, downloadIcs, FEATURES, useFeatures, timeOfDayGreeting } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function StudentHome() {
@@ -206,7 +206,7 @@ export default function StudentHome() {
                 <li key={s.id} className="px-4 py-3 text-sm">
                   <div className="font-medium text-hae-ink">{s.title}</div>
                   <div className="text-xs text-hae-slate">
-                    {s.courseName} · {s.date}
+                    {s.courseName} · {formatDate(s.date)}
                     {s.time ? ` · ${s.time}` : ''}
                   </div>
                   {s.zoomLink ? (
@@ -237,7 +237,7 @@ export default function StudentHome() {
                 <li key={c.id} className="px-4 py-3 text-sm">
                   <div className="font-medium text-hae-ink">{c.type} check-in</div>
                   <div className="text-xs text-hae-slate">
-                    {c.courseName} · due {c.dueDate}
+                    {c.courseName} · due {formatDate(c.dueDate)}
                   </div>
                 </li>
               ))}

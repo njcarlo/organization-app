@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { CommentsPanel, Linkify, Modal, useAuth, PERMISSIONS } from '@hae/ui'
+import { formatDate, CommentsPanel, Linkify, Modal, useAuth, PERMISSIONS } from '@hae/ui'
 import { db } from '../firebase'
 import { COURSE_STATUSES, LEARNING_PATHS, MODULE_TYPES } from '../constants'
 import { centsToDollarsInput, parseDollarsToCents } from '../money'
@@ -209,7 +209,7 @@ export default function CourseDetail() {
             <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
               Start date
             </dt>
-            <dd className="text-hae-ink">{course.startDate || '—'}</dd>
+            <dd className="text-hae-ink">{formatDate(course.startDate)}</dd>
           </div>
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">

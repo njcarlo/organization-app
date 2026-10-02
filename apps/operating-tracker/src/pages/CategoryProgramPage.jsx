@@ -563,7 +563,7 @@ export default function CategoryProgramPage({
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Start date
                 </dt>
-                <dd className="text-hae-ink">{program.startDate || '—'}</dd>
+                <dd className="text-hae-ink">{formatDate(program.startDate)}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
@@ -599,7 +599,7 @@ export default function CategoryProgramPage({
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Assets Deadline
                 </dt>
-                <dd className="text-hae-ink">{program.assetsDeadline || '—'}</dd>
+                <dd className="text-hae-ink">{formatDate(program.assetsDeadline)}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
@@ -643,7 +643,7 @@ export default function CategoryProgramPage({
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">
                   Start date
                 </dt>
-                <dd className="text-hae-ink">{program.startDate || '—'}</dd>
+                <dd className="text-hae-ink">{formatDate(program.startDate)}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-hae-slate">

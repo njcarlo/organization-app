@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { useAuth } from '@hae/ui'
+import { formatDate, useAuth } from '@hae/ui'
 import { db } from '../firebase'
 
 export default function MyCertificates() {
@@ -61,7 +61,7 @@ export default function MyCertificates() {
                 {c.courseName || 'Course'}
               </h2>
               <p className="mt-2 text-sm text-hae-slate">
-                Issued {c.issuedAt || '—'} · {c.status || 'Issued'}
+                Issued {formatDate(c.issuedAt)} · {c.status || 'Issued'}
               </p>
               {c.courseId ? (
                 <Link

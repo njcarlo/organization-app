@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
-import { customProgramStatusBadgeClass, namesLabel, toNameList } from '../utils'
+import { customProgramStatusBadgeClass, formatDate, namesLabel, toNameList } from '../utils'
 
 const emptyCourseFields = {
   haeLead: [],
@@ -387,13 +387,13 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                       <div className="mt-0.5 text-xs font-normal text-hae-slate">
                         {[
                           namesLabel(p.haeLead) && `HAE Lead: ${namesLabel(p.haeLead)}`,
-                          p.startDate && `Start: ${p.startDate}`,
+                          p.startDate && `Start: ${formatDate(p.startDate)}`,
                           p.durationWeeks && `${p.durationWeeks} weeks`,
                           (p.startTime || p.endTime) &&
                             `Time: ${p.startTime || '—'}–${p.endTime || '—'}`,
                           p.instructor && `Instructor: ${p.instructor}`,
                           p.guestSpeaker && `Guest: ${p.guestSpeaker}`,
-                          p.assetsDeadline && `Assets due: ${p.assetsDeadline}`,
+                          p.assetsDeadline && `Assets due: ${formatDate(p.assetsDeadline)}`,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
@@ -403,7 +403,7 @@ export default function CategoryItemsAdmin({ collectionName, itemLabel, showCour
                   <td className="px-3 py-2 text-sm text-hae-slate">{namesLabel(p.lead) || '—'}</td>
                   {!showCourseFields && (
                     <>
-                      <td className="px-3 py-2 text-sm text-hae-slate">{p.startDate || '—'}</td>
+                      <td className="px-3 py-2 text-sm text-hae-slate">{formatDate(p.startDate)}</td>
                       <td className="px-3 py-2 text-sm">
                         {p.status ? (
                           <span
