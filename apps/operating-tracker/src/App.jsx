@@ -17,9 +17,9 @@ import Activity from './pages/Activity'
 import ProgramPage from './pages/ProgramPage'
 import CategoryProgramPage from './pages/CategoryProgramPage'
 import CustomSectionItemPage from './pages/CustomSectionItemPage'
-import CourseRegistrations from './pages/CourseRegistrations'
 import AcademyLinks from './pages/AcademyLinks'
 import AcademyCalendar from './pages/AcademyCalendar'
+import AcademyReport from './pages/AcademyReport'
 import RhrAcademyTasks from './pages/RhrAcademyTasks'
 import MyTasks from './pages/MyTasks'
 import Calendar from './pages/Calendar'
@@ -199,12 +199,17 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/academy/course-registrations"
+                  path="/academy/report"
                   element={
                     <SectionRoute sectionId="academy">
-                      <CourseRegistrations />
+                      <AcademyReport />
                     </SectionRoute>
                   }
+                />
+                {/* Course Enrollments now lives in the Academy Report. */}
+                <Route
+                  path="/academy/course-registrations"
+                  element={<Navigate to="/academy/report" replace />}
                 />
                 <Route
                   path="/academy/links"

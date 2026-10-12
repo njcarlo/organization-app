@@ -77,7 +77,7 @@ const DEFAULT_SECTION_ORDER = [
 
 // Regina's cross-course Academy view. It's requested to be visible to
 // everyone regardless of permission type, so even though it's placed in the
-// Academy section's nav (before Course Enrollments), it's re-added below for
+// Academy section's nav (after Academy Report), it's re-added below for
 // section-restricted staff who don't have Academy access at all.
 const RHR_ACADEMY_TODO_ITEM = {
   to: '/academy/rhr-things-to-do',
@@ -844,8 +844,8 @@ export default function Sidebar({ open = false, onClose }) {
       ],
       onReorderItems: (items) => reorderCategory('academyPrograms', items),
       items: [
+        { to: '/academy/report', label: 'Academy Report', icon: 'chart' },
         RHR_ACADEMY_TODO_ITEM,
-        { to: '/academy/course-registrations', label: 'Course Enrollments', icon: 'checklist' },
         { to: '/academy/links', label: 'Academy Schedule and Links', icon: 'folder' },
         { to: '/academy/calendar', label: 'Academy Calendar', icon: 'calendar' },
         ...academyItems,
