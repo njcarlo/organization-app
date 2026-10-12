@@ -109,7 +109,7 @@ export default function ModuleShell({
         />
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 sm:py-8">
+          <div className="px-4 py-6 sm:px-6 sm:py-8">
             <Outlet />
           </div>
         </main>
