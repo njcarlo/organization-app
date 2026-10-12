@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   addDoc,
   collection,
@@ -7,22 +6,16 @@ import {
   doc,
   getDocs,
   serverTimestamp,
-  setDoc,
   updateDoc,
 } from 'firebase/firestore'
 import { Modal, formatDate } from '@hae/ui'
 import { db } from '../firebase'
-import CourseRegistrations from './CourseRegistrations'
 
-// Courses tracked only for reporting (e.g. past cohorts). They live in their
-// own collection so they don't become Academy items in the side nav, the RHR
-// course grid, or the Academy Calendar.
+// The report is its own record: courses are added here (not pulled from the
+// side-nav Academy items, Course Enrollments or payments) and live in their own
+// collection, so they don't appear in the side nav, the RHR course grid or the
+// Academy Calendar.
 const REPORT_COLLECTION = 'academyReportCourses'
-
-const PAGE_TABS = [
-  { key: 'report', label: 'Course Report' },
-  { key: 'registrations', label: 'Registrations & Payments' },
-]
 
 const STATUS_TABS = ['All', 'Upcoming', 'In progress', 'Completed']
 
@@ -33,7 +26,7 @@ const STATUS_BADGE = {
   'No date': 'bg-hae-mist text-hae-slate',
 }
 
-// Same breakdown as the Enrollment Summary on Course Enrollments.
+// Enrollment types tracked per course.
 const ENROLLMENT_TYPES = [
   { key: 'free', label: 'Free' },
   { key: 'promotional', label: 'Promotional' },
@@ -121,13 +114,9 @@ function statusOf(startDate, endDate, today) {
 }
 
 export default function AcademyReport({ sectionReadOnly = false }) {
-  const [programs, setPrograms] = useState([])
   const [reportCourses, setReportCourses] = useState([])
-  const [enrollmentCounts, setEnrollmentCounts] = useState({})
-  const [revenueByCourse, setRevenueByCourse] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [pageTab, setPageTab] = useState('report')
   const [drafts, setDrafts] = useState({})
   const [statusTab, setStatusTab] = useState('All')
   const [search, setSearch] = useState('')
@@ -141,30 +130,8 @@ export default function AcademyReport({ sectionReadOnly = false }) {
   const load = useCallback(async () => {
     setError('')
     try {
-      const [programSnap, reportSnap, countSnap, registrationSnap] = await Promise.all([
-        getDocs(collection(db, 'academyPrograms')),
-        getDocs(collection(db, REPORT_COLLECTION)),
-        getDocs(collection(db, 'courseEnrollmentCounts')),
-        getDocs(collection(db, 'courseRegistrations')),
-      ])
-      setPrograms(programSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => p.name))
-      setReportCourses(reportSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
-
-      const counts = {}
-      countSnap.docs.forEach((d) => {
-        const data = d.data()
-        if (!data.course) return
-        counts[data.course] = enrollmentBreakdown(data)
-      })
-      setEnrollmentCounts(counts)
-
-      const revenue = {}
-      registrationSnap.docs.forEach((d) => {
-        const data = d.data()
-        if (!data.course) return
-        revenue[data.course] = (revenue[data.course] || 0) + (Number(data.amountPaid) || 0)
-      })
-      setRevenueByCourse(revenue)
+      const snap = await getDocs(collection(db, REPORT_COLLECTION))
+      setReportCourses(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     } catch (err) {
       setError(err.message || 'Failed to load Academy report')
     } finally {
@@ -172,11 +139,9 @@ export default function AcademyReport({ sectionReadOnly = false }) {
     }
   }, [])
 
-  // Reload when coming back from Registrations & Payments so revenue reflects
-  // any payments added or edited there.
   useEffect(() => {
-    if (pageTab === 'report') load()
-  }, [load, pageTab])
+    load()
+  }, [load])
 
   const rows = useMemo(() => {
     const today = todayIso()
@@ -192,42 +157,10 @@ export default function AcademyReport({ sectionReadOnly = false }) {
         ...extra,
       }
     }
-    // Enrollment counts and payments are keyed by course name. Names that no
-    // longer match a course (renamed or removed from the side nav) still show,
-    // so their enrollments and revenue aren't dropped from the totals.
-    const knownNames = new Set([...programs, ...reportCourses].map((c) => c.name))
-    const unlistedNames = [
-      ...new Set([...Object.keys(enrollmentCounts), ...Object.keys(revenueByCourse)]),
-    ].filter((name) => !knownNames.has(name))
-    return [
-      ...programs.map((p) =>
-        toRow(p, {
-          source: 'program',
-          ...enrollmentBreakdown(enrollmentCounts[p.name]),
-          revenue: revenueByCourse[p.name] || 0,
-        })
-      ),
-      ...reportCourses.map((c) =>
-        toRow(c, {
-          source: 'report',
-          ...enrollmentBreakdown(c),
-          revenue: Number(c.revenue) || 0,
-        })
-      ),
-      ...unlistedNames
-        .map((name) =>
-          toRow(
-            { id: name, name },
-            {
-              source: 'unlisted',
-              ...enrollmentBreakdown(enrollmentCounts[name]),
-              revenue: revenueByCourse[name] || 0,
-            }
-          )
-        )
-        .filter((r) => r.enrollments > 0 || r.revenue !== 0),
-    ]
-  }, [programs, reportCourses, enrollmentCounts, revenueByCourse])
+    return reportCourses.map((c) =>
+      toRow(c, { ...enrollmentBreakdown(c), revenue: Number(c.revenue) || 0 })
+    )
+  }, [reportCourses])
 
   const visibleRows = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -282,18 +215,8 @@ export default function AcademyReport({ sectionReadOnly = false }) {
     </button>
   )
 
-  const draftKey = (row, field) => `${row.source}:${row.id}:${field}`
+  const draftKey = (row, field) => `${row.id}:${field}`
 
-  const canEdit = (row, field) => {
-    if (sectionReadOnly) return false
-    if (field === 'startDate') return row.source !== 'unlisted'
-    if (field === 'revenue') return row.source === 'report'
-    return true
-  }
-
-  // Inline edits write back to where each value lives: report-only courses to
-  // their own doc; side-nav courses to academyPrograms (start date) and
-  // courseEnrollmentCounts (counts); revenue for those comes from payments.
   const saveCell = async (row, field, raw) => {
     const key = draftKey(row, field)
     const clearDraft = () =>
@@ -308,27 +231,16 @@ export default function AcademyReport({ sectionReadOnly = false }) {
         : field === 'revenue'
           ? Number(raw) || 0
           : Math.max(0, Number(raw) || 0)
-    if (!canEdit(row, field) || value === row[field]) {
+    if (sectionReadOnly || value === row[field]) {
       clearDraft()
       return
     }
     setError('')
     try {
-      if (row.source === 'report') {
-        await updateDoc(doc(db, REPORT_COLLECTION, row.id), {
-          [field]: value,
-          updatedAt: serverTimestamp(),
-        })
-      } else if (field === 'startDate') {
-        await updateDoc(doc(db, 'academyPrograms', row.id), { startDate: value })
-      } else {
-        const counts = Object.fromEntries(ENROLLMENT_TYPES.map(({ key: k }) => [k, row[k]]))
-        await setDoc(doc(db, 'courseEnrollmentCounts', encodeURIComponent(row.name)), {
-          course: row.name,
-          ...counts,
-          [field]: value,
-        })
-      }
+      await updateDoc(doc(db, REPORT_COLLECTION, row.id), {
+        [field]: value,
+        updatedAt: serverTimestamp(),
+      })
       await load()
     } catch (err) {
       setError(err.message || 'Failed to save change')
@@ -338,7 +250,7 @@ export default function AcademyReport({ sectionReadOnly = false }) {
   }
 
   const renderCell = (row, field, display) => {
-    if (!canEdit(row, field)) return display
+    if (sectionReadOnly) return display
     const key = draftKey(row, field)
     const isDate = field === 'startDate'
     return (
@@ -438,7 +350,6 @@ export default function AcademyReport({ sectionReadOnly = false }) {
             Every Academy course — past, current and upcoming — with enrollments and revenue.
           </p>
         </div>
-        {pageTab === 'report' && (
         <div className="flex gap-2 print:hidden">
           <button
             type="button"
@@ -453,30 +364,8 @@ export default function AcademyReport({ sectionReadOnly = false }) {
             </button>
           )}
         </div>
-        )}
       </div>
 
-      <div className="flex gap-2 border-b border-hae-line print:hidden">
-        {PAGE_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setPageTab(tab.key)}
-            className={`-mb-px border-b-2 px-3 py-2 text-xs font-semibold uppercase ${
-              pageTab === tab.key
-                ? 'border-hae-crimson text-hae-crimson'
-                : 'border-transparent text-hae-slate hover:text-hae-ink'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {pageTab === 'registrations' && <CourseRegistrations sectionReadOnly={sectionReadOnly} />}
-
-      {pageTab === 'report' && (
-      <>
       {error && <p className="text-sm text-hae-red">{error}</p>}
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -561,21 +450,8 @@ export default function AcademyReport({ sectionReadOnly = false }) {
             </thead>
             <tbody>
               {visibleRows.map((r) => (
-                <tr key={`${r.source}-${r.id}`} className="border-b border-hae-line/70">
-                  <td className="px-3 py-2 text-sm font-medium text-hae-ink">
-                    {r.source === 'program' ? (
-                      <Link to={`/academy/${r.id}`} className="hover:text-hae-crimson hover:underline">
-                        {r.name}
-                      </Link>
-                    ) : (
-                      r.name
-                    )}
-                    {r.source === 'unlisted' && (
-                      <span className="mt-0.5 block text-[11px] font-normal text-hae-slate">
-                        Not in course list
-                      </span>
-                    )}
-                  </td>
+                <tr key={r.id} className="border-b border-hae-line/70">
+                  <td className="px-3 py-2 text-sm font-medium text-hae-ink">{r.name}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-sm text-hae-slate">
                     {renderCell(r, 'startDate', formatDate(r.startDate, 'TBD'))}
                   </td>
@@ -599,7 +475,7 @@ export default function AcademyReport({ sectionReadOnly = false }) {
                     {renderCell(r, 'revenue', formatMoney(r.revenue))}
                   </td>
                   <td className="px-3 py-2 text-right print:hidden">
-                    {r.source === 'report' && !sectionReadOnly && (
+                    {!sectionReadOnly && (
                       <button
                         type="button"
                         onClick={() => openEdit(r)}
@@ -614,7 +490,7 @@ export default function AcademyReport({ sectionReadOnly = false }) {
               {visibleRows.length === 0 && (
                 <tr>
                   <td colSpan={COLUMNS.length + 1} className="px-3 py-6 text-center text-sm text-hae-slate">
-                    {rows.length === 0 ? 'No Academy courses yet.' : 'No courses match these filters.'}
+                    {rows.length === 0 ? 'No courses yet — use Add Course to start the report.' : 'No courses match these filters.'}
                   </td>
                 </tr>
               )}
@@ -640,21 +516,10 @@ export default function AcademyReport({ sectionReadOnly = false }) {
           </table>
         </div>
         <p className="mt-3 text-xs text-hae-slate print:hidden">
-          Click a start date or enrollment count to edit it. Revenue for courses in the side nav is
-          the total of their payments on{' '}
-          <button
-            type="button"
-            onClick={() => setPageTab('registrations')}
-            className="text-hae-crimson hover:underline"
-          >
-            Registrations &amp; Payments
-          </button>
-          . Courses marked “Not in course list” have enrollments or payments under a name that no
-          longer matches a course.
+          Click a start date, enrollment count or revenue amount to edit it. Use Edit to rename a
+          course, change its duration or remove it.
         </p>
       </div>
-      </>
-      )}
 
       <Modal
         open={Boolean(form)}

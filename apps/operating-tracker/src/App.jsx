@@ -206,7 +206,7 @@ export default function App() {
                     </SectionRoute>
                   }
                 />
-                {/* Course Enrollments now lives in the Academy Report. */}
+                {/* Course Enrollments was replaced by the Academy Report. */}
                 <Route
                   path="/academy/course-registrations"
                   element={<Navigate to="/academy/report" replace />}
