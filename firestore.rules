@@ -244,6 +244,9 @@ service cloud.firestore {
     match /courseEnrollmentCounts/{id} {
       allow read, write: if isStaff();
     }
+    match /academyReportCourses/{id} {
+      allow read, write: if isStaff();
+    }
     match /projects/{id} {
       allow read, write: if isStaff();
     }

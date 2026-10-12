@@ -22,6 +22,7 @@ export const EXPORT_COLLECTIONS = [
   { id: 'trackerData', label: 'Data Projects', app: 'Tracker' },
   { id: 'boardCommitments', label: 'Board Commitments', app: 'Tracker' },
   { id: 'courseRegistrations', label: 'Course Registrations', app: 'Tracker' },
+  { id: 'academyReportCourses', label: 'Academy Report (past courses)', app: 'Tracker' },
   { id: 'projects', label: 'Projects', app: 'Tracker' },
   { id: 'tasks', label: 'Tasks', app: 'Tracker' },
   { id: 'surveys', label: 'Surveys', app: 'Tracker' },

@@ -14,7 +14,7 @@
 
 export const TRACKER_SECTIONS = [
   { id: 'programs', label: 'Programs', collectionName: 'programs', pathPrefix: '/programs' },
-  { id: 'academy', label: 'Academy', landingPath: '/academy/course-registrations', pathPrefix: '/academy' },
+  { id: 'academy', label: 'Academy', landingPath: '/academy/report', pathPrefix: '/academy' },
   {
     id: 'custom-programs',
     label: 'Custom Programs',
