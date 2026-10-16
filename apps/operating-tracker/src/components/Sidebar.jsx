@@ -755,12 +755,10 @@ export default function Sidebar({ open = false, onClose }) {
       ? [
           { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-          { to: '/calendar', label: 'Calendar', icon: 'calendar' },
         ]
       : [
           { to: '/', label: 'Dashboard', end: true, icon: 'home' },
           { to: '/my-tasks', label: 'My Tasks', icon: 'checklist' },
-          { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/activity', label: 'Activity', icon: 'history' },
           { to: '/advancement-dashboard', label: 'Advancement and Programming', icon: 'chart' },
         ]
@@ -942,6 +940,7 @@ export default function Sidebar({ open = false, onClose }) {
       actions: sectionActions('trackerEvents'),
       items: [
         { to: '/events-dashboard', label: 'Events & Programs Dashboard', icon: 'chart' },
+        { to: '/events-calendar', label: 'Events Calendar', icon: 'calendar' },
       ],
     })
 
