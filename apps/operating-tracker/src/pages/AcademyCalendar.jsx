@@ -273,7 +273,7 @@ export default function AcademyCalendar({ sectionReadOnly = false }) {
           <h1 className="font-display text-3xl text-hae-ink sm:text-4xl">Academy Calendar</h1>
           <p className="mt-1 text-sm text-hae-slate">
             Course start dates and event dates for {monthLabel(viewYear, viewMonth)} — separate
-            from the main Operations Calendar.
+            from the Events Calendar.
           </p>
         </div>
         {isStaff && !sectionReadOnly ? (

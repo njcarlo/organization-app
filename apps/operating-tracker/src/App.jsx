@@ -22,7 +22,7 @@ import AcademyCalendar from './pages/AcademyCalendar'
 import AcademyReport from './pages/AcademyReport'
 import RhrAcademyTasks from './pages/RhrAcademyTasks'
 import MyTasks from './pages/MyTasks'
-import Calendar from './pages/Calendar'
+import EventsCalendar from './pages/EventsCalendar'
 import Notifications from './pages/Notifications'
 import ExecutiveInbox from './pages/ExecutiveInbox'
 import DailyBriefing from './pages/DailyBriefing'
@@ -115,14 +115,23 @@ export default function App() {
                 <Route path="/my-tasks" element={<MyTasks />} />
                 {/* Not wrapped in SectionRoute("academy") — available to
                     every signed-in staff member regardless of section
-                    access, same as My Tasks / Calendar above. */}
+                    access, same as My Tasks above. */}
                 <Route path="/academy/rhr-things-to-do" element={<RhrAcademyTasks />} />
-                <Route path="/calendar" element={<Calendar />} />
+                {/* The old Workspace Calendar now lives under Events & Programs. */}
+                <Route path="/calendar" element={<Navigate to="/events-calendar" replace />} />
                 <Route
                   path="/events-dashboard"
                   element={
                     <SectionRoute sectionId="events">
                       <EventsDashboard />
+                    </SectionRoute>
+                  }
+                />
+                <Route
+                  path="/events-calendar"
+                  element={
+                    <SectionRoute sectionId="events">
+                      <EventsCalendar />
                     </SectionRoute>
                   }
                 />

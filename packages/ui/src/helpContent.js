@@ -77,11 +77,11 @@ export const HELP_SECTIONS = [
         ],
       },
       {
-        heading: 'Calendar',
+        heading: 'Events Calendar',
         steps: [
-          'Month view of task due dates — Mine by default; staff can switch to All.',
-          'Click a day to list tasks due that date; click a task for details.',
-          'Export .ics downloads the visible month’s dated tasks (when Calendar export is enabled).',
+          'Found under Events & Programs. Month view of every dated event from the Events & Programs Dashboard (task due dates are not shown).',
+          'Click a day to list its events in the side panel; View event opens it on the dashboard.',
+          'Export .ics downloads the visible month’s events (when Calendar export is enabled).',
         ],
       },
       {
