@@ -69,7 +69,6 @@ const DEFAULT_SECTION_ORDER = [
   'password',
   'events',
   'graphics',
-  'content',
   'data',
   'board-commitments',
   'chapters',
@@ -962,21 +961,19 @@ export default function Sidebar({ open = false, onClose }) {
     )
     next.push({
       id: 'graphics',
-      label: 'Graphics',
+      label: 'Social Media',
       actions: [
         ...sectionActions('trackerGraphics'),
         sortAzAction('trackerGraphics', trackerGraphics),
         addGroupAction('trackerGraphics'),
       ],
       onReorderItems: (items) => reorderCategory('trackerGraphics', items),
-      items: [{ to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' }, ...trackerGraphicsItems],
+      items: [
+        { to: '/graphics-dashboard', label: 'Graphics Dashboard', icon: 'chart' },
+        { to: '/content-calendar', label: 'Social Media Calendar', icon: 'calendar' },
+        ...trackerGraphicsItems,
+      ],
       groups: trackerGraphicsGroups,
-    })
-
-    next.push({
-      id: 'content',
-      label: 'Content',
-      items: [{ to: '/content-calendar', label: 'Social Media Calendar', icon: 'calendar' }],
     })
 
     const trackerDataGroupDefs = groupsForKey('trackerData')

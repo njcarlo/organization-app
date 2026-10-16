@@ -52,7 +52,7 @@ export const DASHBOARD_LINKS = [
     label: 'Social Media',
     icon: 'calendar',
     to: '/content-calendar',
-    sectionId: 'content',
+    sectionId: 'graphics',
   },
   {
     id: 'traffic-report',

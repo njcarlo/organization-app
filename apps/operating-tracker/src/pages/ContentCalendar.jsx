@@ -3,8 +3,18 @@ import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore
 import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import SocialPostDetailCard from '../components/SocialPostDetailCard'
-import { SOCIAL_GRAPHICS_STATUS_OPTIONS, SOCIAL_POST_STATUS_OPTIONS } from '../constants'
-import { formatDate, socialGraphicsStatusBadgeClass, socialPostStatusBadgeClass } from '../utils'
+import GraphicDetailCard from '../components/GraphicDetailCard'
+import {
+  GRAPHICS_STATUS_OPTIONS,
+  SOCIAL_GRAPHICS_STATUS_OPTIONS,
+  SOCIAL_POST_STATUS_OPTIONS,
+} from '../constants'
+import {
+  formatDate,
+  graphicsStatusBadgeClass,
+  socialGraphicsStatusBadgeClass,
+  socialPostStatusBadgeClass,
+} from '../utils'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -43,6 +53,35 @@ function monthGroupLabel(key) {
   return monthLabel(year, month - 1)
 }
 
+// Graphics Dashboard requests (trackerGraphicsRequests) are shown alongside
+// posts, read live and placed by Date Needed — no copy is written, so editing
+// a graphic here or on the dashboard is the same record.
+function graphicToEntry(g) {
+  return {
+    key: `graphic:${g.id}`,
+    kind: 'graphic',
+    source: g,
+    creative: g.title || '',
+    eventOrProgram: g.eventOrProgram || '',
+    status: g.status || GRAPHICS_STATUS_OPTIONS[0],
+    statusClass: graphicsStatusBadgeClass(g.status),
+    dateOfPosting: g.dateNeeded || '',
+    fileUrl: g.url || '',
+    peopleToTag: g.whoToTag || '',
+  }
+}
+
+function postToEntry(p) {
+  return {
+    ...p,
+    key: `post:${p.id}`,
+    kind: 'post',
+    source: p,
+    status: p.status || SOCIAL_POST_STATUS_OPTIONS[0].value,
+    statusClass: socialPostStatusBadgeClass(p.status),
+  }
+}
+
 const emptyForm = {
   creative: '',
   status: SOCIAL_POST_STATUS_OPTIONS[0].value,
@@ -54,10 +93,12 @@ const emptyForm = {
  * Social Media Content Calendar — Main Table groups creatives by month of posting
  * (sorted by date within each group); Calendar reflects the same data on a month grid.
  * Click a row/entry to open its detail card with file, hashtags, comments, and activity log.
+ * Graphics Dashboard requests are merged in by Date Needed and open the graphic detail card.
  */
 export default function ContentCalendar({ sectionReadOnly = false }) {
   const [tab, setTab] = useState('table')
-  const [rows, setRows] = useState([])
+  const [posts, setPosts] = useState([])
+  const [graphics, setGraphics] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedId, setExpandedId] = useState(null)
@@ -71,8 +112,12 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
   const load = useCallback(async () => {
     setError('')
     try {
-      const snap = await getDocs(collection(db, 'socialMediaPosts'))
-      setRows(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const [postSnap, graphicSnap] = await Promise.all([
+        getDocs(collection(db, 'socialMediaPosts')),
+        getDocs(collection(db, 'trackerGraphicsRequests')),
+      ])
+      setPosts(postSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setGraphics(graphicSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
     } catch (err) {
       setError(err.message || 'Failed to load content calendar')
     } finally {
@@ -83,6 +128,11 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
   useEffect(() => {
     load()
   }, [load])
+
+  const rows = useMemo(
+    () => [...posts.map(postToEntry), ...graphics.map(graphicToEntry)],
+    [posts, graphics]
+  )
 
   const groupedRows = useMemo(() => {
     const groups = new Map()
@@ -166,7 +216,7 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
     }
   }
 
-  const expandedRow = rows.find((r) => r.id === expandedId) || null
+  const expandedRow = rows.find((r) => r.key === expandedId) || null
 
   if (loading) return <p className="text-sm text-hae-slate">Loading content calendar…</p>
 
@@ -181,8 +231,8 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
             Social Media Calendar
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-hae-slate">
-            Track creatives from draft to posting — grouped by month in the table, or laid out on
-            the calendar.
+            Track creatives and Graphics Dashboard requests from draft to posting — grouped by
+            month in the table, or laid out on the calendar.
           </p>
         </div>
         {!sectionReadOnly && (
@@ -314,27 +364,43 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
                     <tbody>
                       {group.items.map((row) => (
                         <tr
-                          key={row.id}
-                          onClick={() => setExpandedId(row.id)}
+                          key={row.key}
+                          onClick={() => setExpandedId(row.key)}
                           className="cursor-pointer border-b border-hae-line/70 hover:bg-hae-mist/40"
                         >
-                          <td className="px-3 py-2 text-sm font-medium text-hae-ink">{row.creative}</td>
+                          <td className="px-3 py-2 text-sm font-medium text-hae-ink">
+                            <div className="flex items-center gap-2">
+                              <span>{row.creative}</span>
+                              {row.kind === 'graphic' ? (
+                                <span className="rounded border border-hae-line px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
+                                  Graphic
+                                </span>
+                              ) : null}
+                            </div>
+                            {row.eventOrProgram ? (
+                              <div className="text-xs font-normal text-hae-slate">{row.eventOrProgram}</div>
+                            ) : null}
+                          </td>
                           <td className="px-3 py-2 text-sm">
                             <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${socialPostStatusBadgeClass(row.status)}`}
+                              className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${row.statusClass}`}
                             >
-                              {row.status || SOCIAL_POST_STATUS_OPTIONS[0].value}
+                              {row.status}
                             </span>
                           </td>
                           <td className="px-3 py-2 text-sm text-hae-slate">
                             {row.dateOfPosting ? formatDate(row.dateOfPosting) : '—'}
                           </td>
                           <td className="px-3 py-2 text-sm">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${socialGraphicsStatusBadgeClass(row.graphicsStatus)}`}
-                            >
-                              {row.graphicsStatus || SOCIAL_GRAPHICS_STATUS_OPTIONS[0].value}
-                            </span>
+                            {row.kind === 'post' ? (
+                              <span
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${socialGraphicsStatusBadgeClass(row.graphicsStatus)}`}
+                              >
+                                {row.graphicsStatus || SOCIAL_GRAPHICS_STATUS_OPTIONS[0].value}
+                              </span>
+                            ) : (
+                              <span className="text-hae-slate">—</span>
+                            )}
                           </td>
                           <td className="px-3 py-2 text-sm">
                             {row.fileUrl ? (
@@ -398,7 +464,7 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
             ))}
             {cells.map((cell, i) => {
               if (!cell) return <div key={`blank-${i}`} className="min-h-[6rem] bg-hae-mist/20" />
-              const posts = byDate.get(cell.iso) || []
+              const dayEntries = byDate.get(cell.iso) || []
               const isToday = cell.iso === todayIso
               const isSelected = cell.iso === selectedDay
               return (
@@ -418,23 +484,24 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
                     {cell.day}
                   </span>
                   <div className="mt-1 space-y-0.5">
-                    {posts.slice(0, 3).map((p) => (
+                    {dayEntries.slice(0, 3).map((p) => (
                       <div
-                        key={p.id}
+                        key={p.key}
                         role="button"
                         tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation()
-                          setExpandedId(p.id)
+                          setExpandedId(p.key)
                         }}
-                        className={`truncate rounded px-1 py-0.5 text-[10px] font-medium ${socialPostStatusBadgeClass(p.status)}`}
-                        title={p.creative}
+                        className={`truncate rounded px-1 py-0.5 text-[10px] font-medium ${p.statusClass}`}
+                        title={p.kind === 'graphic' ? `Graphic: ${p.creative}` : p.creative}
                       >
+                        {p.kind === 'graphic' ? 'Graphic · ' : ''}
                         {p.creative}
                       </div>
                     ))}
-                    {posts.length > 3 ? (
-                      <div className="text-[10px] text-hae-slate">+{posts.length - 3} more</div>
+                    {dayEntries.length > 3 ? (
+                      <div className="text-[10px] text-hae-slate">+{dayEntries.length - 3} more</div>
                     ) : null}
                   </div>
                 </button>
@@ -457,17 +524,24 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
               ) : (
                 <ul className="space-y-2">
                   {selectedPosts.map((p) => (
-                    <li key={p.id}>
+                    <li key={p.key}>
                       <button
                         type="button"
-                        onClick={() => setExpandedId(p.id)}
+                        onClick={() => setExpandedId(p.key)}
                         className="flex w-full items-center justify-between rounded-md border border-hae-line/60 px-3 py-2 text-left hover:bg-hae-mist/40"
                       >
-                        <span className="text-sm font-medium text-hae-ink">{p.creative}</span>
+                        <span className="text-sm font-medium text-hae-ink">
+                          {p.kind === 'graphic' ? (
+                            <span className="mr-2 text-[10px] font-semibold tracking-wide text-hae-slate uppercase">
+                              Graphic
+                            </span>
+                          ) : null}
+                          {p.creative}
+                        </span>
                         <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${socialPostStatusBadgeClass(p.status)}`}
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${p.statusClass}`}
                         >
-                          {p.status || SOCIAL_POST_STATUS_OPTIONS[0].value}
+                          {p.status}
                         </span>
                       </button>
                     </li>
@@ -479,9 +553,20 @@ export default function ContentCalendar({ sectionReadOnly = false }) {
         </div>
       )}
 
-      {expandedRow ? (
+      {expandedRow?.kind === 'graphic' ? (
+        <GraphicDetailCard
+          graphic={expandedRow.source}
+          onClose={() => setExpandedId(null)}
+          onChanged={load}
+          readOnly={sectionReadOnly}
+          onDeleted={() => {
+            setExpandedId(null)
+            load()
+          }}
+        />
+      ) : expandedRow ? (
         <SocialPostDetailCard
-          post={expandedRow}
+          post={expandedRow.source}
           onClose={() => setExpandedId(null)}
           onChanged={load}
           readOnly={sectionReadOnly}

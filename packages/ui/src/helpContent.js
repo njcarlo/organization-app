@@ -85,6 +85,15 @@ export const HELP_SECTIONS = [
         ],
       },
       {
+        heading: 'Social Media',
+        steps: [
+          'Social Media combines the Graphics Dashboard and the Social Media Calendar in one sidebar section.',
+          'Every Graphics Dashboard request also appears on the Social Media Calendar on its Date Needed, tagged “Graphic”.',
+          'Open a graphic or post and use + Attach images to add up to 5 reference images.',
+          'Attached images are for reference only and are automatically compressed — keep the full-resolution file in the Link / File link field (Google Drive or Dropbox).',
+        ],
+      },
+      {
         heading: 'Notifications',
         steps: [
           'Shows Mentions (when someone @tags you in a task/project comment), plus overdue / due-soon / waiting / LMS check-ins.',

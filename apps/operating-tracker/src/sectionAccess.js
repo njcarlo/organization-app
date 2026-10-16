@@ -34,7 +34,9 @@ export const TRACKER_SECTIONS = [
     pathPrefix: '/passwords',
   },
   { id: 'events', label: 'Events & Programs', landingPath: '/events-dashboard', pathPrefix: '/events' },
-  { id: 'graphics', label: 'Graphics', landingPath: '/graphics-dashboard', pathPrefix: '/graphics' },
+  // Social Media merges the former Graphics and Content sections; it keeps the
+  // `graphics` id so existing users/{uid}.sectionAccess values stay valid.
+  { id: 'graphics', label: 'Social Media', landingPath: '/graphics-dashboard', pathPrefix: '/graphics' },
   { id: 'data', label: 'Data Projects', collectionName: 'trackerData', pathPrefix: '/data' },
   {
     id: 'board-commitments',
@@ -43,10 +45,19 @@ export const TRACKER_SECTIONS = [
     pathPrefix: '/board-commitments',
   },
   { id: 'chapters', label: 'Chapters', landingPath: '/chapter-leader-dashboard', pathPrefix: '/chapters' },
-  { id: 'content', label: 'Content', landingPath: '/content-calendar', pathPrefix: '/content-calendar' },
 ]
 
 const sortByOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0)
+
+// Section ids retired by a merge, mapped to the section that absorbed them.
+const LEGACY_SECTION_IDS = { content: 'graphics' }
+
+/** Map retired section ids on a stored sectionAccess/sectionReadOnly array
+ * to their current id (deduped), so older user docs keep the same access. */
+export function normalizeSectionIds(ids) {
+  if (!Array.isArray(ids)) return ids
+  return [...new Set(ids.map((id) => LEGACY_SECTION_IDS[id] || id))]
+}
 
 export function sectionDef(id) {
   return TRACKER_SECTIONS.find((s) => s.id === id)

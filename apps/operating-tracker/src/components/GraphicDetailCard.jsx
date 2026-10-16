@@ -4,6 +4,7 @@ import { Modal } from '@hae/ui'
 import { db } from '../firebase'
 import LeadSelect from './LeadSelect'
 import CommentsPanel from './CommentsPanel'
+import ReferenceImages from './ReferenceImages'
 import { GRAPHICS_STATUS_OPTIONS, WHERE_TO_POST_OPTIONS } from '../constants'
 import { formatDate, graphicsStatusBadgeClass, namesLabel, toNameList } from '../utils'
 
@@ -294,6 +295,17 @@ export default function GraphicDetailCard({ graphic, onClose, onChanged, onDelet
                 )
               )}
             </dl>
+
+            <div className="border-t border-hae-line/60 pt-4">
+              <ReferenceImages
+                collectionName="trackerGraphicsRequests"
+                docId={graphic.id}
+                parentName={graphic.title}
+                images={graphic.referenceImages}
+                readOnly={readOnly}
+                onChanged={onChanged}
+              />
+            </div>
 
             <div className="border-t border-hae-line/60 pt-4">
               <h4 className="mb-2 text-[11px] font-semibold tracking-wider text-hae-slate uppercase">
