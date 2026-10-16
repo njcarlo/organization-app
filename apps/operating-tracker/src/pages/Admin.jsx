@@ -31,7 +31,7 @@ import LeadSelect from '../components/LeadSelect'
 import { namesLabel, toNameList } from '../utils'
 import { useAuth } from '../context/AuthContext'
 import { FEATURES, Modal, useFeatures } from '@hae/ui'
-import { TRACKER_SECTIONS, sectionLabel } from '../sectionAccess'
+import { TRACKER_SECTIONS, normalizeSectionIds, sectionLabel } from '../sectionAccess'
 
 const CREATE_GUIDE = [
   {
@@ -270,8 +270,10 @@ export default function Admin() {
 
   const openSectionAccess = (u) => {
     setSectionAccessUser(u)
-    setSectionAccessDraft(Array.isArray(u.sectionAccess) ? u.sectionAccess : [])
-    setSectionReadOnlyDraft(Array.isArray(u.sectionReadOnly) ? u.sectionReadOnly : [])
+    setSectionAccessDraft(Array.isArray(u.sectionAccess) ? normalizeSectionIds(u.sectionAccess) : [])
+    setSectionReadOnlyDraft(
+      Array.isArray(u.sectionReadOnly) ? normalizeSectionIds(u.sectionReadOnly) : []
+    )
   }
 
   const closeSectionAccess = () => {

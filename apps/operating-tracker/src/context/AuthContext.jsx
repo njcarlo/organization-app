@@ -20,7 +20,7 @@ import {
 import { isSuperAdminEmail } from '../../../../packages/ui/src/superadmin.js'
 import { ensureSuperAdminProfile } from '../../../../packages/ui/src/ensureSuperAdmin.js'
 import { consumeSsoTokenIfPresent } from '../../../../packages/ui/src/sso.js'
-import { isSectionRestricted } from '../sectionAccess'
+import { isSectionRestricted, normalizeSectionIds } from '../sectionAccess'
 
 const AuthContext = createContext(null)
 
@@ -93,13 +93,13 @@ export function AuthProvider({ children }) {
   // stale sectionAccess value lingers on their user doc.
   const sectionAccess =
     !isSuperAdmin && !isAdmin && isSectionRestricted(userProfile?.sectionAccess)
-      ? userProfile.sectionAccess
+      ? normalizeSectionIds(userProfile.sectionAccess)
       : null
   // Sections this user can view but not edit — independent of the
   // sidebar-visibility restriction above.
   const sectionReadOnly =
     !isSuperAdmin && !isAdmin && Array.isArray(userProfile?.sectionReadOnly)
-      ? userProfile.sectionReadOnly
+      ? normalizeSectionIds(userProfile.sectionReadOnly)
       : []
 
   const value = useMemo(

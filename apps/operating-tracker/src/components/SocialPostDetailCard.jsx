@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import CommentsPanel from './CommentsPanel'
 import ActivityLog from './ActivityLog'
+import ReferenceImages from './ReferenceImages'
 import { SOCIAL_GRAPHICS_STATUS_OPTIONS, SOCIAL_POST_STATUS_OPTIONS } from '../constants'
 import { formatDate, socialGraphicsStatusBadgeClass, socialPostStatusBadgeClass } from '../utils'
 import { diffSocialPostFields, logHistory } from '../utils/activityLog'
@@ -297,6 +298,17 @@ export default function SocialPostDetailCard({ post, onClose, onChanged, onDelet
                 )
               )}
             </dl>
+
+            <div className="mt-4 border-t border-hae-line/60 pt-4">
+              <ReferenceImages
+                collectionName="socialMediaPosts"
+                docId={post.id}
+                parentName={post.creative}
+                images={post.referenceImages}
+                readOnly={readOnly}
+                onChanged={onChanged}
+              />
+            </div>
           </div>
 
           <div className="mt-4 space-y-4 border-t border-hae-line/60 pt-4 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">

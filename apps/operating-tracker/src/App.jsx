@@ -137,7 +137,7 @@ export default function App() {
                 <Route
                   path="/content-calendar"
                   element={
-                    <SectionRoute sectionId="content">
+                    <SectionRoute sectionId="graphics">
                       <ContentCalendar />
                     </SectionRoute>
                   }
